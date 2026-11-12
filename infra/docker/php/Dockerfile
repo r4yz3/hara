@@ -1,0 +1,31 @@
+# Development image for the Laravel API. Not a production image: it runs the
+# built-in server and mounts the source tree. A hardened production image
+# (non-root, php-fpm behind nginx, no dev dependencies) is backlog E-05.
+#
+# UNVERIFIED: not yet built (no Docker on the authoring workstation).
+
+FROM composer:2.11.2 AS composer
+
+FROM php:8.4-fpm-alpine3.23
+
+RUN apk add --no-cache icu-libs libpq libzip \
+    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS icu-dev postgresql-dev libzip-dev linux-headers \
+    && docker-php-ext-install -j"$(nproc)" bcmath intl pcntl pdo_pgsql pgsql zip \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del .build-deps \
+    && rm -rf /tmp/pear
+
+COPY --from=composer /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www/backend
+
+COPY backend/composer.json backend/composer.lock ./
+RUN composer install --no-interaction --no-scripts --no-autoloader --prefer-dist
+
+COPY backend/ ./
+RUN composer dump-autoload --optimize
+
+EXPOSE 8000
+
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]

@@ -1,0 +1,82 @@
+# Local development stack. NOT a production configuration.
+# Run from the repository root:  docker compose -f infra/compose.yaml up -d --build
+# Values come from the root .env (copy .env.example first). Every published
+# port binds to 127.0.0.1 so nothing is reachable from the network.
+#
+# UNVERIFIED: written on a workstation without Docker (2026-11-13). Validate
+# with `docker compose -f infra/compose.yaml config --quiet` before first use.
+#
+# Object storage: the spec names MinIO, but its image is no longer published on
+# Docker Hub. No replacement has been chosen (see ADR-012); nothing in Phase 1
+# Sprint 2 reads or writes object storage.
+
+name: food-delivery
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: infra/docker/php/Dockerfile
+    env_file:
+      - ../.env
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+    volumes:
+      - ../backend:/var/www/backend
+      - backend_vendor:/var/www/backend/vendor
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:8000/health/live') === false ? 1 : 0);"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+
+  postgres:
+    image: postgis/postgis:17-3.5-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-food_delivery}
+      POSTGRES_USER: ${DB_USERNAME:-food_delivery}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+  redis:
+    image: redis:8.8.4-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:v1.33.1
+    ports:
+      - "127.0.0.1:8025:8025" # web UI
+      - "127.0.0.1:1025:1025" # SMTP
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  backend_vendor:

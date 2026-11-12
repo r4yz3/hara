@@ -1,0 +1,155 @@
+{
+  "version": 2,
+  "skills": {
+    "dart-add-unit-test": {
+      "source": "flutter/agent-plugins",
+      "sourceType": "github",
+      "skillPath": "skills/dart-add-unit-test/SKILL.md",
+      "computedHash": "3679f62a634142d81a9f5754eae20356d5fc471e5957e35e18239801bf7a471c"
+    },
+    "dart-run-static-analysis": {
+      "source": "flutter/agent-plugins",
+      "sourceType": "github",
+      "skillPath": "skills/dart-run-static-analysis/SKILL.md",
+      "computedHash": "fa93216b2e985fe86cffbc7f9734361205cbe6c7c8d46b21a87beea19bea2066"
+    },
+    "docker-build-strategies": {
+      "source": "docker/skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-build-strategies/SKILL.md",
+      "computedHash": "f6376cf97e353c4ec469f3037486603e6ade3b4642f65fee14f389f9f0bbc613"
+    },
+    "docker-compose-patterns": {
+      "source": "docker/skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-compose-patterns/SKILL.md",
+      "computedHash": "ab8353137a2f7054f113b7aa565eff12248bca7b41518a4d4183f7da522af2c3"
+    },
+    "docker-destructive-guardrails": {
+      "source": "docker/skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-destructive-guardrails/SKILL.md",
+      "computedHash": "3a5445d2104a05d8f57b5f9fa7274e83c4e3c84571b7ff8aeecad304afeef016"
+    },
+    "docker-project-foundations": {
+      "source": "docker/skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-project-foundations/SKILL.md",
+      "computedHash": "67b9b39419c68097af89fc5188bf1574a7cd925991ebf795b724da56804bf829"
+    },
+    "flutter-add-integration-test": {
+      "source": "flutter/agent-plugins",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-add-integration-test/SKILL.md",
+      "computedHash": "ce8c06d4673db956810ffc2380e4c9305e068021eab72c0f3506dacdf0fa4027"
+    },
+    "flutter-add-widget-test": {
+      "source": "flutter/agent-plugins",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-add-widget-test/SKILL.md",
+      "computedHash": "5cfab5fd20d6b84e28e9b9cc278ac0c3fb2c89a7e850f2b900749b14cb367bbf"
+    },
+    "flutter-apply-architecture-best-practices": {
+      "source": "flutter/agent-plugins",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-apply-architecture-best-practices/SKILL.md",
+      "computedHash": "a41b999109cc3c2dc79ddbc05b5fd5f39ed08d5c6c17dab728a6b926d3a504de"
+    },
+    "flutter-build-responsive-layout": {
+      "source": "flutter/agent-plugins",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-build-responsive-layout/SKILL.md",
+      "computedHash": "bdb7ab7ca812ee719237a718376a5f2e15b659201ff66818f1012c5d13751487"
+    },
+    "flutter-implement-json-serialization": {
+      "source": "flutter/agent-plugins",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-implement-json-serialization/SKILL.md",
+      "computedHash": "48727033cb05de551ef14264112e36e8aec015b3cf955fa2115cfdac6094fe69"
+    },
+    "flutter-setup-declarative-routing": {
+      "source": "flutter/agent-plugins",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-setup-declarative-routing/SKILL.md",
+      "computedHash": "566264ee0f746a8b4d571a0dec69d3d3f09c246591a3393d1fb67783661465bf"
+    },
+    "github-actions-hardening": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/github-actions-hardening/SKILL.md",
+      "computedHash": "ce7df8e90622480a41ffae4a81c78dbf4de3a6965cc21a91693efdf15fb3284c"
+    },
+    "laravel-best-practices": {
+      "source": "laravel/boost",
+      "sourceType": "github",
+      "skillPath": ".ai/laravel/skill/laravel-best-practices/SKILL.md",
+      "computedHash": "a92d7c727eaa27cb5153af54203ff6dbf283bf4b6b31aad6f6a12517b471a306"
+    },
+    "maplibre-fonts-glyphs": {
+      "source": "maplibre/maplibre-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/maplibre-fonts-glyphs/SKILL.md",
+      "computedHash": "2548341a165b4682177869a1a90956cd54e43859d964fbb120a89af02296ad78"
+    },
+    "maplibre-native-gl-js-parity": {
+      "source": "maplibre/maplibre-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/maplibre-native-gl-js-parity/SKILL.md",
+      "computedHash": "a00edb7b9b6d95529af64fe0fe911917f0f87efa0d09e0c7426a9d8eb124df59"
+    },
+    "maplibre-pmtiles-patterns": {
+      "source": "maplibre/maplibre-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/maplibre-pmtiles-patterns/SKILL.md",
+      "computedHash": "678174edca9879b3d4fc0d4682147a214151412e1431d5e8757cf15d67f5415b"
+    },
+    "maplibre-source-wiring": {
+      "source": "maplibre/maplibre-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/maplibre-source-wiring/SKILL.md",
+      "computedHash": "a23a54aa4cd9a7fac8360f55d9236eba6002469cd532ca13d08e0b3745d75e21"
+    },
+    "maplibre-sprites-icons": {
+      "source": "maplibre/maplibre-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/maplibre-sprites-icons/SKILL.md",
+      "computedHash": "398d4029043f39110118056b1a3e0f6bd2441de9762777a44a1569ce6c10631a"
+    },
+    "maplibre-tile-sources": {
+      "source": "maplibre/maplibre-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/maplibre-tile-sources/SKILL.md",
+      "computedHash": "3cfa8b4086156fa041c057cff5b9b3eec81a5bad0d02a0d26ffef9cbe5e51afb"
+    },
+    "maplibre-v6-migration": {
+      "source": "maplibre/maplibre-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/maplibre-v6-migration/SKILL.md",
+      "computedHash": "d82e44b726113da568e0042ac23f08341dd960a6a7285a7c263ac1bb68cc2243"
+    },
+    "postgis": {
+      "source": "postgis/postgis",
+      "sourceType": "github",
+      "skillPath": "doc/skills/postgis/SKILL.md",
+      "computedHash": "8bc772b0cf02bada628d97d9f17d72a941e60f89a8deefde48e2964db835e799"
+    },
+    "shadcn": {
+      "source": "shadcn-ui/ui",
+      "sourceType": "github",
+      "skillPath": "skills/shadcn/SKILL.md",
+      "computedHash": "388962d16c7a4f13aaeee0d8f128e50a87df8553d42ef7988c39c0e1c74a40e8"
+    },
+    "sql-programming": {
+      "source": "postgis/postgis",
+      "sourceType": "github",
+      "skillPath": "doc/skills/sql-programming/SKILL.md",
+      "computedHash": "8ae8bf3afb4e2cdc6f04ca33ef5e6c89df02bef1e81383f5cfffc0c4403c52e0"
+    },
+    "tailwindcss-development": {
+      "source": "laravel/boost",
+      "sourceType": "github",
+      "skillPath": ".ai/tailwindcss/3/skill/tailwindcss-development/SKILL.md",
+      "computedHash": "2fee93d432112ad50d99133bd0c945c8d936212afb06d117d5640baa42a893db"
+    }
+  }
+}

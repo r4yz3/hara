@@ -1,0 +1,17 @@
+.git
+.github
+.claude
+.env
+.env.*
+!.env.example
+**/node_modules
+**/.next
+apps
+packages
+docs
+backend/vendor
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/.env

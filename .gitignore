@@ -1,0 +1,49 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Node
+node_modules/
+.pnpm-store/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+playwright-report/
+test-results/
+storybook-static/
+
+# PHP / Laravel
+/backend/vendor/
+/backend/storage/*.key
+/backend/storage/logs/*
+/backend/storage/framework/cache/*
+/backend/storage/framework/sessions/*
+/backend/storage/framework/views/*
+/backend/bootstrap/cache/*
+!/backend/**/.gitignore
+.phpunit.cache/
+.phpunit.result.cache
+
+# Flutter / Dart
+.dart_tool/
+/apps/rider-flutter/build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+local.properties
+.gradle/
+
+# Infra and editors
+/infra/backups/
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+*.log

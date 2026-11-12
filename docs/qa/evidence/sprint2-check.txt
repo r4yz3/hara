@@ -1,0 +1,148 @@
+﻿Command: .\infra\scripts\dev.ps1 check
+Date: 2026-11-13
+Exit code: 0
+
+==> web lint
+
+> food-delivery@ lint F:\PROJECTS\hara
+> pnpm -r --if-present lint
+
+Scope: 8 of 9 workspace projects
+apps/admin-web lint$ eslint
+apps/customer-web lint$ eslint
+apps/merchant-web lint$ eslint
+apps/admin-web lint: Done
+apps/merchant-web lint: Done
+apps/customer-web lint: Done
+==> web typecheck
+
+> food-delivery@ typecheck F:\PROJECTS\hara
+> pnpm -r --if-present typecheck
+
+Scope: 8 of 9 workspace projects
+apps/admin-web typecheck$ next typegen && tsc --noEmit
+apps/customer-web typecheck$ next typegen && tsc --noEmit
+apps/merchant-web typecheck$ next typegen && tsc --noEmit
+apps/admin-web typecheck: Generating route types...
+apps/customer-web typecheck: Generating route types...
+apps/merchant-web typecheck: Generating route types...
+apps/admin-web typecheck: ✓ Types generated successfully
+apps/customer-web typecheck: ✓ Types generated successfully
+apps/merchant-web typecheck: ✓ Types generated successfully
+apps/admin-web typecheck: Done
+apps/customer-web typecheck: Done
+apps/merchant-web typecheck: Done
+==> web build
+
+> food-delivery@ build F:\PROJECTS\hara
+> pnpm -r --if-present build
+
+Scope: 8 of 9 workspace projects
+apps/admin-web build$ next build
+apps/customer-web build$ next build
+apps/merchant-web build$ next build
+apps/admin-web build: ▲ Next.js 16.4.6 (Turbopack)
+apps/customer-web build: ▲ Next.js 16.4.6 (Turbopack)
+apps/merchant-web build: ▲ Next.js 16.4.6 (Turbopack)
+apps/admin-web build: ✓ Running next.config.ts took 41ms
+apps/customer-web build: ✓ Running next.config.ts took 39ms
+apps/merchant-web build: ✓ Running next.config.ts took 40ms
+apps/admin-web build: - Cache Components enabled
+apps/merchant-web build: - Cache Components enabled
+apps/merchant-web build: - Partial Prefetching enabled
+apps/admin-web build: - Partial Prefetching enabled
+apps/customer-web build: - Cache Components enabled
+apps/customer-web build: - Partial Prefetching enabled
+apps/merchant-web build:   Creating an optimized production build ...
+apps/admin-web build:   Creating an optimized production build ...
+apps/customer-web build:   Creating an optimized production build ...
+apps/admin-web build: ✓ Compiled successfully in 779ms
+apps/admin-web build:   Running TypeScript ...
+apps/merchant-web build: ✓ Compiled successfully in 794ms
+apps/merchant-web build:   Running TypeScript ...
+apps/customer-web build: ✓ Compiled successfully in 942ms
+apps/customer-web build:   Running TypeScript ...
+apps/admin-web build:   Finished TypeScript in 1790ms ...
+apps/admin-web build:   Collecting page data using 5 workers ...
+apps/merchant-web build:   Finished TypeScript in 1793ms ...
+apps/merchant-web build:   Collecting page data using 5 workers ...
+apps/customer-web build:   Finished TypeScript in 1917ms ...
+apps/customer-web build:   Collecting page data using 5 workers ...
+apps/admin-web build:   Generating static pages using 5 workers (0/4) ...
+apps/merchant-web build:   Generating static pages using 5 workers (0/4) ...
+apps/customer-web build:   Generating static pages using 5 workers (0/4) ...
+apps/admin-web build:   Generating static pages using 5 workers (1/4) 
+apps/merchant-web build:   Generating static pages using 5 workers (1/4) 
+apps/admin-web build:   Generating static pages using 5 workers (2/4) 
+apps/admin-web build:   Generating static pages using 5 workers (3/4) 
+apps/merchant-web build:   Generating static pages using 5 workers (2/4) 
+apps/admin-web build: ✓ Generating static pages using 5 workers (4/4) in 989ms
+apps/merchant-web build:   Generating static pages using 5 workers (3/4) 
+apps/merchant-web build: ✓ Generating static pages using 5 workers (4/4) in 985ms
+apps/admin-web build:   Finalizing page optimization ...
+apps/merchant-web build:   Finalizing page optimization ...
+apps/admin-web build: Route (app)
+apps/admin-web build: ┌ ○ /
+apps/admin-web build: └ ○ /_not-found
+apps/merchant-web build: Route (app)
+apps/merchant-web build: ┌ ○ /
+apps/merchant-web build: └ ○ /_not-found
+apps/merchant-web build: ○  (Static)  prerendered as static content
+apps/admin-web build: ○  (Static)  prerendered as static content
+apps/customer-web build:   Generating static pages using 5 workers (1/4) 
+apps/customer-web build:   Generating static pages using 5 workers (2/4) 
+apps/customer-web build:   Generating static pages using 5 workers (3/4) 
+apps/customer-web build: ✓ Generating static pages using 5 workers (4/4) in 961ms
+apps/customer-web build:   Finalizing page optimization ...
+apps/customer-web build: Route (app)
+apps/customer-web build: ┌ ○ /
+apps/customer-web build: └ ○ /_not-found
+apps/customer-web build: ○  (Static)  prerendered as static content
+apps/merchant-web build: Done
+apps/admin-web build: Done
+apps/customer-web build: Done
+WARNING: Docker not found: running backend checks with native PHP. Database-backed tests cannot run this way.
+==> backend format
+{"tool":"pint","result":"passed"}==> backend static analysis
+powershell : Note: Using configuration file F:\PROJECTS\hara\backend\phpstan.neon.
+At line:1 char:594
++ ... ple; $out = powershell -NoProfile -ExecutionPolicy Bypass -File infra ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Note: Using con...d\phpstan.neon.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+ [OK] No errors                                                                                                        
+
+==> backend tests
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Unit\ArchitectureTest[39m
+  [32;1m✓[39;22m[90m [39m[90mexpected domain modules exist[39m
+  [32;1m✓[39;22m[90m [39m[90mdomain code does not import http layer[39m
+  [32;1m✓[39;22m[90m [39m[90mmodules reference each other only through contracts[39m
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\HealthTest[39m
+  [32;1m✓[39;22m[90m [39m[90mlive returns minimal body[39m[90m                                                                                   [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mready is hidden from public addresses[39m[90m                                                                       [39m [90m0.01s[39m  
+  [32;1m✓[39;22m[90m [39m[90mready reports only dependency state to internal callers[39m[90m                                                     [39m [90m2.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mframework default health route is not registered[39m[90m                                                            [39m [90m0.03s[39m  
+  [32;1m✓[39;22m[90m [39m[90mno versioned api routes exist yet[39m[90m                                                                           [39m [90m0.01s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\RouteInventoryTest[39m
+  [32;1m✓[39;22m[90m [39m[90monly expected routes are registered[39m[90m                                                                         [39m [90m0.01s[39m  
+
+  [90mTests:[39m    [32;1m9 passed[39;22m[90m (23 assertions)[39m
+  [90mDuration:[39m [39m2.61s[39m
+
+==> flutter analyze
+Analyzing rider-flutter...                                      
+No issues found! (ran in 2.8s)
+==> flutter test
+00:00 +0: loading F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart
+00:00 +0: home is labelled as a scaffold
+00:00 +1: online toggle is off and disabled
+00:00 +2: scaffold label is exposed to screen readers
+00:00 +3: android manifest requests no location permission
+00:00 +4: All tests passed!
+All checks passed.
+
