@@ -29,7 +29,7 @@ Status key: `todo`, `blocked`, `done`.
 | A-09 | Flutter rider skeleton | `flutter analyze` and `flutter test` pass | — | done (4 tests) |
 | A-10 | Makefile plus PowerShell scripts | `setup`, `up`, `down`, `migrate`, `seed-demo`, `check`, `logs` each have a `.ps1` equivalent that works on this workstation | A-05 | partial: `dev.ps1 check` verified; `up`, `down`, `migrate`, `logs` and the Makefile unverified; `seed-demo` waits for D-05 |
 | A-11 | CI workflows: backend, web, flutter, security | All run on a clean clone; actions pinned by SHA; least-privilege tokens | A-04, A-08, A-09 | written, never run (no remote repository) |
-| A-12 | Install Laravel Boost as a dev dependency | Boost MCP server connects | A-04 | todo |
+| A-12 | Install Laravel Boost as a dev dependency | Boost MCP server connects | A-04 | done: installed as a dev dependency; server answers an MCP initialize request; root `.mcp.json` added; browser-log route disabled |
 
 ## Sprint 3 — database
 
@@ -40,7 +40,7 @@ Status key: `todo`, `blocked`, `done`.
 | D-03 | Confirm ULID case and add normalization | Test proves one stored case and case-insensitive lookup (ADR-003) | D-01 | todo |
 | D-04 | Spatial round-trip test | GeoJSON in equals normalized GeoJSON out | D-01 | todo |
 | D-05 | Factories and gated development seeder | Seeder refuses outside `local`/`testing`; demo city and zone are clearly labelled synthetic | D-01 | todo |
-| D-06 | `Money` value object | CurrencyAmountTest; no float path | A-04 | todo |
+| D-06 | `Money` value object | CurrencyAmountTest; no float path | A-04 | done (CurrencyAmountTest, 41 cases incl. overflow and float-hostile values) |
 | D-07 | Confirm city status values (human) | ADR-000 item 8 closed | — | blocked (human) |
 
 ## Sprint 4 — authentication and RBAC (Slice B)
@@ -66,7 +66,7 @@ Status key: `todo`, `blocked`, `done`.
 |---|---|---|---|---|
 | C-01 | OpenAPI 3.1 document for all Phase 1 routes | Lints clean; CI diff check | A-04 | todo |
 | C-02 | City create, read, update, status transitions | CitySlugTest, CityStatusTransitionTest, AdminCityCreateTest | B-05, D-07 | todo |
-| C-03 | Zone geometry validator | ZoneGeometryValidatorTest, CoordinateBoundsTest, fuzz test | D-01 | todo |
+| C-03 | Zone geometry validator | ZoneGeometryValidatorTest, CoordinateBoundsTest, fuzz test | D-01 | partial: `Coordinates` value object and CoordinateBoundsTest (27 cases) done; polygon validator not started |
 | C-04 | Zone create and update with versioning | ZoneCreateTest; stale update returns 409; concurrent edit test | C-03, B-05 | todo |
 | C-05 | Zone activate and pause | ZoneActivateTest; needs active city, valid geometry, reason on pause | C-04 | todo |
 | C-06 | Zone archive through explicit status transition | Covered by transition test (ADR-000 item 9) | C-04 | todo |
