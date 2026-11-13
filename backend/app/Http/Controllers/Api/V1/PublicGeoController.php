@@ -11,6 +11,7 @@ use App\Support\Http\ApiResponse;
 use App\Support\Http\Cursor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
@@ -20,6 +21,33 @@ use InvalidArgumentException;
  */
 class PublicGeoController extends Controller
 {
+    /**
+     * Deployment facts any client may read before signing in. Built from a
+     * fixed list: adding a config value never publishes it by accident.
+     */
+    public function config(Request $request): JsonResponse
+    {
+        $style = config('platform.map_style_url');
+        $open = DB::table('delivery_zones as z')
+            ->join('cities as c', 'c.id', '=', 'z.city_id')
+            ->where('z.status', 'active')
+            ->where('c.status', 'active')
+            ->exists();
+
+        return ApiResponse::data($request, [
+            'currency' => (string) config('platform.currency'),
+            'display_timezone' => (string) config('platform.display_timezone'),
+            'service_open' => $open,
+            'map_style_url' => is_string($style) && preg_match('#\Ahttps://[^\s]+\z#', $style) === 1 ? $style : null,
+            'features' => [
+                'public_registration' => (bool) config('features.public_registration'),
+                'live_dispatch' => (bool) config('features.live_dispatch'),
+                'online_payments' => (bool) config('features.online_payments'),
+                'rider_tracking' => (bool) config('features.rider_tracking'),
+            ],
+        ]);
+    }
+
     public function cities(Request $request): JsonResponse
     {
         $input = $request->validate([

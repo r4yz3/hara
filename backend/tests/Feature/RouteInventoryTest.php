@@ -32,6 +32,7 @@ class RouteInventoryTest extends TestCase
             'GET|HEAD api/v1/locations/serviceability',
             'GET|HEAD api/v1/me',
             'GET|HEAD api/v1/public/cities',
+            'GET|HEAD api/v1/public/config',
             'GET|HEAD health/live',
             'GET|HEAD health/ready',
             'PATCH api/v1/admin/cities/{city}',

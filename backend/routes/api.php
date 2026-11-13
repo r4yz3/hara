@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Public, unauthenticated.
+Route::get('/public/config', [PublicGeoController::class, 'config'])->middleware('throttle:120,1')->name('public.config');
 Route::get('/public/cities', [PublicGeoController::class, 'cities'])->middleware('throttle:120,1')->name('public.cities');
 Route::get('/locations/serviceability', [PublicGeoController::class, 'serviceability'])->middleware('throttle:60,1')->name('locations.serviceability');
 

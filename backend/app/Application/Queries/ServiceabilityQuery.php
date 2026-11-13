@@ -14,13 +14,8 @@ use Illuminate\Support\Facades\DB;
  */
 class ServiceabilityQuery
 {
-    /**
-     * @return array{serviceable: bool, reason: 'NO_ACTIVE_ZONE'|'OUTSIDE_COVERAGE'|null, city: array{id: string, name: string}|null, zone: array{id: string, name: string}|null}
-     */
-    public function at(Coordinates $point): array
-    {
-        // ST_MakePoint takes x, y: longitude first.
-        $match = DB::selectOne(<<<'SQL'
+    /** The whole decision in one statement; ServiceabilityPlanTest checks its plan. */
+    public const SQL = <<<'SQL'
             WITH p AS (SELECT ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326) AS geom)
             SELECT z.id AS zone_id, z.name AS zone_name, c.id AS city_id, c.name AS city_name
             FROM delivery_zones z
@@ -38,7 +33,15 @@ class ServiceabilityQuery
               )
             ORDER BY z.priority DESC, z.id ASC
             LIMIT 1
-        SQL, ['longitude' => $point->longitude, 'latitude' => $point->latitude]);
+        SQL;
+
+    /**
+     * @return array{serviceable: bool, reason: 'NO_ACTIVE_ZONE'|'OUTSIDE_COVERAGE'|null, city: array{id: string, name: string}|null, zone: array{id: string, name: string}|null}
+     */
+    public function at(Coordinates $point): array
+    {
+        // ST_MakePoint takes x, y: longitude first.
+        $match = DB::selectOne(self::SQL, ['longitude' => $point->longitude, 'latitude' => $point->latitude]);
 
         if ($match !== null) {
             return [

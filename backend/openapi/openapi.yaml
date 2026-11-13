@@ -185,6 +185,47 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/CurrentUserResponse" }
         "401": { $ref: "#/components/responses/Error" }
+  /api/v1/public/config:
+    get:
+      tags: [Geography]
+      summary: Deployment settings any client may read
+      description: |
+        No sign-in needed and nothing secret. `service_open` is true only when
+        an active zone exists in an active city. `map_style_url` is null until
+        a licensed map style is configured. Every feature flag is off by
+        default; in Phase 1 the later-phase flags change nothing when on.
+      operationId: publicConfig
+      security: []
+      responses:
+        "200":
+          description: The settings.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    required: [currency, display_timezone, service_open, map_style_url, features]
+                    properties:
+                      currency: { type: string, description: ISO 4217 code. One per deployment. }
+                      display_timezone: { type: string, description: For screens with no city. Each city has its own. }
+                      service_open: { type: boolean }
+                      map_style_url: { type: [string, "null"], format: uri }
+                      features:
+                        type: object
+                        additionalProperties: false
+                        required: [public_registration, live_dispatch, online_payments, rider_tracking]
+                        properties:
+                          public_registration: { type: boolean }
+                          live_dispatch: { type: boolean }
+                          online_payments: { type: boolean }
+                          rider_tracking: { type: boolean }
+                  meta: { $ref: "#/components/schemas/Meta" }
+        "429": { $ref: "#/components/responses/Error" }
   /api/v1/public/cities:
     get:
       tags: [Geography]

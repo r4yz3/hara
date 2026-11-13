@@ -8,5 +8,7 @@
 
 return [
     'currency' => strtoupper((string) env('DEFAULT_CURRENCY', 'PHP')),
+    // Published to every client by /public/config; never put a private key in it.
+    'map_style_url' => env('MAP_STYLE_URL') ?: null,
     'display_timezone' => (string) env('DEFAULT_DISPLAY_TIMEZONE', 'Asia/Manila'),
 ];
