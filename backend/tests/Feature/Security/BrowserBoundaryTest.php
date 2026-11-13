@@ -92,6 +92,17 @@ class BrowserBoundaryTest extends AuthTestCase
         }
     }
 
+    public function test_the_apps_can_read_the_request_id_and_the_retry_wait(): void
+    {
+        // A 429 tells the sign-in screens how long to wait; across origins the
+        // browser hides that header unless it is exposed.
+        $exposed = strtolower((string) $this->via('admin')->getJson('/api/v1/public/config')
+            ->headers->get('Access-Control-Expose-Headers'));
+
+        $this->assertStringContainsString('x-request-id', $exposed);
+        $this->assertStringContainsString('retry-after', $exposed);
+    }
+
     public function test_lookalike_and_unlisted_origins_get_no_cross_origin_access(): void
     {
         $refused = [

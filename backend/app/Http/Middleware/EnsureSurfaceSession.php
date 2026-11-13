@@ -58,18 +58,29 @@ class EnsureSurfaceSession
     /**
      * ADR-011. A staff member with a confirmed second factor needs a session
      * that passed it. Without one, local and testing keep password-only
-     * sessions; anywhere else the session may only enrol a factor.
+     * sessions; anywhere else the session may only enrol a factor. A session
+     * that passed a second step for a factor that is gone or replaced ends.
      */
     private function requireSecondStep(Request $request, string $userId): void
     {
         $session = $request->session();
 
-        if ($this->mfa->isConfirmed($userId)) {
-            if ($session->get('mfa_verified') !== true) {
+        $factorId = $this->mfa->confirmedFactorId($userId);
+
+        if ($factorId !== null) {
+            // The session must have passed the second step for this very
+            // factor: a reset followed by a new enrolment does not revive it.
+            if ($session->get('mfa_verified') !== true || $session->get('mfa_factor') !== $factorId) {
                 $this->endSession($request);
             }
 
             return;
+        }
+
+        // No factor (never set up, or reset by an operator): a session that
+        // claims a second step is stale in every environment.
+        if ($session->get('mfa_verified') === true) {
+            $this->endSession($request);
         }
 
         if (app()->environment(ProductionGuard::DEVELOPMENT_ENVIRONMENTS)) {

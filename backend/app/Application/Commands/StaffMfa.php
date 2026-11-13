@@ -24,6 +24,14 @@ class StaffMfa
         return DB::table('user_mfa_factors')->where('user_id', $userId)->whereNotNull('confirmed_at')->exists();
     }
 
+    /** The id of the user's confirmed factor. A session proves a second step for that factor only. */
+    public function confirmedFactorId(string $userId): ?string
+    {
+        $id = DB::table('user_mfa_factors')->where('user_id', $userId)->whereNotNull('confirmed_at')->value('id');
+
+        return is_string($id) ? $id : null;
+    }
+
     /**
      * Starts or restarts enrolment. Null when a factor is already confirmed.
      *
@@ -70,22 +78,94 @@ class StaffMfa
 
             $factor->forceFill(['confirmed_at' => now(), 'last_used_step' => $step])->save();
 
-            $codes = [];
-            $rows = [];
-            for ($i = 0; $i < self::RECOVERY_CODE_COUNT; $i++) {
-                $codes[] = $this->newRecoveryCode();
-                $rows[] = [
-                    'id' => strtolower((string) Str::ulid()),
-                    'user_id' => $user->id,
-                    'code_hash' => $this->hashRecoveryCode($codes[$i]),
-                ];
-            }
-            DB::table('user_mfa_recovery_codes')->insert($rows);
+            $codes = $this->issueRecoveryCodes($user->id);
 
             $this->audit->record($user->id, 'auth.mfa_enrolled', 'user', $user->id, after: ['method' => 'totp'], ip: $ip, correlationId: $correlationId);
 
             return $codes;
         });
+    }
+
+    /**
+     * Replaces every recovery code with ten new ones, shown once. Needs a
+     * current code from the app (a step that was not already used), so a
+     * stolen session alone cannot do it. Null when the code is wrong or no
+     * factor is confirmed.
+     *
+     * @return list<string>|null
+     */
+    public function regenerateRecoveryCodes(User $user, string $code, ?string $ip, ?string $correlationId = null): ?array
+    {
+        return DB::transaction(function () use ($user, $code, $ip, $correlationId): ?array {
+            $factor = UserMfaFactor::query()->where('user_id', $user->id)->whereNotNull('confirmed_at')->lockForUpdate()->first();
+            $step = $factor === null ? null : Totp::match($factor->secret, $code, now()->getTimestamp(), $factor->last_used_step);
+
+            if ($factor === null || $step === null) {
+                return null;
+            }
+
+            $factor->forceFill(['last_used_step' => $step])->save();
+            DB::table('user_mfa_recovery_codes')->where('user_id', $user->id)->delete();
+            $codes = $this->issueRecoveryCodes($user->id);
+
+            $this->audit->record($user->id, 'auth.mfa_recovery_codes_regenerated', 'user', $user->id, after: ['count' => count($codes)], ip: $ip, correlationId: $correlationId);
+
+            return $codes;
+        });
+    }
+
+    /**
+     * Operator reset for a staff member who lost their device and recovery
+     * codes (ADR-011). Authorisation is the caller's job; this removes the
+     * factor and all recovery codes, ends the person's stored sessions and
+     * writes the audit row, in one transaction. The reason is free text for
+     * the audit trail and must not hold secrets.
+     */
+    public function reset(User $actor, string $targetUserId, string $reason, ?string $ip, ?string $correlationId = null): void
+    {
+        DB::transaction(function () use ($actor, $targetUserId, $reason, $ip, $correlationId): void {
+            DB::table('user_mfa_recovery_codes')->where('user_id', $targetUserId)->delete();
+            DB::table('user_mfa_factors')->where('user_id', $targetUserId)->delete();
+
+            // Sessions held in the database go at once. Any other store is
+            // covered by EnsureSurfaceSession, which ends a session that
+            // claims a second step the user no longer has.
+            if (config('session.driver') === 'database') {
+                DB::table((string) config('session.table', 'sessions'))->where('user_id', $targetUserId)->delete();
+            }
+
+            $this->audit->record(
+                $actor->id,
+                'auth.mfa_reset',
+                'user',
+                $targetUserId,
+                after: ['reason' => $reason, 'target_user_id' => $targetUserId],
+                ip: $ip,
+                correlationId: $correlationId,
+            );
+        });
+    }
+
+    /**
+     * Inserts ten fresh codes and returns them in the clear, once.
+     *
+     * @return list<string>
+     */
+    private function issueRecoveryCodes(string $userId): array
+    {
+        $codes = [];
+        $rows = [];
+        for ($i = 0; $i < self::RECOVERY_CODE_COUNT; $i++) {
+            $codes[] = $this->newRecoveryCode();
+            $rows[] = [
+                'id' => strtolower((string) Str::ulid()),
+                'user_id' => $userId,
+                'code_hash' => $this->hashRecoveryCode($codes[$i]),
+            ];
+        }
+        DB::table('user_mfa_recovery_codes')->insert($rows);
+
+        return $codes;
     }
 
     /**

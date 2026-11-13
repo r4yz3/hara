@@ -3,6 +3,8 @@ import Link from "next/link";
 
 import { SignInForm } from "@food-delivery/session";
 
+import { SetupNotice } from "./setup-notice";
+
 export const metadata: Metadata = { title: "Staff sign in" };
 
 export default function LoginPage() {
@@ -14,9 +16,11 @@ export default function LoginPage() {
           <p className="text-text-secondary">For platform staff only.</p>
         </div>
 
-        <SignInForm actionClassName="bg-brand-600 text-on-brand" />
+        <SetupNotice />
 
-        <p className="text-sm text-text-secondary">Two-step verification is not built yet, so staff sign-in is switched off in production.</p>
+        <SignInForm actionClassName="bg-brand-600 text-on-brand" twoStep />
+
+        <p className="text-sm text-text-secondary">Staff with two-step sign-in set up are asked for a code after the password.</p>
         <Link href="/forgot-password" className="min-h-11 content-center text-sm font-medium text-brand-600 underline underline-offset-4">
           Forgotten your password?
         </Link>

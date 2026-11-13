@@ -285,6 +285,57 @@ paths:
         "409": { $ref: "#/components/responses/Error" }
         "422": { $ref: "#/components/responses/Error" }
         "429": { $ref: "#/components/responses/Error" }
+  /api/v1/me/mfa/recovery-codes:
+    post:
+      tags: [Auth]
+      summary: Replace the recovery codes
+      description: |
+        Admin app only, for staff with a confirmed second factor. Send a
+        current 6-digit code from the authenticator app (one that has not
+        been used yet). Returns ten new single-use recovery codes, once, and
+        invalidates every old one. A wrong code is 422, like confirming
+        setup; five failures in a minute produce 429. 409 when no second
+        factor is set up. The audit row `auth.mfa_recovery_codes_regenerated`
+        holds no code.
+      operationId: meMfaRecoveryCodesRegenerate
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string, maxLength: 64 }
+      responses:
+        "200":
+          description: New codes.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    required: [recovery_codes]
+                    properties:
+                      recovery_codes:
+                        type: array
+                        minItems: 10
+                        maxItems: 10
+                        items: { type: string }
+                  meta: { $ref: "#/components/schemas/Meta" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
   /api/v1/auth/password/forgot:
     post:
       tags: [Auth]
@@ -1035,6 +1086,47 @@ paths:
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/users/{user}/mfa/reset:
+    parameters:
+      - name: user
+        in: path
+        required: true
+        schema: { type: string }
+        description: Id of a staff member. Letter case is ignored.
+    post:
+      tags: [Admin]
+      summary: Reset a staff member's second factor
+      description: |
+        For a staff member who lost their authenticator and recovery codes.
+        Needs `users.mfa.reset` (platform owner only) with global scope. 403
+        when the target is the caller (use a recovery code instead) and when
+        the target is a platform owner and the caller is not one. 404 for an
+        unknown id or a user without a live staff grant. Deletes the factor
+        and every recovery code in one transaction with the audit row
+        `auth.mfa_reset` (reason and target id, never a code), and ends the
+        person's stored sessions; any other session ends on its next
+        request. They sign in with the password and must set up two-step
+        sign-in again (deployed environments), or sign in with the password
+        alone (local and testing).
+      operationId: adminUsersMfaReset
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 1, maxLength: 255, description: "Why the reset was approved, for the audit trail. Never put a secret here." }
+      responses:
+        "204":
+          description: Reset.
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
   /api/v1/admin/audit-logs:
     get:
       tags: [Admin]

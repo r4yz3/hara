@@ -181,6 +181,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/mfa/recovery-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Replace the recovery codes
+         * @description Admin app only, for staff with a confirmed second factor. Send a
+         *     current 6-digit code from the authenticator app (one that has not
+         *     been used yet). Returns ten new single-use recovery codes, once, and
+         *     invalidates every old one. A wrong code is 422, like confirming
+         *     setup; five failures in a minute produce 429. 409 when no second
+         *     factor is set up. The audit row `auth.mfa_recovery_codes_regenerated`
+         *     holds no code.
+         */
+        post: operations["meMfaRecoveryCodesRegenerate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/password/forgot": {
         parameters: {
             query?: never;
@@ -649,6 +675,39 @@ export interface paths {
          * @description Needs `zones.write` for the city of the exclusion's zone. The removal is audited with the reason and window.
          */
         delete: operations["adminExclusionsDestroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{user}/mfa/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Id of a staff member. Letter case is ignored. */
+                user: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset a staff member's second factor
+         * @description For a staff member who lost their authenticator and recovery codes.
+         *     Needs `users.mfa.reset` (platform owner only) with global scope. 403
+         *     when the target is the caller (use a recovery code instead) and when
+         *     the target is a platform owner and the caller is not one. 404 for an
+         *     unknown id or a user without a live staff grant. Deletes the factor
+         *     and every recovery code in one transaction with the audit row
+         *     `auth.mfa_reset` (reason and target id, never a code), and ends the
+         *     person's stored sessions; any other session ends on its next
+         *     request. They sign in with the password and must set up two-step
+         *     sign-in again (deployed environments), or sign in with the password
+         *     alone (local and testing).
+         */
+        post: operations["adminUsersMfaReset"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1152,6 +1211,45 @@ export interface operations {
         };
         responses: {
             /** @description Confirmed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            recovery_codes: string[];
+                        };
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    meMfaRecoveryCodesRegenerate: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    code: string;
+                };
+            };
+        };
+        responses: {
+            /** @description New codes. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -1983,6 +2081,40 @@ export interface operations {
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+        };
+    };
+    adminUsersMfaReset: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path: {
+                /** @description Id of a staff member. Letter case is ignored. */
+                user: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Why the reset was approved, for the audit trail. Never put a secret here. */
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Reset. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            422: components["responses"]["Error"];
         };
     };
     adminAuditLogsIndex: {

@@ -42,6 +42,7 @@ class RouteInventoryTest extends TestCase
             'PATCH api/v1/admin/zones/{zone}',
             'POST api/v1/admin/cities',
             'POST api/v1/admin/cities/{city}/zones',
+            'POST api/v1/admin/users/{user}/mfa/reset',
             'POST api/v1/admin/zones/{zone}/activate',
             'POST api/v1/admin/zones/{zone}/archive',
             'POST api/v1/admin/zones/{zone}/exclusions',
@@ -55,6 +56,7 @@ class RouteInventoryTest extends TestCase
             'POST api/v1/auth/password/reset',
             'POST api/v1/auth/register',
             'POST api/v1/locations/serviceability',
+            'POST api/v1/me/mfa/recovery-codes',
             'POST api/v1/me/mfa/totp',
             'POST api/v1/me/mfa/totp/confirm',
         ], $registered);

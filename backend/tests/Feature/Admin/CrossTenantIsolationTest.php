@@ -94,6 +94,9 @@ class CrossTenantIsolationTest extends AuthTestCase
     {
         $registered = collect(Route::getRoutes()->getRoutes())
             ->filter(fn (RoutingRoute $route): bool => str_starts_with($route->uri(), 'api/v1/admin/') && $route->parameterNames() !== [])
+            // Not tied to a city record: deployment-wide `users.mfa.reset`, 403 for any city grant
+            // (StaffMfaRecoveryTest::test_city_scoped_staff_get_403_even_if_their_role_were_granted_the_permission).
+            ->reject(fn (RoutingRoute $route): bool => $route->getName() === 'admin.users.mfa.reset')
             ->map(fn (RoutingRoute $route): string => (string) $route->getName())
             ->sort()->values()->all();
 

@@ -50,6 +50,7 @@ Route::middleware(EnsureSurfaceSession::class)->group(function (): void {
     Route::get('/me', [AuthController::class, 'me'])->name('me.show');
     Route::post('/me/mfa/totp', [MfaController::class, 'start'])->name('me.mfa.totp.start');
     Route::post('/me/mfa/totp/confirm', [MfaController::class, 'confirm'])->name('me.mfa.totp.confirm');
+    Route::post('/me/mfa/recovery-codes', [MfaController::class, 'regenerateRecoveryCodes'])->name('me.mfa.recovery-codes.regenerate');
 
     // Staff. Each action checks its own permission and scope (ADR-005).
     Route::middleware(EnsureAdminSurface::class)->prefix('admin')->group(function (): void {
@@ -67,6 +68,7 @@ Route::middleware(EnsureSurfaceSession::class)->group(function (): void {
         Route::get('/zones/{zone}/exclusions', [ExclusionController::class, 'index'])->name('admin.exclusions.index');
         Route::post('/zones/{zone}/exclusions', [ExclusionController::class, 'store'])->name('admin.exclusions.store');
         Route::delete('/exclusions/{exclusion}', [ExclusionController::class, 'destroy'])->name('admin.exclusions.destroy');
+        Route::post('/users/{user}/mfa/reset', [MfaController::class, 'reset'])->name('admin.users.mfa.reset');
         Route::get('/audit-logs', [OversightController::class, 'auditLogs'])->name('admin.audit-logs.index');
         Route::get('/system/status', [OversightController::class, 'systemStatus'])->name('admin.system.status');
     });

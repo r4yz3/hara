@@ -116,3 +116,75 @@ export function safeReturnPath(candidate: string | null | undefined, fallback = 
 
   return candidate;
 }
+
+// ---- Staff two-step sign-in (admin app only) ----
+
+/** The 403 the API gives a staff session that must enrol before anything else. */
+export const ENROLMENT_ONLY_MESSAGE = "Set up two-step sign-in before using the admin console.";
+
+export function isEnrolmentOnly(failure: { kind: string; message?: string }): boolean {
+  return failure.kind === "forbidden" && failure.message === ENROLMENT_ONLY_MESSAGE;
+}
+
+/** A failure plus the 409 the enrolment routes can answer. */
+export type MfaFailure = Failure | { kind: "conflict"; message: string };
+export type MfaResult<T> = { ok: true; value: T } | { ok: false; failure: MfaFailure };
+
+export type PasswordStep = { step: "signed_in"; user: CurrentUser } | { step: "code_required" };
+
+async function toMfaFailure(response: Response): Promise<MfaFailure> {
+  if (response.status === 409) {
+    const body = (await response.clone().json().catch(() => ({}))) as ErrorBody;
+    return { kind: "conflict", message: body.error?.message ?? "Two-step sign-in is already set up." };
+  }
+
+  return toFailure(response);
+}
+
+async function mfaPost<T>(path: string, payload: unknown, read: (body: unknown) => T): Promise<MfaResult<T>> {
+  const response = await post(path, payload);
+  if (!(response instanceof Response)) return { ok: false, failure: response };
+  if (!response.ok) return { ok: false, failure: await toMfaFailure(response) };
+
+  return { ok: true, value: read(await response.json()) };
+}
+
+/** Password step for an app that has a second step: the API may ask for a code. */
+export async function signInFirstStep(email: string, password: string): Promise<Result<PasswordStep>> {
+  const payload: operations["authLogin"]["requestBody"]["content"]["application/json"] = { email, password };
+  const response = await post("/api/v1/auth/login", payload);
+  if (!(response instanceof Response)) return { ok: false, failure: response };
+  if (!response.ok) return { ok: false, failure: await toFailure(response) };
+
+  const body = (await response.json()) as Schemas["CurrentUserResponse"] | Schemas["MfaRequiredResponse"];
+  if ("mfa_required" in body.data) return { ok: true, value: { step: "code_required" } };
+
+  return { ok: true, value: { step: "signed_in", user: body.data } };
+}
+
+/** Second step: an authenticator code or one recovery code. */
+export async function verifySecondStep(input: { code: string } | { recovery_code: string }): Promise<Result<CurrentUser>> {
+  const payload: operations["authMfaVerify"]["requestBody"]["content"]["application/json"] = input;
+  const result = await mfaPost("/api/v1/auth/mfa/verify", payload, (body) => (body as Schemas["CurrentUserResponse"]).data);
+  if (result.ok || result.failure.kind !== "conflict") return result as Result<CurrentUser>;
+
+  return { ok: false, failure: { kind: "unavailable" } };
+}
+
+export type TotpEnrolment = { secret: string; otpauthUri: string };
+
+export function startTotpEnrolment(): Promise<MfaResult<TotpEnrolment>> {
+  return mfaPost("/api/v1/me/mfa/totp", undefined, (body) => {
+    const data = (body as operations["meMfaTotpStart"]["responses"][201]["content"]["application/json"]).data;
+    return { secret: data.secret, otpauthUri: data.otpauth_uri };
+  });
+}
+
+export function confirmTotpEnrolment(code: string): Promise<MfaResult<string[]>> {
+  const payload: operations["meMfaTotpConfirm"]["requestBody"]["content"]["application/json"] = { code };
+  return mfaPost(
+    "/api/v1/me/mfa/totp/confirm",
+    payload,
+    (body) => (body as operations["meMfaTotpConfirm"]["responses"][200]["content"]["application/json"]).data.recovery_codes,
+  );
+}

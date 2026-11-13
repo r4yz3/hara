@@ -25,6 +25,7 @@ return [
         'riders.read',
         'users.read',
         'users.roles.assign',
+        'users.mfa.reset',
         'audit.read',
         'system.status.read',
         'flags.write',

@@ -22,7 +22,8 @@ return [
 
     'allowed_headers' => ['Accept', 'Content-Type', 'X-CSRF-TOKEN', 'X-Requested-With', 'X-Request-Id', 'Idempotency-Key'],
 
-    'exposed_headers' => ['X-Request-Id'],
+    // Retry-After lets the sign-in screens show how long to wait after a 429.
+    'exposed_headers' => ['X-Request-Id', 'Retry-After'],
 
     'max_age' => 600,
 

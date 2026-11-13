@@ -151,7 +151,7 @@ class AuthController extends Controller
         RateLimiter::clear($throttleKey);
         $mfa->recordVerified($user->id, $method, $request->ip(), AssignRequestId::for($request));
 
-        $this->startSession($request, $user, $surface, ['mfa_verified' => true]);
+        $this->startSession($request, $user, $surface, ['mfa_verified' => true, 'mfa_factor' => $mfa->confirmedFactorId($user->id)]);
 
         return ApiResponse::data($request, (new CurrentUserResource($user, $surface))->toArray());
     }
@@ -203,7 +203,7 @@ class AuthController extends Controller
     }
 
     /**
-     * @param  array<string, bool>  $flags  session facts about how this sign-in was earned
+     * @param  array<string, bool|string|null>  $flags  session facts about how this sign-in was earned
      */
     private function startSession(Request $request, User $user, string $surface, array $flags): void
     {

@@ -2,6 +2,28 @@
 
 Last updated: 2026-11-14. Phase 1 has working browser authentication, rider token endpoints, and city, zone and serviceability APIs. Sprint 8 acceptance remains open.
 
+## November 14 staff two-step sign-in: screens and recovery (B-09)
+
+Evidence: `docs/qa/evidence/phase1-2026-11-14-mfa-check.txt` (`dev.ps1 check`, exit 0; 485 backend tests) and `phase1-2026-11-14-mfa-browser.txt` (`pnpm test:browser --workers=2`, exit 0; 171 passed, 3 opt-in skips). Both were run after all three agents had finished.
+
+- **Admin screens (Sonnet subagent, reviewed):**
+  - After the password, the admin sign-in shows a code step, with a recovery-code option, inline 401/422/429 messages and no double submit.
+  - `/security` sets up two-step sign-in: the key shown in groups, a setup link, a confirm code, then 10 recovery codes behind an "I have saved these codes" checkbox.
+  - Secrets and codes stay in component state only: never in a URL, storage or the console. A test checks this.
+  - Customer and merchant sign-in are unchanged. 15 browser tests at 3 viewports.
+- **Recovery (Sonnet subagent, reviewed):**
+  - `POST /api/v1/admin/users/{user}/mfa/reset` (new permission `users.mfa.reset`, platform owner only) clears a staff member's factor and codes. It needs a reason, is audited, and refuses resetting yourself.
+  - `POST /api/v1/me/mfa/recovery-codes` replaces all recovery codes after a current code.
+  - Gate fix found by the agent: after a reset, an old session survived in local/testing. A session now records which factor it passed and ends if that factor is gone or replaced, in every environment.
+  - StaffMfaRecoveryTest (31).
+- **Fixed by me:** the API did not expose `Retry-After` across origins, so the sign-in screens could not show how long to wait after a 429. CORS now exposes it (BrowserBoundaryTest).
+- **Not done:**
+  - no QR code (no QR library added);
+  - no way to turn two-step sign-in off;
+  - only the sign-in flow and `/security` send an enrolment-only session to setup; other screens show the generic forbidden message;
+  - city-scoped staff get 403, not 404, on the reset route, which is excluded from the cross-tenant 404 list as deployment-wide;
+  - the recovery-code design still awaits product owner review.
+
 ## November 14 UI state matrix (U-03)
 
 - Built by a Sonnet subagent and reviewed before commit. `docs/qa/ui-state-matrix.md` maps 9 views against the 9 states in spec 8.7: 48 covered by a named test, 28 not applicable with a reason, 5 gaps.
