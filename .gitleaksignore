@@ -1,6 +1,9 @@
 # Reviewed false positives for the secret scan (gitleaks). One fingerprint per
-# line: commit:file:rule:line. Add one only after reading the flagged text.
+# line: commit:file:rule:line. Add one only after reading the flagged text, and
+# never quote the flagged text in a comment here (it gets flagged again).
 
-# 2026-11-14: "api container: libpq-18.7-r0" is a package version in E-04 scan
-# evidence, matched by the generic-api-key rule because of the word "api".
+# 2026-11-14: a package name and version in E-04 scan evidence, matched by the
+# generic-api-key rule because the line also contains the word "api".
 1f0ab7c8b1f95cbaf4277389553f5dd9aa4cdf55:docs/qa/evidence/sprint7-container-scan-check.txt:generic-api-key:31
+# 2026-11-14: the same text, quoted in an earlier version of this file's comment.
+991772a45fc3cb65ef3f98967efe31dc7a1c10c3:.gitleaksignore:generic-api-key:4
