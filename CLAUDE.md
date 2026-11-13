@@ -38,3 +38,5 @@ Windows 11, PowerShell primary. Docker Desktop is installed; start it before `de
 - Demo sign-in: set `DEMO_PASSWORD` in the local `.env`, restart the stack, run `dev.ps1 seed-demo`; accounts are `demo-owner@example.test` and `demo-customer@example.test`. Never put the value in a tracked file.
 - Never put a position, address or other personal data in a URL. The serviceability check is a POST for this reason (ADR-013).
 - A new public route must be added to the list in `backend/tests/Feature/RouteCoverageTest.php` on purpose; everything else must sit behind the session guard.
+- `.\infra\scripts\dev.ps1 backup` and `restore-drill` back up the development database to the git-ignored `infra/backups/` and verify a restore into a scratch database. Backup files hold personal data: never commit or share them.
+- With `APP_ENV=production` the API refuses to serve unless `App\Support\ProductionGuard` is satisfied; a new production-critical setting should get a rule and a test there.

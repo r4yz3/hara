@@ -1,0 +1,35 @@
+﻿Command: .\infra\scripts\dev.ps1 backup, then .\infra\scripts\dev.ps1 restore-drill
+Date: 2026-11-13. Stack: local Docker (postgis/postgis:17-3.5-alpine). Source: the development database.
+Exit code of the drill: 0
+
+Using food_delivery-20261113-080131.dump
+==> copy backup in
+==> copy script in
+==> restore and verify
+source database:  food_delivery
+scratch database: restore_drill_20261113080151
+backup sha256:    c39854c8e724f94c6ee304af8bfb9f15950bb4ed90d27e3fa105f4cf0d509991
+restore time: 1s
+
+PASS  1. row counts match for 31 tables
+        audit_logs: 6 rows
+        cities: 2 rows
+        delivery_zones: 2 rows
+        migrations: 9 rows
+        permissions: 14 rows
+        role_permissions: 47 rows
+        roles: 11 rows
+        user_role_scopes: 2 rows
+        users: 2 rows
+PASS  2. migration ledger identical
+PASS  3a. zone shapes byte-identical
+PASS  3b. exclusion shapes byte-identical
+PASS  3c. no invalid shape after restore
+PASS  4. spatial indexes present
+PASS  5a. audit triggers present
+PASS  5b. audit log refuses UPDATE
+PASS  5c. audit log refuses DELETE
+PASS  6. serviceability lookup gives the same zone
+
+RESTORE DRILL PASSED. Scratch database restore_drill_20261113080151 is removed on exit.
+

@@ -3,7 +3,7 @@
 
 COMPOSE := docker compose -f infra/compose.yaml --env-file .env
 
-.PHONY: setup up down migrate seed-demo check logs
+.PHONY: setup up down migrate seed-demo check logs backup restore-drill
 
 setup:
 	test -f .env || cp .env.example .env
@@ -25,6 +25,19 @@ migrate:
 
 seed-demo:
 	$(COMPOSE) exec -T api php artisan db:seed --class=DevelopmentSeeder
+
+# The dump holds personal data. infra/backups/ is git-ignored; keep it that way.
+backup:
+	mkdir -p infra/backups
+	$(COMPOSE) cp infra/scripts/db-backup.sh postgres:/tmp/db-backup.sh
+	$(COMPOSE) exec -T postgres sh /tmp/db-backup.sh
+	$(COMPOSE) cp postgres:/tmp/backup.dump infra/backups/food_delivery-$$(date -u +%Y%m%d-%H%M%S).dump
+
+# Restores the newest backup into a scratch database, verifies it, removes the scratch database.
+restore-drill:
+	$(COMPOSE) cp "$$(ls infra/backups/*.dump | sort | tail -n 1)" postgres:/tmp/backup.dump
+	$(COMPOSE) cp infra/scripts/db-restore-drill.sh postgres:/tmp/db-restore-drill.sh
+	$(COMPOSE) exec -T postgres sh /tmp/db-restore-drill.sh
 
 logs:
 	$(COMPOSE) logs -f --tail 200

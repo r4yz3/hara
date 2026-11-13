@@ -99,10 +99,10 @@ Status key: `todo`, `blocked`, `done`.
 |---|---|---|---|---|
 | E-01 | Structured logs with request IDs and the named events | Events from spec 11.3 emitted; no exact customer coordinates logged | A-04 | todo |
 | E-02 | CSP, CORS, cookie review | Negative tests pass | B-02 | todo |
-| E-03 | Backup and restore script and drill | Restore into a new database; migrations and spatial data verified; evidence recorded | D-01 | todo |
+| E-03 | Backup and restore script and drill | Restore into a new database; migrations and spatial data verified; evidence recorded | D-01 | done locally: backup and restore-drill tasks, drill run and passed against the development database (`docs/qa/evidence/restore-drill.txt`); no schedule, off-machine copy, encryption or fault-injection case (`docs/operations/backups.md`) |
 | E-04 | Security scans in CI | Secret scan, dependency audits, container scan; findings classified | A-11 | todo |
 | E-05 | Deploy, rollback and incident runbooks | `docs/operations/` complete; rollback rehearsed | A-05 | todo |
-| E-06 | Production-config test | No debug routes, `APP_DEBUG=false`, seeders refuse | A-04 | todo |
+| E-06 | Production-config test | No debug routes, `APP_DEBUG=false`, seeders refuse | A-04 | done: ProductionGuard refuses to serve in production with unsafe settings (24 tests, plus a real production-mode start that was refused); seeders already refuse; reads application settings only |
 | E-07 | Staging environment (human provides hosting) | Repeatable deploy; domains satisfy ADR-011 | E-05 | blocked (human) |
 
 ## Sprint 8 — acceptance

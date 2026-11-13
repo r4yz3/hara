@@ -60,7 +60,7 @@
 
 ## Residual risks and open items
 
-- T05 and the MFA factor (ADR-011) are unresolved. Privileged production login stays blocked until both are closed.
+- The MFA factor (ADR-011) is not built; T05 is closed. Privileged production login stays blocked until both are closed.
 - Tamper detection for the audit log (hash chain or external sink) is not designed.
 - Audit and personal-data retention periods are not defined; they depend on the privacy review.
 - No penetration test is planned inside Phase 1; it belongs to Phase 6.

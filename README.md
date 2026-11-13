@@ -31,6 +31,8 @@ Git, Node 22 or later, pnpm 9.15.9, PHP 8.3 or later with Composer, Flutter stab
 .\infra\scripts\dev.ps1 migrate    # needs Docker
 .\infra\scripts\dev.ps1 down       # stop the stack, keep data
 .\infra\scripts\dev.ps1 logs
+.\infra\scripts\dev.ps1 backup          # dump the dev database to infra/backups (git-ignored)
+.\infra\scripts\dev.ps1 restore-drill   # restore the newest backup into a scratch database and verify it
 pnpm dev:customer                  # or dev:merchant, dev:admin
 ```
 

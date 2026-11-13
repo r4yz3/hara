@@ -7,7 +7,7 @@
 #>
 param(
     [Parameter(Mandatory = $true, Position = 0)]
-    [ValidateSet('setup', 'up', 'down', 'migrate', 'seed-demo', 'check', 'logs')]
+    [ValidateSet('setup', 'up', 'down', 'migrate', 'seed-demo', 'check', 'logs', 'backup', 'restore-drill')]
     [string]$Task
 )
 
@@ -61,6 +61,29 @@ try {
             Assert-Docker
             # Synthetic demo city and zone. The seeder refuses to run outside local and testing.
             Invoke-Step 'seed demo data' { docker @Compose exec -T api php artisan db:seed --class=DevelopmentSeeder }
+        }
+        'backup' {
+            Assert-Docker
+            # The dump holds personal data. infra/backups/ is git-ignored; keep it that way.
+            $dir = Join-Path $Root 'infra\backups'
+            New-Item -ItemType Directory -Force $dir | Out-Null
+            $file = Join-Path $dir ("food_delivery-{0}.dump" -f (Get-Date).ToUniversalTime().ToString('yyyyMMdd-HHmmss'))
+            # Copied in, not piped: PowerShell appends a carriage return when piping to a native command.
+            Invoke-Step 'copy script in' { docker @Compose cp (Join-Path $Root 'infra\scripts\db-backup.sh') postgres:/tmp/db-backup.sh }
+            Invoke-Step 'dump database' { docker @Compose exec -T postgres sh /tmp/db-backup.sh }
+            Invoke-Step 'copy backup out' { docker @Compose cp postgres:/tmp/backup.dump $file }
+            Write-Host "Backup written to $file"
+        }
+        'restore-drill' {
+            Assert-Docker
+            # Restores the newest backup into a scratch database, verifies it, removes the scratch database.
+            $latest = Get-ChildItem (Join-Path $Root 'infra\backups') -Filter '*.dump' -ErrorAction SilentlyContinue |
+                Sort-Object Name | Select-Object -Last 1
+            if (-not $latest) { throw 'No backup found in infra\backups. Run the backup task first.' }
+            Write-Host "Using $($latest.Name)"
+            Invoke-Step 'copy backup in' { docker @Compose cp $latest.FullName postgres:/tmp/backup.dump }
+            Invoke-Step 'copy script in' { docker @Compose cp (Join-Path $Root 'infra\scripts\db-restore-drill.sh') postgres:/tmp/db-restore-drill.sh }
+            Invoke-Step 'restore and verify' { docker @Compose exec -T postgres sh /tmp/db-restore-drill.sh }
         }
         'logs' {
             Assert-Docker
