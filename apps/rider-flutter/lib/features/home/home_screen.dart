@@ -19,7 +19,8 @@ class HomeScreen extends StatelessWidget {
   final VoidCallback? onSignOut;
 
   static const notBuiltYet = <String>[
-    'Sign-in and device registration',
+    // Sign-in works; the token is held in memory only.
+    'Staying signed in after the app closes, and notifications',
     'Shifts and delivery offers',
     'Pickup and delivery routes',
     'Earnings and cash remittance',
