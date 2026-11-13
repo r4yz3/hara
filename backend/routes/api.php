@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Admin\CityController;
+use App\Http\Controllers\Api\V1\Admin\ExclusionController;
 use App\Http\Controllers\Api\V1\Admin\ZoneController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\PublicGeoController;
@@ -43,5 +44,8 @@ Route::middleware(EnsureSurfaceSession::class)->group(function (): void {
         Route::post('/zones/{zone}/activate', [ZoneController::class, 'activate'])->name('admin.zones.activate');
         Route::post('/zones/{zone}/pause', [ZoneController::class, 'pause'])->name('admin.zones.pause');
         Route::post('/zones/{zone}/archive', [ZoneController::class, 'archive'])->name('admin.zones.archive');
+        Route::get('/zones/{zone}/exclusions', [ExclusionController::class, 'index'])->name('admin.exclusions.index');
+        Route::post('/zones/{zone}/exclusions', [ExclusionController::class, 'store'])->name('admin.exclusions.store');
+        Route::delete('/exclusions/{exclusion}', [ExclusionController::class, 'destroy'])->name('admin.exclusions.destroy');
     });
 });

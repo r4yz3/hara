@@ -593,6 +593,100 @@ paths:
         "404": { $ref: "#/components/responses/Error" }
         "409": { $ref: "#/components/responses/Error" }
         "422": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/zones/{zone}/exclusions:
+    parameters:
+      - name: zone
+        in: path
+        required: true
+        schema: { type: string }
+        description: Zone id. Letter case is ignored.
+    get:
+      tags: [Admin]
+      summary: List a zone's coverage exclusions
+      description: Needs `zones.read` for the zone's city; 404 otherwise. Includes exclusions whose window has ended or not started.
+      operationId: adminExclusionsIndex
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Cursor" }
+      responses:
+        "200":
+          description: One page of exclusions, sorted by id.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Exclusion" }
+                  meta: { $ref: "#/components/schemas/PageMeta" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+    post:
+      tags: [Admin]
+      summary: Exclude an area from a zone
+      description: |
+        Needs `zones.write` for the zone's city. Points inside the shape,
+        its boundary included, stop being serviceable while the exclusion is
+        in force: from `active_from` (or at once) until `active_until` (or
+        until it is deleted). The shape gets the same checks as a zone and
+        must overlap the zone. Exclusions are not edited: delete and add.
+        409 if the zone is archived.
+      operationId: adminExclusionsStore
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason, geometry]
+              properties:
+                reason: { type: string, minLength: 1, maxLength: 255 }
+                geometry: { $ref: "#/components/schemas/ZoneGeometryInput" }
+                active_from: { type: [string, "null"], format: date-time, description: With an offset or Z. Stored in UTC. }
+                active_until: { type: [string, "null"], format: date-time, description: Must be after `active_from`. }
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data: { $ref: "#/components/schemas/Exclusion" }
+                  meta: { $ref: "#/components/schemas/Meta" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/exclusions/{exclusion}:
+    parameters:
+      - name: exclusion
+        in: path
+        required: true
+        schema: { type: string }
+        description: Exclusion id. Letter case is ignored.
+    delete:
+      tags: [Admin]
+      summary: Remove a coverage exclusion
+      description: Needs `zones.write` for the city of the exclusion's zone. The removal is audited with the reason and window.
+      operationId: adminExclusionsDestroy
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      responses:
+        "204":
+          description: Removed.
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
 security:
   - sessionCookie: []
 components:
@@ -696,6 +790,25 @@ components:
       properties:
         data: { $ref: "#/components/schemas/Zone" }
         meta: { $ref: "#/components/schemas/Meta" }
+    Exclusion:
+      type: object
+      additionalProperties: false
+      required: [id, zone_id, reason, active_from, active_until, geometry, created_at, updated_at]
+      properties:
+        id: { type: string, pattern: "^[0-9a-z]{26}$" }
+        zone_id: { type: string, pattern: "^[0-9a-z]{26}$" }
+        reason: { type: string }
+        active_from: { type: [string, "null"], format: date-time }
+        active_until: { type: [string, "null"], format: date-time }
+        geometry:
+          type: object
+          description: GeoJSON MultiPolygon.
+          required: [type, coordinates]
+          properties:
+            type: { type: string, enum: [MultiPolygon] }
+            coordinates: { type: array, items: {} }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
     PublicCity:
       type: object
       additionalProperties: false

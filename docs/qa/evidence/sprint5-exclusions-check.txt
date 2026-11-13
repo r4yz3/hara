@@ -1,0 +1,466 @@
+==> web lint
+
+> food-delivery@ lint F:\PROJECTS\hara
+> pnpm -r --if-present lint
+
+Scope: 9 of 10 workspace projects
+apps/admin-web lint$ eslint
+apps/customer-web lint$ eslint
+apps/merchant-web lint$ eslint
+apps/merchant-web lint: Done
+apps/admin-web lint: Done
+apps/customer-web lint: Done
+==> web typecheck
+
+> food-delivery@ typecheck F:\PROJECTS\hara
+> pnpm -r --if-present typecheck
+
+Scope: 9 of 10 workspace projects
+apps/admin-web typecheck$ next typegen && tsc --noEmit
+apps/customer-web typecheck$ next typegen && tsc --noEmit
+apps/merchant-web typecheck$ next typegen && tsc --noEmit
+apps/customer-web typecheck: Generating route types...
+apps/merchant-web typecheck: Generating route types...
+apps/admin-web typecheck: Generating route types...
+apps/merchant-web typecheck: ✓ Types generated successfully
+apps/customer-web typecheck: ✓ Types generated successfully
+apps/admin-web typecheck: ✓ Types generated successfully
+apps/admin-web typecheck: Done
+apps/customer-web typecheck: Done
+apps/merchant-web typecheck: Done
+==> web tests
+
+> food-delivery@ test F:\PROJECTS\hara
+> pnpm -r --if-present test
+
+Scope: 9 of 10 workspace projects
+packages/design-tokens test$ node --test
+packages/design-tokens test: ✔ contrast ratio matches the WCAG reference values (1.1863ms)
+packages/design-tokens test: ✔ rejects colours that are not #rrggbb (0.2796ms)
+packages/design-tokens test: ✔ light and dark define the same tokens (0.6832ms)
+packages/design-tokens test: ✔ every approved pair meets its threshold in both themes (0.5384ms)
+packages/design-tokens test: ✔ restricted tokens really do fail, so the restriction is not stale (0.1586ms)
+packages/design-tokens test: ✔ tokens.css is up to date with tokens.mjs (0.5268ms)
+packages/design-tokens test: ✔ contrast report is up to date with tokens.mjs (1.3021ms)
+packages/design-tokens test: ✔ the rider app's Dart tokens are up to date with tokens.mjs (0.4618ms)
+packages/design-tokens test: ℹ tests 8
+packages/design-tokens test: ℹ suites 0
+packages/design-tokens test: ℹ pass 8
+packages/design-tokens test: ℹ fail 0
+packages/design-tokens test: ℹ cancelled 0
+packages/design-tokens test: ℹ skipped 0
+packages/design-tokens test: ℹ todo 0
+packages/design-tokens test: ℹ duration_ms 102.0674
+packages/design-tokens test: Done
+==> web build
+
+> food-delivery@ build F:\PROJECTS\hara
+> pnpm -r --if-present build
+
+Scope: 9 of 10 workspace projects
+packages/design-tokens build$ node src/build.mjs
+packages/design-tokens build: Wrote tokens.css, the contrast report and the rider app's tokens.g.dart
+packages/design-tokens build: Done
+apps/admin-web build$ next build
+apps/merchant-web build$ next build
+apps/customer-web build$ next build
+apps/admin-web build: ▲ Next.js 16.4.6 (Turbopack)
+apps/customer-web build: ▲ Next.js 16.4.6 (Turbopack)
+apps/merchant-web build: ▲ Next.js 16.4.6 (Turbopack)
+apps/admin-web build: ✓ Running next.config.ts took 37ms
+apps/customer-web build: ✓ Running next.config.ts took 36ms
+apps/merchant-web build: ✓ Running next.config.ts took 36ms
+apps/admin-web build: - Cache Components enabled
+apps/admin-web build: - Partial Prefetching enabled
+apps/merchant-web build: - Cache Components enabled
+apps/merchant-web build: - Partial Prefetching enabled
+apps/admin-web build:   Creating an optimized production build ...
+apps/merchant-web build:   Creating an optimized production build ...
+apps/customer-web build: - Cache Components enabled
+apps/customer-web build: - Partial Prefetching enabled
+apps/customer-web build:   Creating an optimized production build ...
+apps/admin-web build: ✓ Compiled successfully in 798ms
+apps/admin-web build:   Running TypeScript ...
+apps/merchant-web build: ✓ Compiled successfully in 920ms
+apps/merchant-web build:   Running TypeScript ...
+apps/customer-web build: ✓ Compiled successfully in 1709ms
+apps/customer-web build:   Running TypeScript ...
+apps/admin-web build:   Finished TypeScript in 1622ms ...
+apps/admin-web build:   Collecting page data using 6 workers ...
+apps/merchant-web build:   Finished TypeScript in 2.3s ...
+apps/admin-web build:   Generating static pages using 6 workers (0/5) ...
+apps/merchant-web build:   Collecting page data using 6 workers ...
+apps/customer-web build:   Finished TypeScript in 2.2s ...
+apps/customer-web build:   Collecting page data using 6 workers ...
+apps/merchant-web build:   Generating static pages using 6 workers (0/5) ...
+apps/admin-web build:   Generating static pages using 6 workers (1/5) 
+apps/admin-web build:   Generating static pages using 6 workers (2/5) 
+apps/admin-web build:   Generating static pages using 6 workers (3/5) 
+apps/admin-web build: ✓ Generating static pages using 6 workers (5/5) in 1605ms
+apps/admin-web build:   Finalizing page optimization ...
+apps/admin-web build: Route (app)
+apps/admin-web build: ┌ ◐ /
+apps/admin-web build: ├ ○ /_not-found
+apps/admin-web build: └ ○ /login
+apps/admin-web build: ○  (Static)             prerendered as static content
+apps/admin-web build: ◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content
+apps/customer-web build:   Generating static pages using 6 workers (0/5) ...
+apps/admin-web build: Done
+apps/merchant-web build:   Generating static pages using 6 workers (1/5) 
+apps/merchant-web build:   Generating static pages using 6 workers (2/5) 
+apps/merchant-web build:   Generating static pages using 6 workers (3/5) 
+apps/merchant-web build: ✓ Generating static pages using 6 workers (5/5) in 1071ms
+apps/merchant-web build:   Finalizing page optimization ...
+apps/merchant-web build: Route (app)
+apps/merchant-web build: ┌ ○ /
+apps/merchant-web build: ├ ○ /_not-found
+apps/merchant-web build: └ ○ /login
+apps/merchant-web build: ○  (Static)  prerendered as static content
+apps/customer-web build:   Generating static pages using 6 workers (1/5) 
+apps/customer-web build:   Generating static pages using 6 workers (2/5) 
+apps/customer-web build:   Generating static pages using 6 workers (3/5) 
+apps/customer-web build: ✓ Generating static pages using 6 workers (5/5) in 977ms
+apps/customer-web build:   Finalizing page optimization ...
+apps/customer-web build: Route (app)
+apps/customer-web build: ┌ ○ /
+apps/customer-web build: ├ ○ /_not-found
+apps/customer-web build: └ ○ /login
+apps/customer-web build: ○  (Static)  prerendered as static content
+apps/merchant-web build: Done
+apps/customer-web build: Done
+==> backend format
+
+  ............................................................................
+  ................................
+
+  ──────────────────────────────────────────────────────────────────── Laravel  
+    PASS   ......................................................... 108 files  
+
+==> backend static analysis
+Note: Using configuration file /var/www/backend/phpstan.neon.
+
+ [OK] No errors                                                                 
+
+==> backend tests
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Unit\ArchitectureTest[39m
+  [32;1m✓[39;22m[90m [39m[90mexpected domain modules exist[39m[90m                                       [39m [90m0.01s[39m  
+  [32;1m✓[39;22m[90m [39m[90mdomain code does not import http layer[39m[90m                              [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mmodules reference each other only through contracts[39m[90m                 [39m [90m0.04s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Unit\Domain\Geo\CoordinateBoundsTest[39m
+  [32;1m✓[39;22m[90m [39m[90maccepts values inside and on the bounds with data set "origin"[39m[90m      [39m [90m0.01s[39m  
+  [32;1m✓[39;22m[90m [39m[90maccepts values inside and on the bounds with data set "asymmetric"[39m
+  [32;1m✓[39;22m[90m [39m[90maccepts values inside and on the bounds with data set "north pole, date line"[39m
+  [32;1m✓[39;22m[90m [39m[90maccepts values inside and on the bounds with data set "south pole, antimeridian"[39m
+  [32;1m✓[39;22m[90m [39m[90maccepts values inside and on the bounds with data set "fractional"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects out of range and non finite values with data set "latitude just above"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects out of range and non finite values with data set "latitude just below"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects out of range and non finite values with data set "longitude just above"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects out of range and non finite values with data set "longitude just below"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects out of range and non finite values with data set "swapped asymmetric pair"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects out of range and non finite values with data set "latitude na n"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects out of range and non finite values with data set "longitude na n"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects out of range and non finite values with data set "latitude infinite"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects out of range and non finite values with data set "longitude negative infinite"[39m
+  [32;1m✓[39;22m[90m [39m[90mgeojson position is longitude then latitude[39m
+  [32;1m✓[39;22m[90m [39m[90mreads a geojson position as longitude then latitude[39m
+  [32;1m✓[39;22m[90m [39m[90mgeojson position ignores altitude[39m
+  [32;1m✓[39;22m[90m [39m[90minteger json numbers are accepted in positions[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed geojson positions with data set "empty"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed geojson positions with data set "one value"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed geojson positions with data set "four values"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed geojson positions with data set "numeric strings"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed geojson positions with data set "null"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed geojson positions with data set "boolean"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed geojson positions with data set "nested"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed geojson positions with data set "keyed"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed geojson positions with data set "swapped asymmetric pair"[39m
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Unit\Domain\Geo\ZoneGeometryValidatorTest[39m
+  [32;1m✓[39;22m[90m [39m[90maccepts a multipolygon and returns it unchanged[39m[90m                     [39m [90m0.02s[39m  
+  [32;1m✓[39;22m[90m [39m[90mwraps a polygon into a multipolygon[39m
+  [32;1m✓[39;22m[90m [39m[90mdrops altitude and casts integers[39m
+  [32;1m✓[39;22m[90m [39m[90mkeeps holes and multiple polygons[39m
+  [32;1m✓[39;22m[90m [39m[90mignores unknown members such as bbox[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "no type"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "point"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "feature wrapper"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "geometry collection"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "type is not a string"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "lower-case type"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "missing coordinates"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "coordinates not a list"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "keyed coordinates"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "empty multipolygon"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "polygon without rings"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "multipolygon with empty polygon"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "polygon depth given as multipolygon"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "multipolygon depth given as polygon"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "ring is not a list"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "ring too short"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "ring not closed"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "ring collapsed to a line"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "string coordinates"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "latitude out of range"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "axes swapped"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects more vertices than the cap[39m
+  [32;1m✓[39;22m[90m [39m[90maccepts exactly the vertex cap[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects an extent wider than the cap[39m
+  [32;1m✓[39;22m[90m [39m[90mextent is measured across all polygons[39m
+  [32;1m✓[39;22m[90m [39m[90maccepts an extent within the cap[39m
+  [32;1m✓[39;22m[90m [39m[90mlimits must be positive[39m
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Unit\Support\Money\CurrencyAmountTest[39m
+  [32;1m✓[39;22m[90m [39m[90mholds minor units and currency[39m[90m                                      [39m [90m0.02s[39m  
+  [32;1m✓[39;22m[90m [39m[90mcurrency is normalized to upper case[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid currency codes with data set "empty"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid currency codes with data set "too short"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid currency codes with data set "too long"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid currency codes with data set "symbol"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid currency codes with data set "digits"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid currency codes with data set "padded"[39m
+  [32;1m✓[39;22m[90m [39m[90madds and subtracts exactly[39m
+  [32;1m✓[39;22m[90m [39m[90mamounts that break floats stay exact[39m
+  [32;1m✓[39;22m[90m [39m[90mis immutable[39m
+  [32;1m✓[39;22m[90m [39m[90msigned amounts are allowed[39m
+  [32;1m✓[39;22m[90m [39m[90mmultiplies by whole quantity[39m
+  [32;1m✓[39;22m[90m [39m[90mrefuses to combine different currencies[39m
+  [32;1m✓[39;22m[90m [39m[90mrefuses to compare different currencies[39m
+  [32;1m✓[39;22m[90m [39m[90mequals is false across currencies[39m
+  [32;1m✓[39;22m[90m [39m[90mcompares within a currency[39m
+  [32;1m✓[39;22m[90m [39m[90maddition overflow throws instead of becoming a float[39m
+  [32;1m✓[39;22m[90m [39m[90msubtraction overflow throws[39m
+  [32;1m✓[39;22m[90m [39m[90mmultiplication overflow throws[39m
+  [32;1m✓[39;22m[90m [39m[90mnegating the minimum integer throws[39m
+  [32;1m✓[39;22m[90m [39m[90mparses decimal strings without floats with data set "whole"[39m
+  [32;1m✓[39;22m[90m [39m[90mparses decimal strings without floats with data set "two decimals"[39m
+  [32;1m✓[39;22m[90m [39m[90mparses decimal strings without floats with data set "one decimal"[39m
+  [32;1m✓[39;22m[90m [39m[90mparses decimal strings without floats with data set "float-hostile"[39m
+  [32;1m✓[39;22m[90m [39m[90mparses decimal strings without floats with data set "another float-hostile"[39m
+  [32;1m✓[39;22m[90m [39m[90mparses decimal strings without floats with data set "negative"[39m
+  [32;1m✓[39;22m[90m [39m[90mparses decimal strings without floats with data set "zero"[39m
+  [32;1m✓[39;22m[90m [39m[90mparses decimal strings without floats with data set "large"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "empty"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "three decimals"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "thousands separator"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "currency symbol"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "exponent"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "trailing dot"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "leading dot"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "spaces"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "plus sign"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "words"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "out of range"[39m
+  [32;1m✓[39;22m[90m [39m[90mserializes to amount and currency only[39m
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\ApiErrorEnvelopeTest[39m
+  [32;1m✓[39;22m[90m [39m[90munknown api route returns the error envelope[39m[90m                        [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mevery api response carries a request id header matching the body[39m[90m    [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma well formed incoming request id is kept and a hostile one is repl[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mwrong method is reported without internals[39m[90m                          [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90munexpected errors reveal nothing even with debug on[39m[90m                 [39m [90m0.10s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\Auth\RegisterCustomerTest[39m
+  [32;1m✓[39;22m[90m [39m[90mregistration is closed unless the feature flag is on[39m[90m                [39m [90m0.74s[39m  
+  [32;1m✓[39;22m[90m [39m[90mregistration creates a customer and nothing more[39m[90m                    [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mrole scope and status in the request are ignored[39m[90m                    [39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90man existing email gets the same answer and changes nothing[39m[90m          [39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mweak or malformed input is a validation error[39m[90m                       [39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90mregistration is only offered on the customer surface[39m[90m                [39m [90m0.16s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\Auth\SessionAndMeTest[39m
+  [32;1m✓[39;22m[90m [39m[90mme requires a session[39m[90m                                               [39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90mme returns the user with grants and no secret fields[39m[90m                [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mrevoked grants do not appear in me[39m[90m                                  [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90mlogout ends the session[39m[90m                                             [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mlogout without a session is refused[39m[90m                                 [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma customer session is not valid on the admin surface[39m[90m                [39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma suspended user loses their session on the next request[39m[90m            [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mstaff lose the admin surface when their last staff grant is revoked[39m[90m [39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90mcsrf endpoint issues a token only to known origins[39m[90m                  [39m [90m0.16s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\Auth\SessionLoginTest[39m
+  [32;1m✓[39;22m[90m [39m[90mvalid credentials sign the user in on the customer surface[39m[90m          [39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90mresponse never contains secrets[39m[90m                                     [39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90memail is matched without regard to case or spaces[39m[90m                   [39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90mwrong password unknown account and suspended account look identical[39m[90m [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mlogin requires a known app origin[39m[90m                                   [39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90mmissing fields are a validation error[39m[90m                               [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma customer cannot sign in to the admin or merchant surface[39m[90m          [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mstaff sign in to the admin surface with its own cookie[39m[90m              [39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma revoked staff grant no longer opens the admin surface[39m[90m             [39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90mmerchant surface needs an active staff membership[39m[90m                   [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90madmin sign in is refused in production until two step verification[39m[90m… [39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90mrepeated failures are rate limited per account[39m[90m                      [39m [90m0.20s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\Geo\AdminCityTest[39m
+  [32;1m✓[39;22m[90m [39m[90madmin routes need a session[39m[90m                                         [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma customer session cannot reach admin routes[39m[90m                        [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mowner creates a draft city and it is audited[39m[90m                        [39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mstatus and id in a create request are ignored[39m[90m                       [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90minvalid city input is rejected field by field[39m[90m                       [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma slug can be used once[39m[90m                                             [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma city manager sees only their city and cannot create or edit[39m[90m       [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mstaff without city permissions get nothing[39m[90m                          [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mids are matched in any letter case and malformed ids are not found[39m[90m  [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90mowner edits safe fields only[39m[90m                                        [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90mstatus moves only along allowed transitions[39m[90m                         [39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90man archived city cannot be edited[39m[90m                                   [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90mlist is paged sorted and filterable[39m[90m                                 [39m [90m0.22s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\Geo\AdminExclusionTest[39m
+  [32;1m✓[39;22m[90m [39m[90mexclusion routes need a session[39m[90m                                     [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90man exclusion is created takes effect and is audited[39m[90m                 [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma time window is stored in utc and respected[39m[90m                        [39m [90m0.20s[39m  
+  [32;1m✓[39;22m[90m [39m[90minvalid input is rejected[39m[90m                                           [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90man exclusion must touch its zone[39m[90m                                    [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90man archived zone takes no exclusions[39m[90m                                [39m [90m0.20s[39m  
+  [32;1m✓[39;22m[90m [39m[90mlist and delete[39m[90m                                                     [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mdeleting the last exclusion restores service[39m[90m                        [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mpermission and city scope are enforced[39m[90m                              [39m [90m0.29s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\Geo\AdminZoneStatusTest[39m
+  [32;1m✓[39;22m[90m [39m[90mactivation needs explicit confirmation[39m[90m                              [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma draft zone in an active city activates and becomes serviceable[39m[90m    [39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma zone cannot activate unless its city is active[39m[90m                    [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mpause needs a reason and records it[39m[90m                                 [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mstatus moves only along allowed transitions[39m[90m                         [39m [90m0.28s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma stale version is a conflict[39m[90m                                       [39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mpermission and city scope are enforced[39m[90m                              [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mstatus routes need a session[39m[90m                                        [39m [90m0.18s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\Geo\AdminZoneTest[39m
+  [32;1m✓[39;22m[90m [39m[90mzone routes need a session[39m[90m                                          [39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90mowner creates a draft zone with version one and it is audited[39m[90m       [39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mstructurally invalid geometry is rejected[39m[90m                           [39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mself intersecting geometry is rejected by postgis[39m[90m                   [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90mother fields are validated and slug is unique per city[39m[90m              [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90man archived city takes no new zones[39m[90m                                 [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mcity scope is enforced[39m[90m                                              [39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mread only staff cannot write zones[39m[90m                                  [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mupdate bumps the version and is audited[39m[90m                             [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma stale version is a conflict and changes nothing[39m[90m                   [39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mupdate needs a version and valid geometry[39m[90m                           [39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90man archived zone cannot be edited[39m[90m                                   [39m [90m0.20s[39m  
+  [32;1m✓[39;22m[90m [39m[90mlist is paged and omits geometry[39m[90m                                    [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mmalformed ids are not found[39m[90m                                         [39m [90m0.21s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\Geo\ServiceabilityTest[39m
+  [32;1m✓[39;22m[90m [39m[90mnothing configured is not serviceable and invents no location[39m[90m       [39m [90m0.14s[39m  
+  [32;1m✓[39;22m[90m [39m[90mpoint inside an active zone of an active city is serviceable[39m[90m        [39m [90m0.14s[39m  
+  [32;1m✓[39;22m[90m [39m[90mboundary points count as inside[39m[90m                                     [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mpoint outside every zone is not serviceable[39m[90m                         [39m [90m0.12s[39m  
+  [32;1m✓[39;22m[90m [39m[90mswapped axes do not match[39m[90m                                           [39m [90m0.13s[39m  
+  [32;1m✓[39;22m[90m [39m[90mdraft paused and archived zones or cities are not serviceable[39m[90m       [39m [90m0.13s[39m  
+  [32;1m✓[39;22m[90m [39m[90man active exclusion removes its area including its boundary[39m[90m         [39m [90m0.12s[39m  
+  [32;1m✓[39;22m[90m [39m[90mexclusions outside their time window do not apply[39m[90m                   [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90moverlapping zones resolve by priority then id[39m[90m                       [39m [90m0.12s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma point excluded from the top zone falls through to the next[39m[90m        [39m [90m0.12s[39m  
+  [32;1m✓[39;22m[90m [39m[90minvalid coordinates are rejected before any query[39m[90m                   [39m [90m0.12s[39m  
+  [32;1m✓[39;22m[90m [39m[90mresponse never exposes geometry or internal fields[39m[90m                  [39m [90m0.12s[39m  
+  [32;1m✓[39;22m[90m [39m[90mpublic cities lists only active cities with public fields[39m[90m           [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mserviceability is rate limited[39m[90m                                      [39m [90m0.32s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\HealthTest[39m
+  [32;1m✓[39;22m[90m [39m[90mlive returns minimal body[39m[90m                                           [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mhealth routes run outside the session middleware[39m[90m                    [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mlive does not touch the session store[39m[90m                               [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mready is hidden from public addresses[39m[90m                               [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mready reports only dependency state to internal callers[39m[90m             [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mframework default health route is not registered[39m[90m                    [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mno later phase api routes exist[39m[90m                                     [39m [90m0.09s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\RouteInventoryTest[39m
+  [32;1m✓[39;22m[90m [39m[90monly expected routes are registered[39m[90m                                 [39m [90m0.08s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Integration\AccessCheckerTest[39m
+  [32;1m✓[39;22m[90m [39m[90ma user without grants is denied everything[39m[90m                          [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mcustomer and rider roles carry no permissions[39m[90m                       [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90mglobal grant covers every city[39m[90m                                      [39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90mcity grant covers its own city only[39m[90m                                 [39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90mscope does not add permissions the role lacks[39m[90m                       [39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90monly the owner may change feature flags[39m[90m                             [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mrevoked grant stops working immediately[39m[90m                             [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90msuspended user is denied even with a live grant[39m[90m                     [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mcity grant reaches branches in that city only[39m[90m                       [39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90mcity reach lists cities for query filtering[39m[90m                         [39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90mscope rejects malformed values[39m[90m                                      [39m [90m0.14s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Integration\AuditAndCatalogueTest[39m
+  [32;1m✓[39;22m[90m [39m[90msensitive values are redacted at any depth[39m[90m                          [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mrecorded entries are redacted and never hold the raw ip[39m[90m             [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mcatalogue is seeded exactly and reseeding changes nothing[39m[90m           [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90mcatalogue matches the accepted matrix[39m[90m                               [39m [90m0.20s[39m  
+  [32;1m✓[39;22m[90m [39m[90mreseeding removes a permission that left the catalogue[39m[90m              [39m [90m0.19s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Integration\MigrationRollbackTest[39m
+  [32;1m✓[39;22m[90m [39m[90mfresh rollback and remigrate[39m[90m                                        [39m [90m1.00s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Integration\RoleGrantServiceTest[39m
+  [32;1m✓[39;22m[90m [39m[90mowner grants a role and it is audited in the same step[39m[90m              [39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90mnobody can grant themselves a role[39m[90m                                  [39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma customer cannot grant anything[39m[90m                                    [39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90mplatform owner is never grantable even by an owner[39m[90m                  [39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90monboarding roles are not grantable through this service[39m[90m             [39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90man admin cannot grant a role at or above their own[39m[90m                  [39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma city manager can grant dispatcher in their city and nothing else[39m[90m  [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma city scoped admin cannot reach outside that city[39m[90m                  [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma role cannot be granted at a scope it does not support[39m[90m             [39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma grant needs a scope that exists[39m[90m                                   [39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90munknown roles and inactive targets are refused[39m[90m                      [39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe same grant cannot be made twice[39m[90m                                 [39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90mrevoking removes access and is audited[39m[90m                              [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90monly someone who could grant a role can revoke it[39m[90m                   [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma revoked grantor can no longer grant[39m[90m                               [39m [90m0.17s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Integration\SchemaTest[39m
+  [32;1m✓[39;22m[90m [39m[90mpostgis is available[39m[90m                                                [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mexpected tables exist[39m[90m                                               [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mno later phase tables exist[39m[90m                                         [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mgeometry columns have gist indexes[39m[90m                                  [39m [90m0.14s[39m  
+  [32;1m✓[39;22m[90m [39m[90mulids are stored in one case[39m[90m                                        [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mcity starts as draft and rejects unknown status[39m[90m                     [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mcity slug is unique[39m[90m                                                 [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mzone round trips as a multipolygon in lon lat order[39m[90m                 [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mboundary point is covered and outside point is not[39m[90m                  [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mself intersecting zone is rejected by the database[39m[90m                  [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mzone slug is unique within a city only[39m[90m                              [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mcity with zones cannot be deleted[39m[90m                                   [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mexclusion window must end after it starts[39m[90m                           [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mglobal grant has no scope id and scoped grant needs one[39m[90m             [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma live grant cannot be duplicated but can be regranted after revoca[39m[90m…[39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90maudit log is append only[39m[90m                                            [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90muser email must be lower case and status known[39m[90m                      [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mstatus and roles are not mass assignable[39m[90m                            [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90monly one default address per user[39m[90m                                   [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mdevelopment seeder creates labelled demo data once[39m[90m                  [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mdevelopment seeder creates demo accounts only when a password is co[39m[90m…[39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mdevelopment seeder refuses to run in production[39m[90m                     [39m [90m0.10s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Contract\OpenApiDocumentTest[39m
+  [32;1m✓[39;22m[90m [39m[90mdocument is openapi 3 1[39m[90m                                             [39m [90m0.12s[39m  
+  [32;1m✓[39;22m[90m [39m[90mdocumented operations equal registered routes[39m[90m                       [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mevery operation has an id and documents its errors[39m[90m                  [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90merror codes in the document match the renderer[39m[90m                      [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mlive error and health bodies use only documented fields[39m[90m             [39m [90m0.12s[39m  
+
+  [90mTests:[39m    [32;1m260 passed[39;22m[90m (1176 assertions)[39m
+  [90mDuration:[39m [39m27.45s[39m
+
+==> flutter analyze
+Analyzing rider-flutter...                                      
+No issues found! (ran in 2.0s)
+==> flutter test
+00:00 +0: loading F:/PROJECTS/hara/apps/rider-flutter/test/render_evidence_test.dart
+00:00 +0: F:/PROJECTS/hara/apps/rider-flutter/test/render_evidence_test.dart: render home (dark)
+00:00 +0 ~1: F:/PROJECTS/hara/apps/rider-flutter/test/render_evidence_test.dart: render home (light)
+00:00 +0 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart: home is labelled as a scaffold
+00:00 +1 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart: online toggle is off and disabled
+00:01 +2 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart: scaffold label is exposed to screen readers
+00:01 +3 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart: only the Home destination is enabled
+00:01 +4 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart: shows no invented money, distance or offer
+00:01 +5 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart: fits a narrow phone without overflow
+00:01 +6 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart: android manifest requests no location permission
+00:01 +7 ~2: All tests passed!
+All checks passed.
