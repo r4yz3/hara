@@ -1,6 +1,10 @@
+import { securityHeaders } from "@food-delivery/config/security-headers";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async headers() {
+    return securityHeaders();
+  },
   transpilePackages: ["@food-delivery/session", "@food-delivery/api-client"],
   cacheComponents: true,
   partialPrefetching: true,

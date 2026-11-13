@@ -26,6 +26,9 @@ RUN composer install --no-interaction --no-scripts --no-autoloader --prefer-dist
 COPY backend/ ./
 RUN composer dump-autoload --optimize
 
+# Do not announce the PHP version in an X-Powered-By header (E-02).
+RUN printf 'expose_php = Off\n' > "$PHP_INI_DIR/conf.d/zz-security.ini"
+
 EXPOSE 8000
 
 # --no-reload is required: without it `artisan serve` strips the container's

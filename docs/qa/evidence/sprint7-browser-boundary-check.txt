@@ -1,0 +1,56 @@
+# E-02 live checks against the Docker stack, 2026-11-13T13:19:56Z
+
+## 1. Headers on a public API response (no X-Powered-By expected)
+HTTP/1.1 200 OK
+Connection: close
+Cache-Control: no-store, private
+Content-Type: application/json
+X-RateLimit-Limit: 120
+X-RateLimit-Remaining: 119
+X-Request-Id: 01m7ah15eqddnmpv5p00fsgjv6
+Access-Control-Allow-Origin: http://localhost:3000
+Vary: Origin
+Access-Control-Allow-Credentials: true
+Access-Control-Expose-Headers: X-Request-Id
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Referrer-Policy: no-referrer
+Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'
+
+
+## 2. Headers on health
+HTTP/1.1 200 OK
+Connection: close
+Cache-Control: no-cache, private
+Content-Type: application/json
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Referrer-Policy: no-referrer
+Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'
+
+
+## 3. CSRF: sign-in from the admin origin with no CSRF token (expect 403: the error renderer maps a CSRF mismatch to FORBIDDEN, "The page expired")
+status 403
+
+## 4. CSRF: same request after fetching the token (expect 401, wrong password, so CSRF passed)
+status 401
+
+## 5. CSRF: a forged token (expect 403, as in 3)
+status 403
+
+## 6. Preflight from an unlisted origin (expect no Access-Control-Allow-Origin)
+HTTP/1.0 204 No Content
+Vary: Origin, Access-Control-Request-Method
+
+## 7. Customer web app (next dev, port 3000), GET /location
+HTTP/1.1 200 OK
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: camera=(), microphone=(), payment=(), usb=(), geolocation=(self)
+Content-Security-Policy: frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'
+
+## 8. Same page in the in-app browser: submitted the delivery-area check with synthetic coordinates 10.01, 100.01
+OPTIONS /api/v1/locations/serviceability -> 204, GET /api/v1/auth/csrf -> 200, POST /api/v1/locations/serviceability -> 200.
+Console errors: two 401s from the signed-out /me check (expected); no Content-Security-Policy violations.
+Merchant and admin apps use the same header module (packages/config) without geolocation; they were not started in this check.

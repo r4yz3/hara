@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\ResolveSurface;
+use App\Http\Middleware\SecurityHeaders;
 use App\Support\Errors\ApiErrorRenderer;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -21,6 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Every response, error pages and CORS preflights included (E-02).
+        $middleware->prepend(SecurityHeaders::class);
+
         // Order matters: the surface picks the session cookie name, so it
         // must run before Sanctum starts the session (ADR-011).
         $middleware->api(prepend: [
