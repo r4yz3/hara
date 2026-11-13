@@ -7,3 +7,5 @@
 1f0ab7c8b1f95cbaf4277389553f5dd9aa4cdf55:docs/qa/evidence/sprint7-container-scan-check.txt:generic-api-key:31
 # 2026-11-14: the same text, quoted in an earlier version of this file's comment.
 991772a45fc3cb65ef3f98967efe31dc7a1c10c3:.gitleaksignore:generic-api-key:4
+# 2026-11-14: the public RFC 6238 appendix B test secret in the TOTP unit test.
+713b5028383804947049f4f850a4a105f68fb807:backend/tests/Unit/Domain/Identity/TotpTest.php:generic-api-key:12
