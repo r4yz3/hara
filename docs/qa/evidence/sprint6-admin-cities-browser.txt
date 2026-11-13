@@ -1,0 +1,51 @@
+Admin cities and zones screens: browser run against the real API
+Date: 2026-11-13. App: http://localhost:3002 (next dev). API: Docker stack, development database.
+Account: demo-owner@example.test (platform owner, from DevelopmentSeeder).
+Method: the built-in browser, driven step by step; values below were read back from the page after each step.
+No screenshots: the browser pane would not draw for capture during this run, so this is a text record.
+
+1. /cities while signed out
+   Page showed: "You are signed out. Sign in and try again." with a Sign in link to /login?next=%2Fcities.
+
+2. Sign in from that link
+   Returned to /cities (the return path was honoured). List showed the seeded
+   "Demo City (synthetic, not a real place) | Active | ZZ · PHP · UTC".
+
+3. Create city, timezone left empty
+   Field message: "The timezone field is required." Form message: "Some fields need attention." Nothing created.
+
+4. Create city "Screen Check (synthetic)", country ZZ, timezone UTC
+   Short name auto-filled as "screen-check-synthetic".
+   Message: "Created Screen Check (synthetic) as a draft." The list gained the city as Draft.
+   Finding fixed during the run: browsers omit "UTC" from their timezone list, so it could not be chosen; it is now added.
+
+5. Open the city; add a zone with a self-crossing shape
+   Field message: "The shape is not valid: it crosses itself or has a misplaced hole." Nothing created.
+
+6. Add zone "Check Zone (synthetic)" with a valid 0.02-degree square at longitude 60, latitude -20
+   Message: "Added Check Zone (synthetic) as a draft." Row: "Draft · check-zone · priority 0 · version 1".
+
+7. Activate the zone while the city is a draft
+   Refused: "A zone can be activated only in an active city." Zone stayed Draft, version 1.
+
+8. Activate the city (with confirmation)
+   Heading showed "Active".
+
+9. Activate the zone (with confirmation)
+   Row: "Active · version 2".
+
+10. Public check, by curl, after step 9
+    GET /api/v1/locations/serviceability?latitude=-19.99&longitude=60.01
+      -> serviceable true, city "Screen Check (synthetic)", zone "Check Zone (synthetic)"
+    GET /api/v1/locations/serviceability?latitude=-19.5&longitude=60.01
+      -> serviceable false, reason OUTSIDE_COVERAGE
+
+11. Pause the zone with reason "Screen check finished"
+    Row: "Paused · version 3", actions Reactivate and Archive.
+
+No horizontal overflow at the pane's width on the city page.
+
+Left in the development database by this run: the city "Screen Check (synthetic)" (active) and its paused zone.
+
+Not covered: editing a city's name or timezone, pausing or archiving a city, archiving a zone, the stale-version
+conflict message, a user with less than owner access, keyboard-only use, a screen reader, phone width, dark theme.

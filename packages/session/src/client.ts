@@ -33,7 +33,7 @@ export type Result<T> = { ok: true; value: T } | { ok: false; failure: Failure }
 
 type ErrorBody = { error?: { code?: string; message?: string; fields?: Record<string, string[]> } };
 
-async function call(path: string, init: RequestInit = {}): Promise<Response> {
+export async function call(path: string, init: RequestInit = {}): Promise<Response> {
   return fetch(`${apiUrl}${path}`, {
     ...init,
     credentials: "include",
@@ -41,7 +41,7 @@ async function call(path: string, init: RequestInit = {}): Promise<Response> {
   });
 }
 
-async function csrfToken(): Promise<string | null> {
+export async function csrfToken(): Promise<string | null> {
   const response = await call("/api/v1/auth/csrf");
   if (!response.ok) return null;
 
