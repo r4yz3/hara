@@ -90,6 +90,17 @@ class PasswordRecovery
 
             DB::table('password_reset_tokens')->where('email', $row->email)->delete();
 
+            // Browser sessions die on their next request because the stored
+            // password hash no longer matches (EnsureSurfaceSession). Rider
+            // app tokens do not depend on the password, so end them here:
+            // a stolen token must not outlive the reset meant to shut it out.
+            DB::table('personal_access_tokens')
+                ->where('tokenable_type', $user->getMorphClass())
+                ->where('tokenable_id', $user->getKey())
+                ->delete();
+            DB::table('devices')->where('user_id', $user->getKey())->whereNull('revoked_at')
+                ->update(['revoked_at' => now(), 'updated_at' => now()]);
+
             $this->audit->record($user->id, 'auth.password_reset', 'user', $user->id);
 
             return true;

@@ -10,7 +10,13 @@ import '../../core/palette.dart';
 /// distances or offers are shown because none exist. The app requests no
 /// location permission.
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.riderName, this.onSignOut});
+
+  /// The signed-in rider's name from the API, or null when not signed in.
+  final String? riderName;
+
+  /// Shown as a Sign out action when set.
+  final VoidCallback? onSignOut;
 
   static const notBuiltYet = <String>[
     'Sign-in and device registration',
@@ -35,7 +41,7 @@ class HomeScreen extends StatelessWidget {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          _Header(palette: p),
+          _Header(palette: p, riderName: riderName, onSignOut: onSignOut),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
             child: Column(
@@ -109,9 +115,11 @@ class HomeScreen extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.palette});
+  const _Header({required this.palette, this.riderName, this.onSignOut});
 
   final RiderPalette palette;
+  final String? riderName;
+  final VoidCallback? onSignOut;
 
   @override
   Widget build(BuildContext context) {
@@ -164,9 +172,25 @@ class _Header extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 4),
-              Text(
-                'Not signed in',
-                style: text.bodyMedium?.copyWith(color: p.onHeaderMuted),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      riderName == null
+                          ? 'Not signed in'
+                          : 'Signed in as $riderName',
+                      key: const Key('signed-in-as'),
+                      style: text.bodyMedium?.copyWith(color: p.onHeaderMuted),
+                    ),
+                  ),
+                  if (onSignOut != null)
+                    TextButton(
+                      key: const Key('sign-out-button'),
+                      onPressed: onSignOut,
+                      style: TextButton.styleFrom(foregroundColor: p.onHeader),
+                      child: const Text('Sign out'),
+                    ),
+                ],
               ),
               const SizedBox(height: 16),
               DecoratedBox(

@@ -89,7 +89,7 @@ Status key: `todo`, `blocked`, `done`.
 | U-05 | Admin: login, overview, cities, zones editor, users, audit, settings | Playwright scenarios 3–6, 9, 10 | C-11, U-04 | partial: shell, sign-in, cities, audit, GeoJSON zone create/edit/status, exclusions and read-only system settings are available. Chromium verifies keyboard confirmation, stale edit handling, settings errors and live coverage changes. Map drawing and users remain open |
 | U-06 | Customer: home, location, login, account, labelled previews | Playwright scenarios 1, 2, 5, 7, 8 | C-11, U-04 | partial: home with a live service banner, `/login`, and `/location` (coordinates or device location to a serviceability answer) built and run by hand in a browser; no map pin, address entry, saved addresses or account page, and no Playwright scenarios |
 | U-07 | Merchant shell | Scoped, no fabricated data, disabled actions labelled | C-11, U-02 | partial: overview shell and `/login` built; no merchant account exists to sign in with, and branch data waits for its API |
-| U-08 | Rider shell | Flutter tests in spec 10.3; no location permission request | A-09, B-08 | partial: home restyled with shared tokens, 7 widget tests; login and device run still open |
+| U-08 | Rider shell | Flutter tests in spec 10.3; no location permission request | A-09, B-08 | partial: sign-in screen and API client against the B-08 token endpoints, sign-out, rider name from `/rider/me`; 47 Flutter tests (fake client and a loopback HTTP server). Token kept in memory only. Never run on a device or against the real API; needs `--dart-define=API_BASE_URL=...` |
 | U-09 | Screenshots at 360/375, 768, 1440 from running apps | Saved under `docs/qa/evidence/` | U-05..U-08 | todo |
 | U-10 | Select tile provider (human) | ADR-007 open item closed, or placeholder accepted for Phase 1 | — | blocked (human) |
 
@@ -111,7 +111,7 @@ Status key: `todo`, `blocked`, `done`.
 |---|---|---|---|
 | X-01 | Run every check in `docs/qa/phase1-acceptance.md` | Real output recorded; no invented results | partial: local full check passed on 2026-11-14; Playwright, accessibility, clean clone, hosted CI and staging checks remain |
 | X-02 | Final `docs/PHASE1_STATUS.md` | Done, partial, blocked and future separated accurately | todo |
-| X-03 | Phase 2 backlog | Merchant and catalogue stories with open decisions | todo |
+| X-03 | Phase 2 backlog | Merchant and catalogue stories with open decisions | drafted: `docs/phase2-backlog.md` (6 epics, 39 stories, 22 open decisions), awaiting product owner review |
 
 ## Human decisions needed, in order of urgency
 

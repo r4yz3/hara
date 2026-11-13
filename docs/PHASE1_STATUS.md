@@ -2,6 +2,26 @@
 
 Last updated: 2026-11-14. Phase 1 has working browser authentication, rider token endpoints, and city, zone and serviceability APIs. Sprint 8 acceptance remains open.
 
+## November 14 rider sign-in, password reset fix and Phase 2 draft
+
+Evidence: `docs/qa/evidence/phase1-2026-11-14-rider-signin-check.txt` (`dev.ps1 check`, exit 0; 410 backend tests, 47 rider tests).
+
+- **Security fix (automated review of the pushed code):** a password reset ended browser sessions but not rider app tokens, so a stolen rider token outlived the reset. `PasswordRecovery::reset` now deletes the user's API tokens and marks their devices revoked in the same transaction. RiderTokenTest has a new case.
+- **Open finding (needs a decision):** a rider token can be refreshed indefinitely, so the 60-minute expiry never forces a new sign-in. Fix: refuse refresh after an absolute lifetime counted from the device's sign-in (`devices.created_at`); the length is a product decision.
+- **Rider sign-in (U-08):**
+  - `lib/core/api/rider_api.dart` is a `dart:io` client for sign-in, `/rider/me` and sign-out, with typed failures for 401, 422 field errors, 429, offline and not configured. It logs nothing, and the token is hidden from `toString`.
+  - `lib/features/sign_in/sign_in_screen.dart` is the sign-in screen.
+  - The app starts on sign-in and shows the rider's name on home, with a sign-out button.
+  - Tests went from 7 to 47.
+  - Not done:
+    - never run on a device or against the real API;
+    - the token is in memory only (persistent secure storage is a later decision);
+    - sign-out is best effort, so if the DELETE fails the server token lives until it expires;
+    - the home screen still lists "Sign-in and device registration" as not built;
+    - an http (not https) URL on Android needs a manifest change.
+- **Phase 2 backlog (X-03):** drafted in `docs/phase2-backlog.md` for product owner review.
+- Work split: the rider sign-in was written by a Sonnet subagent and the Phase 2 draft by a Haiku subagent; both were reviewed and the full check run before commit.
+
 ## November 14 admin system settings
 
 - Added a read-only settings page in the admin navigation. It reads the existing system status endpoint and shows service checks, deployment settings, feature flags and active coverage counts.

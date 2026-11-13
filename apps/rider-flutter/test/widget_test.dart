@@ -2,12 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rider_app/app/rider_app.dart';
 import 'package:rider_app/features/home/home_screen.dart';
+import 'support/fake_rider_api.dart';
 
 void main() {
   testWidgets('home is labelled as a scaffold', (tester) async {
-    await tester.pumpWidget(const RiderApp());
+    await pumpSignedInApp(tester);
 
     expect(find.text('Phase 1 scaffold'), findsOneWidget);
     for (final item in HomeScreen.notBuiltYet) {
@@ -16,7 +16,7 @@ void main() {
   });
 
   testWidgets('online toggle is off and disabled', (tester) async {
-    await tester.pumpWidget(const RiderApp());
+    await pumpSignedInApp(tester);
 
     final toggle = tester.widget<SwitchListTile>(
       find.byKey(const Key('online-toggle')),
@@ -36,7 +36,7 @@ void main() {
 
   testWidgets('scaffold label is exposed to screen readers', (tester) async {
     final handle = tester.ensureSemantics();
-    await tester.pumpWidget(const RiderApp());
+    await pumpSignedInApp(tester);
 
     expect(
       find.bySemanticsLabel('Phase 1 scaffold. This app has no live features.'),
@@ -46,7 +46,7 @@ void main() {
   });
 
   testWidgets('only the Home destination is enabled', (tester) async {
-    await tester.pumpWidget(const RiderApp());
+    await pumpSignedInApp(tester);
 
     final destinations = tester
         .widgetList<NavigationDestination>(find.byType(NavigationDestination))
@@ -62,7 +62,7 @@ void main() {
   });
 
   testWidgets('shows no invented money, distance or offer', (tester) async {
-    await tester.pumpWidget(const RiderApp());
+    await pumpSignedInApp(tester);
 
     final shown = tester
         .widgetList<Text>(find.byType(Text))
@@ -80,7 +80,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(const RiderApp());
+    await pumpSignedInApp(tester);
 
     expect(tester.takeException(), isNull);
   });

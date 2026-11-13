@@ -9,7 +9,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rider_app/app/rider_app.dart';
+import 'support/fake_rider_api.dart';
 
 Future<void> _loadFont(String family, String path) async {
   final file = File(path);
@@ -38,7 +38,7 @@ void main() {
       addTearDown(tester.view.reset);
       addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
 
-      await tester.pumpWidget(const RiderApp());
+      await pumpSignedInApp(tester);
       await tester.pumpAndSettle();
 
       await expectLater(

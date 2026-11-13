@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Application\Commands\PasswordRecovery;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -208,6 +209,33 @@ class RiderTokenTest extends AuthTestCase
         DB::table('users')->where('id', $user->id)->update(['status' => 'suspended']);
         $this->withToken2($token, 'GET', '/api/v1/rider/me')->assertStatus(401);
         $this->withToken2($token, 'POST', '/api/v1/auth/mobile/token/refresh')->assertStatus(401);
+    }
+
+    public function test_a_password_reset_revokes_every_token_and_device(): void
+    {
+        $rider = $this->rider();
+        $first = (string) $this->issue()->assertCreated()->json('data.token');
+        $second = (string) $this->issue()->assertCreated()->json('data.token');
+        $this->assertSame(2, DB::table('personal_access_tokens')->where('tokenable_id', $rider->id)->count());
+
+        // A reset link as PasswordRecovery stores it: only the hash of the token.
+        $plain = Str::random(64);
+        DB::table('password_reset_tokens')->insert(['email' => $rider->email, 'token' => hash('sha256', $plain), 'created_at' => now()]);
+
+        // Someone who stole a rider's token must lose it when the rider resets the password.
+        $this->assertTrue(app(PasswordRecovery::class)->reset($plain, 'a-brand-new-passphrase'));
+
+        $this->assertSame(0, DB::table('personal_access_tokens')->where('tokenable_id', $rider->id)->count());
+        $this->assertSame(0, DB::table('devices')->where('user_id', $rider->id)->whereNull('revoked_at')->count());
+        foreach ([$first, $second] as $token) {
+            $this->fresh();
+            $this->withToken2($token, 'GET', '/api/v1/rider/me')->assertStatus(401);
+            $this->fresh();
+            $this->withToken2($token, 'POST', '/api/v1/auth/mobile/token/refresh')->assertStatus(401);
+        }
+
+        // The new password works on a new device.
+        $this->issue(password: 'a-brand-new-passphrase')->assertCreated();
     }
 
     public function test_a_revoked_device_cuts_off_its_token(): void
