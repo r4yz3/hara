@@ -3,9 +3,9 @@ name: web
 on:
   push:
     branches: [main]
-    paths: ["apps/*-web/**", "packages/**", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".github/workflows/web.yml"]
+    paths: ["apps/*-web/**", "packages/**", "backend/openapi/**", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".github/workflows/web.yml"]
   pull_request:
-    paths: ["apps/*-web/**", "packages/**", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".github/workflows/web.yml"]
+    paths: ["apps/*-web/**", "packages/**", "backend/openapi/**", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".github/workflows/web.yml"]
 
 permissions:
   contents: read

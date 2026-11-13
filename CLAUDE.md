@@ -33,6 +33,6 @@ Windows 11, PowerShell primary. Docker Desktop is installed; start it before `de
 - Rider screen images: `RENDER_EVIDENCE=1 flutter test test/render_evidence_test.dart --update-goldens` from `apps/rider-flutter` writes PNGs to `docs/qa/evidence/` (no Android device needed).
 - Backend tests need the Docker stack (PostgreSQL). `tests/bootstrap.php` forces the `food_delivery_test` database; never point tests at another one.
 - `.\infra\scripts\dev.ps1 migrate` and `seed-demo` apply the schema and the synthetic demo city to the development database.
-- New API routes also go in `backend/openapi/openapi.yaml`; `OpenApiDocumentTest` fails if the document and the routes differ.
+- New API routes also go in `backend/openapi/openapi.yaml`; `OpenApiDocumentTest` fails if the document and the routes differ. After changing that file run `pnpm --filter @food-delivery/api-client generate`; `pnpm test` fails if the generated types are stale.
 - In feature tests, `withHeader('Origin', ...)` persists across requests in the same test; use `withoutHeader('Origin')` for a request that must have none. The test framework disables CSRF checks, so verify CSRF with real requests.
 - Demo sign-in: set `DEMO_PASSWORD` in the local `.env`, restart the stack, run `dev.ps1 seed-demo`; accounts are `demo-owner@example.test` and `demo-customer@example.test`. Never put the value in a tracked file.
