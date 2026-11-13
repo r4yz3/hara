@@ -1,8 +1,10 @@
+import Link from "next/link";
+import { Suspense } from "react";
+
 import { SessionStatus } from "@food-delivery/session";
 
 import {
   BagIcon,
-  ClockIcon,
   HeartIcon,
   HomeIcon,
   PinIcon,
@@ -10,6 +12,7 @@ import {
   SearchIcon,
   UserIcon,
 } from "@/components/icons";
+import { ServiceBanner, ServiceBannerFallback } from "@/components/service-banner";
 
 // Placeholder until a brand is chosen (docs/ux/design-direction.md, rule 4).
 const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Food Delivery";
@@ -47,18 +50,17 @@ export default function Home() {
       <header className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-3 px-4 pt-4 md:flex-nowrap md:gap-6 md:py-5">
         <p className="order-1 text-lg font-bold tracking-tight">{appName}</p>
 
-        <button
-          type="button"
-          disabled
+        <Link
+          href="/location"
           aria-describedby="location-hint"
           className="order-3 flex min-h-11 w-full items-center gap-2 rounded-full border border-border-strong bg-surface px-4 text-left text-sm md:order-2 md:w-auto"
         >
           <PinIcon className="shrink-0 text-accent-text" />
           <span className="flex flex-col leading-tight">
             <span className="text-xs text-text-secondary">Deliver to</span>
-            <span className="font-medium">No address set</span>
+            <span className="font-medium">Check my address</span>
           </span>
-        </button>
+        </Link>
 
         <div className="order-4 flex min-h-11 w-full items-center gap-2 rounded-full border border-border-strong bg-surface px-4 md:order-3 md:flex-1">
           <SearchIcon className="shrink-0 text-text-secondary" />
@@ -87,30 +89,13 @@ export default function Home() {
       </header>
 
       <p id="location-hint" className="mx-auto w-full max-w-6xl px-4 pt-2 text-xs text-text-secondary">
-        Choosing an address and searching are not built yet.
+        You can check whether we deliver to a spot. Saving an address and searching are not built yet.
       </p>
 
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-6">
-        <section
-          aria-labelledby="status-heading"
-          className="relative overflow-hidden rounded-3xl bg-cta p-6 text-on-cta md:p-10"
-        >
-          <div aria-hidden="true" className="absolute -right-10 -top-16 hidden size-56 rounded-full bg-accent-500 opacity-60 lg:block" />
-          <div aria-hidden="true" className="absolute -bottom-20 right-24 hidden size-40 rounded-full bg-accent-500 opacity-40 lg:block" />
-          <div className="relative flex max-w-xl flex-col gap-3">
-            <p className="flex w-fit items-center gap-2 rounded-full bg-surface px-3 py-1 text-sm font-medium text-text-primary">
-              <ClockIcon width={16} height={16} />
-              Launching soon
-            </p>
-            <h1 id="status-heading" className="text-3xl font-bold tracking-tight md:text-4xl">
-              We are not delivering anywhere yet
-            </h1>
-            <p className="text-base">
-              No delivery area has been opened. When one is, this page will show the restaurants that deliver to your
-              address.
-            </p>
-          </div>
-        </section>
+        <Suspense fallback={<ServiceBannerFallback />}>
+          <ServiceBanner />
+        </Suspense>
 
         <section aria-labelledby="categories-heading" className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-3">

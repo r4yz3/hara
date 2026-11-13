@@ -1,0 +1,23 @@
+﻿Customer delivery-area check: browser run against the real API
+Date: 2026-11-13. App: http://localhost:3000 (next dev). API: Docker stack, development database with the
+synthetic demo zone (a 0.02-degree square at longitude 100, latitude 10). Values were read back from the page.
+
+1. Home page, server-rendered banner
+   With an active zone in an active city the banner read "See if we deliver to you" with a "Check my address" link.
+   (The closed and unreachable variants were not exercised in this run.)
+
+2. /location with latitude 100.01 and longitude "abc"
+   "The latitude must be between -90 and 90." and "The longitude must be a plain number such as 12.345."
+   Focus moved to the latitude field. No request was sent.
+
+3. latitude 10.01, longitude 100.01
+   "Yes, this spot is inside a delivery area" - "Demo Zone (synthetic), Demo City (synthetic, not a real place)."
+
+4. latitude 10.01, longitude 100.5
+   "Not yet: this spot is outside our delivery areas".
+
+5. Nothing was written to localStorage or sessionStorage. No horizontal overflow at 375 wide
+   (customer-location-375.jpg).
+
+Not covered: the "Use this device's location" button (needs a permission prompt), the rate-limit and
+network-error messages, the "nothing open anywhere" answer, keyboard-only use, a screen reader, dark theme.
