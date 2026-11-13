@@ -58,7 +58,9 @@ try {
             Invoke-Step 'migrate' { docker @Compose exec api php artisan migrate }
         }
         'seed-demo' {
-            throw 'seed-demo is not available yet: the gated DevelopmentSeeder is backlog item D-05 (Sprint 3).'
+            Assert-Docker
+            # Synthetic demo city and zone. The seeder refuses to run outside local and testing.
+            Invoke-Step 'seed demo data' { docker @Compose exec -T api php artisan db:seed --class=DevelopmentSeeder }
         }
         'logs' {
             Assert-Docker
@@ -67,6 +69,7 @@ try {
         'check' {
             Invoke-Step 'web lint' { pnpm lint }
             Invoke-Step 'web typecheck' { pnpm typecheck }
+            Invoke-Step 'web tests' { pnpm test }
             Invoke-Step 'web build' { pnpm build }
 
             if (Test-Docker) {

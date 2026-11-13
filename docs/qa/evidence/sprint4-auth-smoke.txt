@@ -1,0 +1,16 @@
+1. hash algorithm: $argon2id$
+2. csrf token issued: yes
+3. login without CSRF token: 403  (expect 403)
+4. login with CSRF token: HTTP/1.1 200 OK  (expect 200)
+   session cookie flags: Set-Cookie: fd_customer_session=<value>; expires=Fri, 13 Nov 2026 04:15:10 GMT; Max-Age=7200; path=/; httponly; samesite=lax
+   request id header: 1
+   allow-origin: Access-Control-Allow-Origin: http://localhost:3000
+5. /me as customer: 200  (expect 200)
+6. same cookies, admin origin: 401  (expect 401)
+7. customer again (session must survive): 200  (expect 200)
+8. no origin: 401  (expect 401)
+9. preflight from unknown origin, allow-origin header count: 0  (expect 0)
+10. admin login as a customer: 401  (expect 401)
+11. logout: 204  (expect 204)
+12. /me after logout: 401  (expect 401)
+cleanup: throwaway account left: 0

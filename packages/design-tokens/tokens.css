@@ -1,0 +1,60 @@
+/* GENERATED from src/tokens.mjs. Do not edit; run the package's build script. */
+:root {
+  --brand-600: #0f766e;
+  --brand-700: #115e59;
+  --accent-500: #f97316;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --border: #e2e8f0;
+  --danger: #b91c1c;
+  --success: #15803d;
+  --on-brand: #ffffff;
+  --on-danger: #ffffff;
+  --accent-text: #c2410c;
+  --border-strong: #7c8ba1;
+  --warm-50: #fff7ed;
+  --warm-100: #ffedd5;
+  --cta: #c2410c;
+  --on-cta: #ffffff;
+  --nav: #0f172a;
+  --on-nav: #e2e8f0;
+  --on-nav-muted: #a3b1c6;
+  --highlight: #facc15;
+  --on-highlight: #0f172a;
+  --brand-tint: #ccfbf1;
+  --action-bright: #bef264;
+  --on-action-bright: #0f172a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --brand-600: #2dd4bf;
+    --brand-700: #5eead4;
+    --accent-500: #fb923c;
+    --surface: #111827;
+    --surface-2: #1f2937;
+    --text-primary: #f9fafb;
+    --text-secondary: #cbd5e1;
+    --border: #374151;
+    --danger: #f87171;
+    --success: #4ade80;
+    --on-brand: #0f172a;
+    --on-danger: #0f172a;
+    --accent-text: #fb923c;
+    --border-strong: #748094;
+    --warm-50: #1c1410;
+    --warm-100: #2b1d14;
+    --cta: #fb923c;
+    --on-cta: #0f172a;
+    --nav: #0b1220;
+    --on-nav: #e2e8f0;
+    --on-nav-muted: #a3b1c6;
+    --highlight: #facc15;
+    --on-highlight: #0f172a;
+    --brand-tint: #134e4a;
+    --action-bright: #bef264;
+    --on-action-bright: #0f172a;
+  }
+}

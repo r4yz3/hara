@@ -1,55 +1,40 @@
 @import "tailwindcss";
+@import "@food-delivery/design-tokens/tokens.css";
+
+/* Shared sign-in components carry Tailwind classes too. */
+@source "../../../packages/session/src";
 
 /*
- * Starting palette from the Phase 1 specification, section 8.1.
- * Contrast of each pair is NOT yet verified (backlog U-01). These values move
- * to packages/design-tokens in Sprint 6.
+ * Colours come from packages/design-tokens, where each approved
+ * foreground/background pair is measured (docs/ux/contrast-report.md).
+ * accent-500 and border are decorative only; use accent-text, cta and
+ * border-strong where contrast matters.
  */
-:root {
-  --brand-600: #0f766e;
-  --brand-700: #115e59;
-  --accent-500: #f97316;
-  --surface: #ffffff;
-  --surface-2: #f8fafc;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --border: #e2e8f0;
-  --danger: #b91c1c;
-  --success: #15803d;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --brand-600: #2dd4bf;
-    --brand-700: #5eead4;
-    --accent-500: #fb923c;
-    --surface: #111827;
-    --surface-2: #1f2937;
-    --text-primary: #f9fafb;
-    --text-secondary: #cbd5e1;
-    --border: #374151;
-    --danger: #f87171;
-    --success: #4ade80;
-  }
-}
-
 @theme inline {
   --color-brand-600: var(--brand-600);
   --color-brand-700: var(--brand-700);
+  --color-on-brand: var(--on-brand);
   --color-accent-500: var(--accent-500);
+  --color-accent-text: var(--accent-text);
+  --color-cta: var(--cta);
+  --color-on-cta: var(--on-cta);
+  --color-warm-50: var(--warm-50);
+  --color-warm-100: var(--warm-100);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-danger: var(--danger);
+  --color-on-danger: var(--on-danger);
   --color-success: var(--success);
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 body {
-  background: var(--surface);
+  background: var(--warm-50);
   color: var(--text-primary);
 }
 

@@ -1,6 +1,6 @@
 # ADR-011: Authentication and sessions
 
-- Status: proposed; three items **open** and must be closed before Sprint 4 starts
+- Status: accepted by the product owner on 2026-11-13, using the proposals below. Email-verification timing remains open
 - Date: 2026-11-12
 
 ## Context
@@ -14,7 +14,14 @@ The spec requires "an explicitly selected secure auth design" (1.3), cookie sess
 - Registration is open only when `FEATURE_PUBLIC_REGISTRATION` is on, always creates a `customer`, and ignores any role or scope in the request.
 - The first owner account is created by a console command that runs only in `local` and `testing`. Production owner provisioning is a separate audited procedure, not yet defined.
 
-## Open
+## Decided on 2026-11-13
+1. **Session separation:** each web app gets its own session cookie name and its own guard, so a customer session is never valid on the admin or merchant surface.
+2. **MFA factor:** TOTP from an authenticator app, secrets encrypted at rest. Until it is built and reviewed, privileged login is refused when `APP_ENV=production`.
+
+## As built (2026-11-13)
+One session guard is used, not three. Separation comes from a per-app cookie name chosen from the request's Origin, plus the app's name stored in the session and compared on every authenticated request; a mismatch ends the session. The CSRF token is served by `GET /api/v1/auth/csrf` and sent in `X-CSRF-TOKEN`; Sanctum's shared-cookie route is disabled.
+
+## Original options and what is still open
 1. **Session separation between surfaces.** With one API domain, a browser logged into the admin app and the customer app could share one session cookie. Options: separate cookie names and guards per origin, or separate API hostnames per surface. To be decided and threat-modelled before Sprint 4.
 2. **MFA factor.** TOTP is the likely choice; secrets need encryption at rest and a reviewed recovery flow. Until MFA is implemented and reviewed, privileged login is refused when `APP_ENV=production`. Tests use a deterministic bypass that cannot be enabled in production.
 3. **Email verification** before first login versus before sensitive actions.

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class HealthTest extends TestCase
@@ -11,6 +12,30 @@ class HealthTest extends TestCase
         $this->getJson('/health/live')
             ->assertOk()
             ->assertExactJson(['status' => 'ok']);
+    }
+
+    public function test_health_routes_run_outside_the_session_middleware(): void
+    {
+        foreach (['health.live', 'health.ready'] as $name) {
+            $route = Route::getRoutes()->getByName($name);
+
+            $this->assertNotNull($route);
+            $this->assertNotContains('web', $route->gatherMiddleware());
+            $this->assertNotContains('api', $route->gatherMiddleware());
+        }
+    }
+
+    public function test_live_does_not_touch_the_session_store(): void
+    {
+        // A database session driver with no reachable database must not matter.
+        // The connection stays defined (test teardown resolves it); only its host is dead.
+        config([
+            'session.driver' => 'database',
+            'database.connections.pgsql.host' => '127.0.0.1',
+            'database.connections.pgsql.port' => 1,
+        ]);
+
+        $this->getJson('/health/live')->assertOk()->assertHeaderMissing('Set-Cookie');
     }
 
     public function test_ready_is_hidden_from_public_addresses(): void
@@ -37,9 +62,10 @@ class HealthTest extends TestCase
         $this->get('/up')->assertNotFound();
     }
 
-    public function test_no_versioned_api_routes_exist_yet(): void
+    public function test_no_later_phase_api_routes_exist(): void
     {
-        $this->getJson('/api/v1/orders')->assertNotFound();
-        $this->getJson('/api/v1/restaurants')->assertNotFound();
+        foreach (['orders', 'restaurants', 'carts', 'checkout/quote', 'payments/intents', 'rider/location', 'admin/dispatch/map'] as $path) {
+            $this->getJson("/api/v1/{$path}")->assertNotFound();
+        }
     }
 }

@@ -10,3 +10,5 @@ parameters:
         - database
         - routes
         - tests
+    excludePaths:
+        - tests/bootstrap.php

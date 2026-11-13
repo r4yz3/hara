@@ -1,0 +1,682 @@
+openapi: 3.1.0
+info:
+  title: Food delivery platform API
+  version: 0.1.0
+  description: |
+    Phase 1 contract. Only routes that exist and are tested appear here; a
+    test fails if this document and the registered routes differ.
+
+    Browser clients authenticate with a session cookie that is specific to
+    the app they are served from (customer, merchant or admin), identified by
+    the request's Origin header. Every state-changing request must carry the
+    token from `GET /api/v1/auth/csrf` in the `X-CSRF-TOKEN` header.
+servers:
+  - url: http://localhost:8000
+    description: Local development
+tags:
+  - name: Health
+  - name: Auth
+  - name: Geography
+  - name: Admin
+paths:
+  /health/live:
+    get:
+      tags: [Health]
+      summary: Liveness
+      description: Touches no dependency. Public.
+      operationId: healthLive
+      security: []
+      responses:
+        "200":
+          description: The process is serving requests.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [status]
+                properties:
+                  status: { type: string, const: ok }
+  /health/ready:
+    get:
+      tags: [Health]
+      summary: Readiness
+      description: Reports dependency state. Answers only to loopback and private network addresses; anyone else receives 404.
+      operationId: healthReady
+      security: []
+      responses:
+        "200":
+          description: Every dependency is reachable.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Readiness" }
+        "503":
+          description: At least one dependency is unreachable.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Readiness" }
+        "404":
+          description: Caller is not on an internal network.
+  /api/v1/auth/csrf:
+    get:
+      tags: [Auth]
+      summary: Get the CSRF token for this app's session
+      operationId: authCsrf
+      security: []
+      responses:
+        "200":
+          description: Token bound to the caller's session.
+          headers:
+            X-Request-Id: { $ref: "#/components/headers/RequestId" }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    required: [csrf_token]
+                    properties:
+                      csrf_token: { type: string }
+                  meta: { $ref: "#/components/schemas/Meta" }
+        "403": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/v1/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a customer
+      description: |
+        Available only from the customer app and only when public
+        registration is switched on; otherwise 404. Always creates a
+        customer: any role, scope or status in the request is ignored. The
+        answer is the same whether or not the address was already registered.
+      operationId: authRegister
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 120 }
+                email: { type: string, format: email, maxLength: 255 }
+                password: { type: string, minLength: 10, maxLength: 1024, format: password }
+      responses:
+        "202":
+          description: Registration received.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    required: [status]
+                    properties:
+                      status: { type: string, const: registration_received }
+                  meta: { $ref: "#/components/schemas/Meta" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Sign in
+      description: |
+        Starts a session on the calling app. A wrong password, an unknown
+        account, a suspended account and an account not entitled to this app
+        all produce the same 401. Five failures for one account from one
+        address within a minute produce 429. The admin app refuses sign-in in
+        production until two-step verification exists.
+      operationId: authLogin
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, maxLength: 255 }
+                password: { type: string, maxLength: 1024, format: password }
+      responses:
+        "200":
+          description: Signed in.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CurrentUserResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/v1/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Sign out
+      operationId: authLogout
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      responses:
+        "204": { description: Session ended. }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/v1/me:
+    get:
+      tags: [Auth]
+      summary: The signed-in user
+      description: Lists live role grants only. Contains no secret fields.
+      operationId: meShow
+      responses:
+        "200":
+          description: Current user.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CurrentUserResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/v1/public/cities:
+    get:
+      tags: [Geography]
+      summary: Cities where the service is open
+      description: Active cities only. Empty until a city has been activated.
+      operationId: publicCities
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Cursor" }
+      responses:
+        "200":
+          description: One page of active cities, sorted by id.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/PublicCity" }
+                  meta: { $ref: "#/components/schemas/PageMeta" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/v1/locations/serviceability:
+    get:
+      tags: [Geography]
+      summary: Can this point be delivered to?
+      description: |
+        Polygon containment only: it does not check that a route exists. A
+        point on a zone boundary is inside. The position is not stored or
+        logged. `NO_ACTIVE_ZONE` means nothing is open anywhere;
+        `OUTSIDE_COVERAGE` means zones exist but none covers the point.
+        Limited to 60 requests a minute per address.
+      operationId: serviceability
+      security: []
+      parameters:
+        - name: latitude
+          in: query
+          required: true
+          schema: { type: string, pattern: '^-?\d{1,3}(\.\d{1,12})?$' }
+          description: Decimal degrees, -90 to 90.
+        - name: longitude
+          in: query
+          required: true
+          schema: { type: string, pattern: '^-?\d{1,3}(\.\d{1,12})?$' }
+          description: Decimal degrees, -180 to 180.
+      responses:
+        "200":
+          description: The decision.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data: { $ref: "#/components/schemas/Serviceability" }
+                  meta: { $ref: "#/components/schemas/Meta" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/cities:
+    get:
+      tags: [Admin]
+      summary: List cities the caller may read
+      description: Admin app only. Filtered to the caller's scope; needs `cities.read`.
+      operationId: adminCitiesIndex
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Cursor" }
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/CityStatus" }
+      responses:
+        "200":
+          description: One page of cities, sorted by id.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/City" }
+                  meta: { $ref: "#/components/schemas/PageMeta" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+    post:
+      tags: [Admin]
+      summary: Create a city
+      description: Needs `cities.write` with global scope. The city starts as a draft; `status` and `id` in the request are ignored.
+      operationId: adminCitiesStore
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, slug, country_code, currency_code, timezone]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 160 }
+                slug: { type: string, maxLength: 160, pattern: "^[a-z0-9]+(-[a-z0-9]+)*$" }
+                country_code: { type: string, pattern: "^[A-Z]{2}$" }
+                currency_code: { type: string, description: Must equal the deployment currency. }
+                timezone: { type: string, description: IANA name. Required; never defaulted. }
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CityResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/cities/{city}:
+    parameters:
+      - name: city
+        in: path
+        required: true
+        schema: { type: string }
+        description: City id. Letter case is ignored.
+    get:
+      tags: [Admin]
+      summary: One city
+      description: 404 if it does not exist or the caller may not read it.
+      operationId: adminCitiesShow
+      responses:
+        "200":
+          description: The city.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CityResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+    patch:
+      tags: [Admin]
+      summary: Edit a city or move its status
+      description: |
+        Needs `cities.write`. Only `name`, `timezone` and `status` can change.
+        Status moves along: draft to active or archived; active to paused;
+        paused to active or archived. Anything else, or any change to an
+        archived city, is 409.
+      operationId: adminCitiesUpdate
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, minLength: 1, maxLength: 160 }
+                timezone: { type: string }
+                status: { $ref: "#/components/schemas/CityStatus" }
+      responses:
+        "200":
+          description: Updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CityResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/cities/{city}/zones:
+    parameters:
+      - name: city
+        in: path
+        required: true
+        schema: { type: string }
+        description: City id. Letter case is ignored.
+    get:
+      tags: [Admin]
+      summary: List a city's delivery zones
+      description: Needs `zones.read` for the city; 404 otherwise. Geometry is left out of lists.
+      operationId: adminZonesIndex
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Cursor" }
+      responses:
+        "200":
+          description: One page of zones, sorted by id.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Zone" }
+                  meta: { $ref: "#/components/schemas/PageMeta" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+    post:
+      tags: [Admin]
+      summary: Create a delivery zone
+      description: |
+        Needs `zones.write` for the city. The zone starts as a draft at
+        version 1; `status`, `version` and `id` in the request are ignored.
+        Geometry is checked for structure, the vertex and extent caps, and
+        then by PostGIS for self-intersection. 409 if the city is archived.
+      operationId: adminZonesStore
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, slug, geometry]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 160 }
+                slug: { type: string, maxLength: 160, pattern: "^[a-z0-9]+(-[a-z0-9]+)*$", description: Unique within the city. }
+                priority: { type: integer, minimum: -1000, maximum: 1000, default: 0 }
+                geometry: { $ref: "#/components/schemas/ZoneGeometryInput" }
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ZoneResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/zones/{zone}:
+    parameters:
+      - name: zone
+        in: path
+        required: true
+        schema: { type: string }
+        description: Zone id. Letter case is ignored.
+    get:
+      tags: [Admin]
+      summary: One delivery zone, with its geometry
+      description: 404 if it does not exist or the caller may not read its city.
+      operationId: adminZonesShow
+      responses:
+        "200":
+          description: The zone.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ZoneResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+    patch:
+      tags: [Admin]
+      summary: Edit a delivery zone
+      description: |
+        Needs `zones.write` for the zone's city. Send the `version` you
+        loaded; if the zone has changed since, the edit is refused with 409
+        and nothing is written. Only `name`, `priority` and `geometry` can
+        change; each successful edit adds 1 to `version`. Status changes are
+        not available yet. Any change to an archived zone is 409.
+      operationId: adminZonesUpdate
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version]
+              properties:
+                version: { type: integer, minimum: 1 }
+                name: { type: string, minLength: 1, maxLength: 160 }
+                priority: { type: integer, minimum: -1000, maximum: 1000 }
+                geometry: { $ref: "#/components/schemas/ZoneGeometryInput" }
+      responses:
+        "200":
+          description: Updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ZoneResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+security:
+  - sessionCookie: []
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: fd_customer_session
+      description: The cookie is `fd_customer_session`, `fd_merchant_session` or `fd_admin_session` depending on the calling app.
+  parameters:
+    CsrfToken:
+      name: X-CSRF-TOKEN
+      in: header
+      required: true
+      schema: { type: string }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+    Cursor:
+      name: cursor
+      in: query
+      schema: { type: string }
+      description: Opaque value from `meta.next_cursor` of the previous page.
+  headers:
+    RequestId:
+      description: Identifier of this request, also present in the body.
+      schema: { type: string }
+  responses:
+    Error:
+      description: Error envelope.
+      headers:
+        X-Request-Id: { $ref: "#/components/headers/RequestId" }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+  schemas:
+    PageMeta:
+      type: object
+      additionalProperties: false
+      required: [request_id, next_cursor]
+      properties:
+        request_id: { type: string }
+        next_cursor: { type: [string, "null"] }
+    CityStatus:
+      type: string
+      enum: [draft, active, paused, archived]
+    City:
+      type: object
+      additionalProperties: false
+      required: [id, slug, name, country_code, currency_code, timezone, status, created_at, updated_at]
+      properties:
+        id: { type: string, pattern: "^[0-9a-z]{26}$" }
+        slug: { type: string }
+        name: { type: string }
+        country_code: { type: string }
+        currency_code: { type: string }
+        timezone: { type: string }
+        status: { $ref: "#/components/schemas/CityStatus" }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    CityResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/City" }
+        meta: { $ref: "#/components/schemas/Meta" }
+    ZoneGeometryInput:
+      type: object
+      required: [type, coordinates]
+      description: GeoJSON Polygon or MultiPolygon, positions as [longitude, latitude]. Caps from config/geo.php.
+      properties:
+        type: { type: string, enum: [Polygon, MultiPolygon] }
+        coordinates: { type: array, items: {} }
+    Zone:
+      type: object
+      additionalProperties: false
+      required: [id, city_id, name, slug, status, priority, version, created_at, updated_at]
+      properties:
+        id: { type: string, pattern: "^[0-9a-z]{26}$" }
+        city_id: { type: string, pattern: "^[0-9a-z]{26}$" }
+        name: { type: string }
+        slug: { type: string }
+        status: { $ref: "#/components/schemas/CityStatus" }
+        priority: { type: integer }
+        version: { type: integer, minimum: 1 }
+        geometry:
+          type: object
+          description: GeoJSON MultiPolygon. Present on single-zone responses only.
+          required: [type, coordinates]
+          properties:
+            type: { type: string, enum: [MultiPolygon] }
+            coordinates: { type: array, items: {} }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    ZoneResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/Zone" }
+        meta: { $ref: "#/components/schemas/Meta" }
+    PublicCity:
+      type: object
+      additionalProperties: false
+      required: [id, name, country_code, currency_code, timezone]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        country_code: { type: string }
+        currency_code: { type: string }
+        timezone: { type: string }
+    NamedRef:
+      type: object
+      additionalProperties: false
+      required: [id, name]
+      properties:
+        id: { type: string }
+        name: { type: string }
+    Serviceability:
+      type: object
+      additionalProperties: false
+      required: [serviceable, reason, city, zone]
+      properties:
+        serviceable: { type: boolean }
+        reason: { type: [string, "null"], enum: [NO_ACTIVE_ZONE, OUTSIDE_COVERAGE, null] }
+        city:
+          oneOf: [{ $ref: "#/components/schemas/NamedRef" }, { type: "null" }]
+        zone:
+          oneOf: [{ $ref: "#/components/schemas/NamedRef" }, { type: "null" }]
+    Meta:
+      type: object
+      additionalProperties: false
+      required: [request_id]
+      properties:
+        request_id: { type: string }
+    Readiness:
+      type: object
+      additionalProperties: false
+      required: [status, checks]
+      properties:
+        status: { type: string, enum: [ready, unavailable] }
+        checks:
+          type: object
+          additionalProperties: false
+          required: [database, redis]
+          properties:
+            database: { type: boolean }
+            redis: { type: boolean }
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message, request_id]
+          properties:
+            code:
+              type: string
+              enum: [VALIDATION_ERROR, AUTH_REQUIRED, FORBIDDEN, NOT_FOUND, METHOD_NOT_ALLOWED, CONFLICT, RATE_LIMITED, PROVIDER_UNAVAILABLE, BAD_REQUEST, SERVER_ERROR]
+            message: { type: string }
+            fields:
+              type: object
+              additionalProperties:
+                type: array
+                items: { type: string }
+            request_id: { type: string }
+    CurrentUser:
+      type: object
+      additionalProperties: false
+      required: [id, name, email, email_verified, surface, grants]
+      properties:
+        id: { type: string, pattern: "^[0-9a-z]{26}$" }
+        name: { type: string }
+        email: { type: string }
+        email_verified: { type: boolean }
+        surface: { type: string, enum: [customer, merchant, admin] }
+        grants:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [role, scope_type, scope_id, permissions]
+            properties:
+              role: { type: string }
+              scope_type: { type: string, enum: [global, city, merchant, branch] }
+              scope_id: { type: [string, "null"] }
+              permissions:
+                type: array
+                items: { type: string }
+    CurrentUserResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/CurrentUser" }
+        meta: { $ref: "#/components/schemas/Meta" }

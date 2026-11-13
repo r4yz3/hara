@@ -22,8 +22,23 @@ class RouteInventoryTest extends TestCase
             ->all();
 
         $this->assertSame([
+            'GET|HEAD api/v1/admin/cities',
+            'GET|HEAD api/v1/admin/cities/{city}',
+            'GET|HEAD api/v1/admin/cities/{city}/zones',
+            'GET|HEAD api/v1/admin/zones/{zone}',
+            'GET|HEAD api/v1/auth/csrf',
+            'GET|HEAD api/v1/locations/serviceability',
+            'GET|HEAD api/v1/me',
+            'GET|HEAD api/v1/public/cities',
             'GET|HEAD health/live',
             'GET|HEAD health/ready',
+            'PATCH api/v1/admin/cities/{city}',
+            'PATCH api/v1/admin/zones/{zone}',
+            'POST api/v1/admin/cities',
+            'POST api/v1/admin/cities/{city}/zones',
+            'POST api/v1/auth/login',
+            'POST api/v1/auth/logout',
+            'POST api/v1/auth/register',
         ], $registered);
     }
 }

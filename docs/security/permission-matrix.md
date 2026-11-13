@@ -1,6 +1,6 @@
 # Role and permission matrix — Phase 1
 
-- Date: 2026-11-12. Status: **proposed, needs human approval before it is seeded** (Sprint 4).
+- Date: 2026-11-12. Status: **accepted by the product owner on 2026-11-13**, with the proposed answer to each reviewer question below. The seeded catalogue is `backend/config/rbac.php`; a test keeps it equal to this table.
 - Roles and their scopes come from spec section 6.1. Permission slugs come from 6.1 plus three added for Phase 1 endpoints: `users.read`, `system.status.read`, `flags.write`.
 - A tick means the role carries the permission **within its scope only**. Enforcement follows ADR-005.
 
@@ -46,7 +46,7 @@ Not permissions, enforced by ownership instead:
 - Merchant roles: read their own merchant and assigned branches (shell only in Phase 1).
 - Rider: read their own rider profile.
 
-## Questions for the reviewer
+## Reviewer questions (answered 2026-11-13: the proposal in each is adopted; question 3: no further finance access; question 4: support sees zone geometry through `zones.read`)
 
 1. Should `city_manager` create or pause a **city**, or only its zones? Proposed: zones only.
 2. Should `city_manager` read the audit log for their own city? Proposed: no in Phase 1, because the viewer's redaction rules are not reviewed.

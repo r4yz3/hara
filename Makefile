@@ -24,7 +24,7 @@ migrate:
 	$(COMPOSE) exec api php artisan migrate
 
 seed-demo:
-	@echo "seed-demo is not available yet: the gated DevelopmentSeeder is backlog item D-05 (Sprint 3)." && exit 1
+	$(COMPOSE) exec -T api php artisan db:seed --class=DevelopmentSeeder
 
 logs:
 	$(COMPOSE) logs -f --tail 200
@@ -32,6 +32,7 @@ logs:
 check:
 	pnpm lint
 	pnpm typecheck
+	pnpm test
 	pnpm build
 	$(COMPOSE) exec -T api vendor/bin/pint --test
 	$(COMPOSE) exec -T api vendor/bin/phpstan analyse --no-progress --memory-limit=1G

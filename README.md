@@ -40,12 +40,12 @@ On Linux, macOS or WSL the same targets exist in the `Makefile`.
 
 | Command | State on 2026-11-13 |
 |---|---|
-| `dev.ps1 check` | Passes. Output in `docs/qa/evidence/sprint2-check.txt` |
+| `dev.ps1 check` | Passes with the backend in the Docker stack. Output in `docs/qa/evidence/sprint2-check-4.txt` |
 | `dev.ps1 setup` | Not run end to end |
-| `dev.ps1 up`, `migrate`, `down`, `logs` | Not run: Docker is not installed on the authoring workstation |
+| Compose stack | Starts healthy; `/health/ready` returns 200. The `up`, `migrate`, `down`, `logs` script tasks themselves not run |
 | `Makefile` targets | Not run: `make` is not installed |
 | GitHub Actions workflows | Never run: no remote repository yet |
-| `dev.ps1 seed-demo` | Not available until Sprint 3 |
+| `dev.ps1 seed-demo` | Works: creates the synthetic demo city and zone in the development database |
 
 ## Ports
 
@@ -58,6 +58,10 @@ On Linux, macOS or WSL the same targets exist in the `Makefile`.
 | PostgreSQL | 5432 | localhost only |
 | Redis | 6379 | localhost only |
 | Mailpit UI / SMTP | 8025 / 1025 | localhost only |
+
+## API
+
+The contract is `backend/openapi/openapi.yaml`. Today it covers health checks and sign-in (`/api/v1/auth/csrf`, `register`, `login`, `logout`) and `/api/v1/me`. Registration is off unless `FEATURE_PUBLIC_REGISTRATION=true`.
 
 ## Health routes
 

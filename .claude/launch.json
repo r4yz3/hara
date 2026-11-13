@@ -1,0 +1,8 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "customer-web", "runtimeExecutable": "pnpm", "runtimeArgs": ["--filter", "customer-web", "dev"], "port": 3000 },
+    { "name": "merchant-web", "runtimeExecutable": "pnpm", "runtimeArgs": ["--filter", "merchant-web", "dev"], "port": 3001 },
+    { "name": "admin-web", "runtimeExecutable": "pnpm", "runtimeArgs": ["--filter", "admin-web", "dev"], "port": 3002 }
+  ]
+}

@@ -39,12 +39,50 @@ void main() {
     await tester.pumpWidget(const RiderApp());
 
     expect(
-      find.bySemanticsLabel(
-        'Phase 1 scaffold. This app has no live features.',
-      ),
+      find.bySemanticsLabel('Phase 1 scaffold. This app has no live features.'),
       findsOneWidget,
     );
     handle.dispose();
+  });
+
+  testWidgets('only the Home destination is enabled', (tester) async {
+    await tester.pumpWidget(const RiderApp());
+
+    final destinations = tester
+        .widgetList<NavigationDestination>(find.byType(NavigationDestination))
+        .toList();
+
+    expect(destinations.map((d) => d.label), [
+      'Home',
+      'Jobs',
+      'Earnings',
+      'Account',
+    ]);
+    expect(destinations.map((d) => d.enabled), [true, false, false, false]);
+  });
+
+  testWidgets('shows no invented money, distance or offer', (tester) async {
+    await tester.pumpWidget(const RiderApp());
+
+    final shown = tester
+        .widgetList<Text>(find.byType(Text))
+        .map((t) => t.data ?? '')
+        .join(' | ');
+
+    final invented = RegExp(r'[₱€$]|[0-9]+(\.[0-9]+)? ?(km|min)');
+    expect(invented.hasMatch(shown), isFalse, reason: shown);
+    expect(find.text('No delivery offers'), findsOneWidget);
+    expect(find.text('Nothing to show yet'), findsOneWidget);
+  });
+
+  testWidgets('fits a narrow phone without overflow', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(const RiderApp());
+
+    expect(tester.takeException(), isNull);
   });
 
   test('android manifest requests no location permission', () {

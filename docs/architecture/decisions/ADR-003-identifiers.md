@@ -1,6 +1,6 @@
 # ADR-003: ULID identifiers
 
-- Status: accepted; letter case to be confirmed in Sprint 3
+- Status: accepted. Confirmed in Sprint 3: the framework emits lower-case ULIDs and PostgreSQL compares them case-sensitively (`SchemaTest::test_ulids_are_stored_in_one_case`). Lower case is the stored form; normalizing incoming IDs at the API boundary is Sprint 4 work
 - Date: 2026-11-12
 
 ## Context

@@ -2,7 +2,7 @@
 # built-in server and mounts the source tree. A hardened production image
 # (non-root, php-fpm behind nginx, no dev dependencies) is backlog E-05.
 #
-# UNVERIFIED: not yet built (no Docker on the authoring workstation).
+# Built and run locally on 2026-11-13 (Docker 29.9.3).
 
 FROM composer:2.11.2 AS composer
 
@@ -28,4 +28,7 @@ RUN composer dump-autoload --optimize
 
 EXPOSE 8000
 
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# --no-reload is required: without it `artisan serve` strips the container's
+# environment from the server process and falls back to backend/.env, so the
+# values from Compose (database, Redis, session driver) are silently ignored.
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000", "--no-reload"]

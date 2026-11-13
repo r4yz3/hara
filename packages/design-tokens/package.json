@@ -2,5 +2,14 @@
   "name": "@food-delivery/design-tokens",
   "version": "0.0.0",
   "private": true,
-  "description": "Placeholder. No code yet; see docs/backlog.md."
+  "type": "module",
+  "description": "Colour tokens with measured contrast. tokens.css is generated from src/tokens.mjs.",
+  "exports": {
+    "./tokens.css": "./tokens.css",
+    "./tokens": "./src/tokens.mjs"
+  },
+  "scripts": {
+    "build": "node src/build.mjs",
+    "test": "node --test"
+  }
 }

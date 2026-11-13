@@ -31,7 +31,7 @@
 | T02 | 2 | I | Account enumeration through login, registration or recovery | Identical responses and timing-insensitive flow | SessionLoginTest, recovery tests |
 | T03 | 2 | T | CSRF on cookie-authenticated mutations | CSRF token, SameSite, origin allowlist | CSRF and CORS negative tests |
 | T04 | 2 | I/E | Cross-origin credentialed requests from an unlisted origin | Explicit CORS allowlist, never wildcard with credentials | CORS negative tests |
-| T05 | 2 | E | Session shared between customer and admin surfaces | **Open** — ADR-011 item 1 | To be added in Sprint 4 |
+| T05 | 2 | E | Session shared between customer and admin surfaces | Per-app session cookie chosen from the Origin; surface stored in the session and checked on every request | SessionAndMeTest, sprint4-auth-smoke.txt |
 | T06 | 2 | S | Session fixation or theft | Regenerate session on login, HttpOnly + Secure cookies, logout invalidates server side | SessionLogoutTest |
 | T07 | 2/3 | E | Self-granted role at registration or profile update | Role and scope fields ignored on public endpoints; grants only through the audited service | RegisterCustomerTest, "customer cannot grant platform_owner" |
 | T08 | 2/3 | E/I | IDOR: guessed or edited city, zone, merchant, branch or user ID | ADR-005 five checks, scoped queries, 404 for out-of-scope | CrossTenantIsolationTest, ScopePolicyTest |

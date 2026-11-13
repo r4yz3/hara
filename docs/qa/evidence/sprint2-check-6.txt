@@ -1,0 +1,288 @@
+﻿Command: .\infra\scripts\dev.ps1 check
+Date: 2026-11-13 (sixth run: after merchant portal shell)
+Exit code: 0
+
+==> web lint
+
+> food-delivery@ lint F:\PROJECTS\hara
+> pnpm -r --if-present lint
+
+Scope: 8 of 9 workspace projects
+apps/admin-web lint$ eslint
+apps/customer-web lint$ eslint
+apps/merchant-web lint$ eslint
+apps/merchant-web lint: Done
+apps/admin-web lint: Done
+apps/customer-web lint: Done
+==> web typecheck
+
+> food-delivery@ typecheck F:\PROJECTS\hara
+> pnpm -r --if-present typecheck
+
+Scope: 8 of 9 workspace projects
+apps/admin-web typecheck$ next typegen && tsc --noEmit
+apps/customer-web typecheck$ next typegen && tsc --noEmit
+apps/merchant-web typecheck$ next typegen && tsc --noEmit
+apps/admin-web typecheck: Generating route types...
+apps/customer-web typecheck: Generating route types...
+apps/merchant-web typecheck: Generating route types...
+apps/admin-web typecheck: ✓ Types generated successfully
+apps/customer-web typecheck: ✓ Types generated successfully
+apps/merchant-web typecheck: ✓ Types generated successfully
+apps/customer-web typecheck: Done
+apps/admin-web typecheck: Done
+apps/merchant-web typecheck: Done
+==> web tests
+
+> food-delivery@ test F:\PROJECTS\hara
+> pnpm -r --if-present test
+
+Scope: 8 of 9 workspace projects
+packages/design-tokens test$ node --test
+packages/design-tokens test: ✔ contrast ratio matches the WCAG reference values (1.7865ms)
+packages/design-tokens test: ✔ rejects colours that are not #rrggbb (0.2848ms)
+packages/design-tokens test: ✔ light and dark define the same tokens (0.6997ms)
+packages/design-tokens test: ✔ every approved pair meets its threshold in both themes (0.5083ms)
+packages/design-tokens test: ✔ restricted tokens really do fail, so the restriction is not stale (0.1641ms)
+packages/design-tokens test: ✔ tokens.css is up to date with tokens.mjs (0.5181ms)
+packages/design-tokens test: ✔ contrast report is up to date with tokens.mjs (1.3921ms)
+packages/design-tokens test: ℹ tests 7
+packages/design-tokens test: ℹ suites 0
+packages/design-tokens test: ℹ pass 7
+packages/design-tokens test: ℹ fail 0
+packages/design-tokens test: ℹ cancelled 0
+packages/design-tokens test: ℹ skipped 0
+packages/design-tokens test: ℹ todo 0
+packages/design-tokens test: ℹ duration_ms 103.0955
+packages/design-tokens test: Done
+==> web build
+
+> food-delivery@ build F:\PROJECTS\hara
+> pnpm -r --if-present build
+
+Scope: 8 of 9 workspace projects
+packages/design-tokens build$ node src/build.mjs
+packages/design-tokens build: Wrote tokens.css and docs/ux/contrast-report.md
+packages/design-tokens build: Done
+apps/admin-web build$ next build
+apps/customer-web build$ next build
+apps/merchant-web build$ next build
+apps/merchant-web build: ▲ Next.js 16.4.6 (Turbopack)
+apps/admin-web build: ▲ Next.js 16.4.6 (Turbopack)
+apps/customer-web build: ▲ Next.js 16.4.6 (Turbopack)
+apps/admin-web build: ✓ Running next.config.ts took 38ms
+apps/merchant-web build: ✓ Running next.config.ts took 38ms
+apps/customer-web build: ✓ Running next.config.ts took 39ms
+apps/merchant-web build: - Cache Components enabled
+apps/merchant-web build: - Partial Prefetching enabled
+apps/customer-web build: - Cache Components enabled
+apps/customer-web build: - Partial Prefetching enabled
+apps/admin-web build: - Cache Components enabled
+apps/admin-web build: - Partial Prefetching enabled
+apps/merchant-web build:   Creating an optimized production build ...
+apps/customer-web build:   Creating an optimized production build ...
+apps/admin-web build:   Creating an optimized production build ...
+apps/merchant-web build: ✓ Compiled successfully in 777ms
+apps/merchant-web build:   Running TypeScript ...
+apps/customer-web build: ✓ Compiled successfully in 770ms
+apps/customer-web build:   Running TypeScript ...
+apps/admin-web build: ✓ Compiled successfully in 1278ms
+apps/admin-web build:   Running TypeScript ...
+apps/customer-web build:   Finished TypeScript in 1697ms ...
+apps/customer-web build:   Collecting page data using 5 workers ...
+apps/merchant-web build:   Finished TypeScript in 2.2s ...
+apps/merchant-web build:   Collecting page data using 5 workers ...
+apps/admin-web build:   Finished TypeScript in 1950ms ...
+apps/admin-web build:   Collecting page data using 5 workers ...
+apps/customer-web build:   Generating static pages using 5 workers (0/4) ...
+apps/merchant-web build:   Generating static pages using 5 workers (0/4) ...
+apps/admin-web build:   Generating static pages using 5 workers (0/4) ...
+apps/customer-web build:   Generating static pages using 5 workers (1/4) 
+apps/customer-web build:   Generating static pages using 5 workers (2/4) 
+apps/customer-web build:   Generating static pages using 5 workers (3/4) 
+apps/customer-web build: ✓ Generating static pages using 5 workers (4/4) in 1137ms
+apps/customer-web build:   Finalizing page optimization ...
+apps/customer-web build: Route (app)
+apps/customer-web build: ┌ ○ /
+apps/customer-web build: └ ○ /_not-found
+apps/customer-web build: ○  (Static)  prerendered as static content
+apps/merchant-web build:   Generating static pages using 5 workers (1/4) 
+apps/merchant-web build:   Generating static pages using 5 workers (2/4) 
+apps/merchant-web build:   Generating static pages using 5 workers (3/4) 
+apps/merchant-web build: ✓ Generating static pages using 5 workers (4/4) in 1027ms
+apps/merchant-web build:   Finalizing page optimization ...
+apps/merchant-web build: Route (app)
+apps/merchant-web build: ┌ ○ /
+apps/merchant-web build: └ ○ /_not-found
+apps/merchant-web build: ○  (Static)  prerendered as static content
+apps/admin-web build:   Generating static pages using 5 workers (1/4) 
+apps/admin-web build:   Generating static pages using 5 workers (2/4) 
+apps/admin-web build:   Generating static pages using 5 workers (3/4) 
+apps/admin-web build: ✓ Generating static pages using 5 workers (4/4) in 998ms
+apps/admin-web build:   Finalizing page optimization ...
+apps/customer-web build: Done
+apps/admin-web build: Route (app)
+apps/admin-web build: ┌ ◐ /
+apps/admin-web build: └ ○ /_not-found
+apps/admin-web build: ○  (Static)             prerendered as static content
+apps/admin-web build: ◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content
+apps/merchant-web build: Done
+apps/admin-web build: Done
+==> backend format
+
+  ..........................................
+
+  ──────────────────────────────────────────────────────────────────── Laravel  
+    PASS   .......................................................... 42 files  
+
+==> backend static analysis
+powershell : Note: Using configuration file /var/www/backend/phpstan.neon.
+At line:1 char:910
++ ... jpg; $out = powershell -NoProfile -ExecutionPolicy Bypass -File infra ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Note: Using con...d/phpstan.neon.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+ [OK] No errors                                                                 
+
+==> backend tests
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Unit\ArchitectureTest[39m
+  [32;1m✓[39;22m[90m [39m[90mexpected domain modules exist[39m[90m                                       [39m [90m0.01s[39m  
+  [32;1m✓[39;22m[90m [39m[90mdomain code does not import http layer[39m[90m                              [39m [90m0.04s[39m  
+  [32;1m✓[39;22m[90m [39m[90mmodules reference each other only through contracts[39m[90m                 [39m [90m0.03s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Unit\Domain\Geo\CoordinateBoundsTest[39m
+  [32;1m✓[39;22m[90m [39m[90maccepts values inside and on the bounds with data set "origin"[39m[90m      [39m [90m0.01s[39m  
+  [32;1m✓[39;22m[90m [39m[90maccepts values inside and on the bounds with data set "asymmetric"[39m
+  [32;1m✓[39;22m[90m [39m[90maccepts values inside and on the bounds with data set "north pole, date line"[39m
+  [32;1m✓[39;22m[90m [39m[90maccepts values inside and on the bounds with data set "south pole, antimeridian"[39m
+  [32;1m✓[39;22m[90m [39m[90maccepts values inside and on the bounds with data set "fractional"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects out of range and non finite values with data set "latitude just above"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects out of range and non finite values with data set "latitude just below"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects out of range and non finite values with data set "longitude just above"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects out of range and non finite values with data set "longitude just below"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects out of range and non finite values with data set "swapped asymmetric pair"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects out of range and non finite values with data set "latitude na n"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects out of range and non finite values with data set "longitude na n"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects out of range and non finite values with data set "latitude infinite"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects out of range and non finite values with data set "longitude negative infinite"[39m
+  [32;1m✓[39;22m[90m [39m[90mgeojson position is longitude then latitude[39m
+  [32;1m✓[39;22m[90m [39m[90mreads a geojson position as longitude then latitude[39m
+  [32;1m✓[39;22m[90m [39m[90mgeojson position ignores altitude[39m
+  [32;1m✓[39;22m[90m [39m[90minteger json numbers are accepted in positions[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed geojson positions with data set "empty"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed geojson positions with data set "one value"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed geojson positions with data set "four values"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed geojson positions with data set "numeric strings"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed geojson positions with data set "null"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed geojson positions with data set "boolean"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed geojson positions with data set "nested"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed geojson positions with data set "keyed"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed geojson positions with data set "swapped asymmetric pair"[39m
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Unit\Domain\Geo\ZoneGeometryValidatorTest[39m
+  [32;1m✓[39;22m[90m [39m[90maccepts a multipolygon and returns it unchanged[39m[90m                     [39m [90m0.02s[39m  
+  [32;1m✓[39;22m[90m [39m[90mwraps a polygon into a multipolygon[39m
+  [32;1m✓[39;22m[90m [39m[90mdrops altitude and casts integers[39m
+  [32;1m✓[39;22m[90m [39m[90mkeeps holes and multiple polygons[39m
+  [32;1m✓[39;22m[90m [39m[90mignores unknown members such as bbox[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "no type"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "point"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "feature wrapper"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "geometry collection"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "type is not a string"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "lower-case type"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "missing coordinates"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "coordinates not a list"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "keyed coordinates"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "empty multipolygon"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "polygon without rings"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "multipolygon with empty polygon"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "polygon depth given as multipolygon"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "multipolygon depth given as polygon"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "ring is not a list"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "ring too short"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "ring not closed"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "ring collapsed to a line"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "string coordinates"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "latitude out of range"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid input with a reason with data set "axes swapped"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects more vertices than the cap[39m
+  [32;1m✓[39;22m[90m [39m[90maccepts exactly the vertex cap[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects an extent wider than the cap[39m
+  [32;1m✓[39;22m[90m [39m[90mextent is measured across all polygons[39m
+  [32;1m✓[39;22m[90m [39m[90maccepts an extent within the cap[39m
+  [32;1m✓[39;22m[90m [39m[90mlimits must be positive[39m
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Unit\Support\Money\CurrencyAmountTest[39m
+  [32;1m✓[39;22m[90m [39m[90mholds minor units and currency[39m[90m                                      [39m [90m0.02s[39m  
+  [32;1m✓[39;22m[90m [39m[90mcurrency is normalized to upper case[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid currency codes with data set "empty"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid currency codes with data set "too short"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid currency codes with data set "too long"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid currency codes with data set "symbol"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid currency codes with data set "digits"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects invalid currency codes with data set "padded"[39m
+  [32;1m✓[39;22m[90m [39m[90madds and subtracts exactly[39m
+  [32;1m✓[39;22m[90m [39m[90mamounts that break floats stay exact[39m
+  [32;1m✓[39;22m[90m [39m[90mis immutable[39m
+  [32;1m✓[39;22m[90m [39m[90msigned amounts are allowed[39m
+  [32;1m✓[39;22m[90m [39m[90mmultiplies by whole quantity[39m
+  [32;1m✓[39;22m[90m [39m[90mrefuses to combine different currencies[39m
+  [32;1m✓[39;22m[90m [39m[90mrefuses to compare different currencies[39m
+  [32;1m✓[39;22m[90m [39m[90mequals is false across currencies[39m
+  [32;1m✓[39;22m[90m [39m[90mcompares within a currency[39m
+  [32;1m✓[39;22m[90m [39m[90maddition overflow throws instead of becoming a float[39m
+  [32;1m✓[39;22m[90m [39m[90msubtraction overflow throws[39m
+  [32;1m✓[39;22m[90m [39m[90mmultiplication overflow throws[39m
+  [32;1m✓[39;22m[90m [39m[90mnegating the minimum integer throws[39m
+  [32;1m✓[39;22m[90m [39m[90mparses decimal strings without floats with data set "whole"[39m
+  [32;1m✓[39;22m[90m [39m[90mparses decimal strings without floats with data set "two decimals"[39m
+  [32;1m✓[39;22m[90m [39m[90mparses decimal strings without floats with data set "one decimal"[39m
+  [32;1m✓[39;22m[90m [39m[90mparses decimal strings without floats with data set "float-hostile"[39m
+  [32;1m✓[39;22m[90m [39m[90mparses decimal strings without floats with data set "another float-hostile"[39m
+  [32;1m✓[39;22m[90m [39m[90mparses decimal strings without floats with data set "negative"[39m
+  [32;1m✓[39;22m[90m [39m[90mparses decimal strings without floats with data set "zero"[39m
+  [32;1m✓[39;22m[90m [39m[90mparses decimal strings without floats with data set "large"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "empty"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "three decimals"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "thousands separator"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "currency symbol"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "exponent"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "trailing dot"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "leading dot"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "spaces"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "plus sign"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "words"[39m
+  [32;1m✓[39;22m[90m [39m[90mrejects malformed decimal strings with data set "out of range"[39m
+  [32;1m✓[39;22m[90m [39m[90mserializes to amount and currency only[39m
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\HealthTest[39m
+  [32;1m✓[39;22m[90m [39m[90mlive returns minimal body[39m[90m                                           [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mhealth routes run outside the session middleware[39m[90m                    [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mlive does not touch the session store[39m[90m                               [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mready is hidden from public addresses[39m[90m                               [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mready reports only dependency state to internal callers[39m[90m             [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mframework default health route is not registered[39m[90m                    [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mno versioned api routes exist yet[39m[90m                                   [39m [90m0.07s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\RouteInventoryTest[39m
+  [32;1m✓[39;22m[90m [39m[90monly expected routes are registered[39m[90m                                 [39m [90m0.07s[39m  
+
+  [90mTests:[39m    [32;1m111 passed[39;22m[90m (153 assertions)[39m
+  [90mDuration:[39m [39m1.09s[39m
+
+==> flutter analyze
+Analyzing rider-flutter...                                      
+No issues found! (ran in 2.7s)
+==> flutter test
+00:00 +0: loading F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart
+00:00 +0: home is labelled as a scaffold
+00:00 +1: online toggle is off and disabled
+00:00 +2: scaffold label is exposed to screen readers
+00:00 +3: android manifest requests no location permission
+00:00 +4: All tests passed!
+All checks passed.
+
