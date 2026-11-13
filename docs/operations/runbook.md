@@ -12,6 +12,8 @@ Status on 2026-11-13: rehearsed on the production-like stack in `infra/rehearsal
 
 Every response carries `X-Request-Id`, and every log line carries the same id. Ask a person reporting an error for it.
 
+**502 from nginx and the `api` container restarting** usually means the API refused to start: its log says `Refusing to start with unsafe settings` and names each setting to fix (never its value). Fix the environment and restart `api`. `migrate`, `config:clear` and the other repair commands still run in that state.
+
 ## Rolling back
 
 Choose the smallest step that fixes the problem.

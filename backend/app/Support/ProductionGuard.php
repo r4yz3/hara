@@ -78,6 +78,7 @@ final class ProductionGuard
             'demo.password_is_set' => is_string($demo) && $demo !== '',
             'database.password_is_real' => is_string($databasePassword)
                 && ! in_array(strtolower($databasePassword), self::PLACEHOLDER_SECRETS, true),
+            'trustedproxy.proxies' => $config->get('trustedproxy.proxies'),
         ];
     }
 
@@ -147,6 +148,11 @@ final class ProductionGuard
             $problems[] = 'DB_PASSWORD must be a real secret, not empty or a placeholder.';
         }
 
+        $proxies = $facts['trustedproxy.proxies'] ?? null;
+        if (! is_array($proxies) || array_filter($proxies, fn (mixed $proxy): bool => ! self::isProxyAddress($proxy)) !== []) {
+            $problems[] = 'TRUSTED_PROXIES must list specific proxy IP addresses or ranges, never "*" or a range covering every address.';
+        }
+
         return $problems;
     }
 
@@ -163,6 +169,31 @@ final class ProductionGuard
 
             throw new RuntimeException("Refusing to start with unsafe settings:\n- ".implode("\n- ", $problems));
         }
+    }
+
+    /**
+     * An IP address, or a CIDR range narrower than "everyone" (/0).
+     */
+    private static function isProxyAddress(mixed $proxy): bool
+    {
+        if (! is_string($proxy)) {
+            return false;
+        }
+
+        [$address, $mask] = array_pad(explode('/', $proxy, 2), 2, null);
+        $version = filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false ? 4
+            : (filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false ? 6 : null);
+
+        if ($version === null) {
+            return false;
+        }
+        if ($mask === null) {
+            return true;
+        }
+
+        $max = $version === 4 ? 32 : 128;
+
+        return ctype_digit($mask) && (int) $mask >= 1 && (int) $mask <= $max;
     }
 
     private static function isHttps(mixed $url): bool

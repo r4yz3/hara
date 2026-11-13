@@ -40,6 +40,7 @@ Both images are scanned in CI by the `image` job in `.github/workflows/security.
 | `HASH_DRIVER` | `argon2id` |
 | `DB_PASSWORD` | a real secret |
 | `DEMO_PASSWORD` | unset |
+| `TRUSTED_PROXIES` | the TLS proxy's IP addresses or CIDR ranges, comma-separated; never `*` or a `/0` range. Without it Laravel sees plain HTTP and never sends HSTS |
 | `LOG_CHANNEL=stack`, `LOG_STACK=json` | logs as JSON to the container's stderr (E-01) |
 
 Admin sign-in stays refused in production until two-step verification exists (B-09). That is intended.
@@ -72,6 +73,6 @@ If any step fails, follow the rollback in `docs/operations/runbook.md`.
 .\infra\scripts\rehearsal.ps1 destroy                 # deletes the rehearsal database
 ```
 
-There is no TLS in the rehearsal. The https settings are satisfied by configuration only, so Secure cookies and HSTS behave as they would behind a proxy that has not been configured to be trusted yet (ADR-014).
+There is no TLS in the rehearsal. The https settings are satisfied by configuration only. Requests from the workstation reach nginx from the Docker gateway, so setting `TRUSTED_PROXIES` to that address in `infra\rehearsal\.env` makes the gateway play the TLS proxy (`docs/qa/evidence/sprint7-trusted-proxy-check.txt`).
 
 The last rehearsal is recorded in `docs/qa/evidence/e05-rollback-rehearsal.txt`.

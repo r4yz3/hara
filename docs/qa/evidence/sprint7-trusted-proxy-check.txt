@@ -1,0 +1,13 @@
+# Trusted proxies on the production-like stack (nginx -> PHP-FPM, APP_ENV=staging), 2026-11-13T15:46:08Z
+# Requests from the host reach nginx from the Docker gateway, 172.19.0.1, which here plays the TLS proxy.
+
+## 1. TRUSTED_PROXIES unset (the default)
+host claims https: HTTP/1.1 200 OK 
+
+## 2. TRUSTED_PROXIES=172.19.0.1 (the gateway)
+host claims https: HTTP/1.1 200 OK Strict-Transport-Security: max-age=31536000 
+another container claims https:   HTTP/1.1 200 OK 
+
+## 3. TRUSTED_PROXIES=* (refused by ProductionGuard)
+host request: 502
+TRUSTED_PROXIES must list specific proxy IP addresses or ranges, never \

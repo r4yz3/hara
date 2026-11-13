@@ -32,12 +32,20 @@ class ProductionGuardTest extends TestCase
             'hashing.driver' => 'argon2id',
             'demo.password_is_set' => false,
             'database.password_is_real' => true,
+            'trustedproxy.proxies' => [],
         ];
     }
 
     public function test_a_safe_configuration_has_no_violations(): void
     {
         $this->assertSame([], ProductionGuard::violations(self::safe()));
+    }
+
+    public function test_specific_proxy_addresses_and_ranges_are_accepted(): void
+    {
+        $facts = array_merge(self::safe(), ['trustedproxy.proxies' => ['203.0.113.10', '10.0.0.0/8', '2001:db8::/32', 'fd00::1']]);
+
+        $this->assertSame([], ProductionGuard::violations($facts));
     }
 
     /** @param array<string, mixed> $override */
@@ -57,6 +65,13 @@ class ProductionGuardTest extends TestCase
 
         return [
             'debug on' => [['app.debug' => true], 'APP_DEBUG'],
+            'every proxy trusted' => [['trustedproxy.proxies' => ['*']], 'TRUSTED_PROXIES'],
+            'every proxy trusted, alternate form' => [['trustedproxy.proxies' => ['**']], 'TRUSTED_PROXIES'],
+            'proxy list missing' => [['trustedproxy.proxies' => null], 'TRUSTED_PROXIES'],
+            'proxy is a host name' => [['trustedproxy.proxies' => ['proxy.example.test']], 'TRUSTED_PROXIES'],
+            'proxy range too wide' => [['trustedproxy.proxies' => ['0.0.0.0/0']], 'TRUSTED_PROXIES'],
+            'proxy range too wide, ipv6' => [['trustedproxy.proxies' => ['::/0']], 'TRUSTED_PROXIES'],
+            'proxy mask invalid' => [['trustedproxy.proxies' => ['10.0.0.0/33']], 'TRUSTED_PROXIES'],
             'debug unset' => [['app.debug' => null], 'APP_DEBUG'],
             'debug as a string' => [['app.debug' => 'false'], 'APP_DEBUG'],
             'no app key' => [['app.key_is_set' => false], 'APP_KEY'],
@@ -83,7 +98,7 @@ class ProductionGuardTest extends TestCase
     public function test_an_empty_set_of_facts_fails_every_rule(): void
     {
         // Nothing is assumed safe by being absent.
-        $this->assertCount(11, ProductionGuard::violations([]));
+        $this->assertCount(12, ProductionGuard::violations([]));
     }
 
     public function test_every_problem_is_listed_at_once(): void

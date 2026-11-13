@@ -5,6 +5,19 @@ Last updated: 2026-11-13, Sprint 4 in progress (roles, permissions, audit and si
 ## Summary
 Sprint 1 documents await human review. The Docker stack now starts healthy and the backend checks run inside it against PostGIS and Redis. The Sprint 2 gate ("clean clone boot smoke with logs") is **still not met**: the boot was done in the working tree, not from a clean clone, and CI has never run. The product owner supplied front-end reference images; the customer home screen is built in that direction.
 
+## Sprint 7: trusted proxies (follow-up to E-02 and E-05, 2026-11-13)
+Evidence: `docs/qa/evidence/sprint7-trusted-proxy-check.txt` (behind nginx in the rehearsal stack) and `sprint7-trusted-proxy-full-check.txt` (`dev.ps1 check`).
+
+- Gap closed: behind the host's TLS proxy, Laravel trusted no forwarded headers, so it saw every request as plain HTTP and never sent HSTS.
+- `TRUSTED_PROXIES` (new, `config/trustedproxy.php`) is a comma-separated list of IP addresses or CIDR ranges. It is empty by default. Laravel's own middleware believes only `X-Forwarded-For`, `-Proto` and `-Port`, and only from those addresses; `X-Forwarded-Host` is never believed, because URLs come from `APP_URL`.
+- `ProductionGuard` gained a rule: refuse `*`, `**`, a `/0` range, host names and malformed masks. Trusting everyone would let any client fake its address and slip past per-address sign-in limits.
+- Tests: TrustedProxyTest (8) and seven new ProductionGuardTest cases.
+- Checked behind nginx (rehearsal stack, Docker gateway playing the proxy):
+  - unset: a claimed https was ignored;
+  - set to the gateway: HSTS was sent, while the same claim from another container changed nothing;
+  - `*`: the API refused to start.
+- Learned: the guard runs when the container starts, because the entry point's `route:cache` boots the application. An unsafe setting makes the container exit and restart, and nginx answers 502. Earlier text said the check happened on the first request; the entry point comment, ADR-014 and the runbook are corrected, and the runbook now says how to recognise a refused start.
+
 ## Sprint 7: production images and rollback rehearsal (E-05, 2026-11-13)
 Evidence: `docs/qa/evidence/e05-rollback-rehearsal.txt` (each step) and `e05-full-check.txt` (`dev.ps1 check`, exit 0; 387 backend tests).
 
@@ -31,7 +44,7 @@ Evidence: `docs/qa/evidence/e05-rollback-rehearsal.txt` (each step) and `e05-ful
 - Docs: `docs/operations/deploy.md`, `docs/operations/runbook.md`, `docs/security/incident-response.md`.
 - Not done:
   - no real host (E-07);
-  - no TLS in the rehearsal, and trusted proxies are not configured, so HSTS is never sent behind a proxy yet;
+  - no TLS in the rehearsal (trusted proxies were added afterwards, see above);
   - no read-only root filesystem;
   - no queue worker or scheduler (none needed in Phase 1);
   - no `APP_KEY` rotation procedure;

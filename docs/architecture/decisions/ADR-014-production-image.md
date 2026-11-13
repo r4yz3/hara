@@ -11,7 +11,7 @@ The only API image was a development image: it runs `php artisan serve` as root 
 - Two images from one Dockerfile, `infra/docker/prod/api.Dockerfile`:
   - `api`: PHP 8.4 FPM on Alpine, code baked in, Composer dependencies without development packages, an authoritative class map, production `php.ini` with OPcache, file uploads off, `expose_php` off. Runs as `www-data`; only `storage/` and `bootstrap/cache/` are writable, by that user alone. Composer and the tests are removed from the image.
   - `web`: nginx (`nginxinc/nginx-unprivileged`), running as `nginx`, serving `backend/public/` and passing every other request to `api:9000`. Hidden files and any `.php` path other than the front controller return 404.
-- Configuration comes only from the environment at run time. The entry point caches configuration and routes on start, and `ProductionGuard` refuses to serve with unsafe settings.
+- Configuration comes only from the environment at run time. The entry point caches configuration and routes on start; that boots the application, so `ProductionGuard` checks the settings then, and the container exits instead of starting with unsafe ones.
 - TLS ends before nginx, at whatever proxy or load balancer the host provides.
 - nginx logs the requested path without its query string and never a request body (ADR-013), plus the request id. PHP-FPM's own access log is off so each request is logged once.
 - Both images run `apk upgrade` at build time, and CI scans both (E-04).
@@ -28,4 +28,4 @@ PHP-FPM behind nginx is the arrangement in Laravel's deployment documentation. I
 - Where the images run, and what terminates TLS (E-07).
 - A queue worker and scheduler container: Phase 1 has no queued jobs, so there is nothing to run.
 - A read-only root filesystem: the entry point writes the configuration cache. It needs writable mounts for `storage/` and `bootstrap/cache/`, which depends on the host.
-- Trusted proxies: behind the host's proxy, Laravel will see plain HTTP until the proxy's address is trusted, and only then send HSTS (E-02). That needs the proxy's address, which comes with the host.
+- The proxy's address: `TRUSTED_PROXIES` (added after this decision) lists it, and only the forwarded client address, scheme and port are believed, never the host. The value comes with the host.

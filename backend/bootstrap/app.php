@@ -25,6 +25,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Every response, error pages and CORS preflights included (E-02).
         $middleware->prepend(SecurityHeaders::class);
 
+        // Which proxies to believe comes from config/trustedproxy.php. Of their
+        // headers, only client address, scheme and port: never the host (ADR-014).
+        $middleware->trustProxies(headers: Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_PROTO | Request::HEADER_X_FORWARDED_PORT);
+
         // Order matters: the surface picks the session cookie name, so it
         // must run before Sanctum starts the session (ADR-011).
         $middleware->api(prepend: [
