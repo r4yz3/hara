@@ -13,7 +13,7 @@ use Illuminate\Validation\ValidationException;
  * Creates and edits delivery zones (backlog C-04). Every write carries the
  * zone's version: an edit made against an older version is refused with 409
  * instead of silently overwriting someone else's change. Each change and its
- * audit row share one transaction. Status changes are not handled here (C-05).
+ * audit row share one transaction.
  * Authorization is the caller's job.
  */
 class ZoneService
@@ -94,6 +94,53 @@ class ZoneService
             }
 
             $this->audit->record($actorId, 'zone.updated', 'delivery_zone', $zoneId, (string) $row->city_id, before: $before, after: $this->audited($zoneId));
+        });
+    }
+
+    /**
+     * Moves a zone along the same edges as a city (ADR-000 items 8 and 9).
+     * Activation also needs the city to be active and the stored shape to be
+     * valid. The reason, when given, is kept in the audit row.
+     */
+    public function changeStatus(string $actorId, string $zoneId, int $expectedVersion, CityStatus $target, ?string $reason): void
+    {
+        DB::transaction(function () use ($actorId, $zoneId, $expectedVersion, $target, $reason): void {
+            $row = DB::table('delivery_zones')->where('id', $zoneId)->lockForUpdate()->first(['city_id', 'status', 'version']);
+            if ($row === null) {
+                throw ApiError::notFound();
+            }
+            if ((int) $row->version !== $expectedVersion) {
+                throw new ApiError(409, 'CONFLICT', 'The zone was changed by someone else. Reload it and try again.');
+            }
+
+            $current = CityStatus::from((string) $row->status);
+            if (! $current->canBecome($target)) {
+                throw new ApiError(409, 'CONFLICT', "A {$current->value} zone cannot become {$target->value}.");
+            }
+
+            if ($target === CityStatus::Active) {
+                // Shared lock: the city cannot be paused or archived mid-activation.
+                $cityStatus = DB::table('cities')->where('id', $row->city_id)->sharedLock()->value('status');
+                if ($cityStatus !== CityStatus::Active->value) {
+                    throw new ApiError(409, 'CONFLICT', 'A zone can be activated only in an active city.');
+                }
+
+                $valid = DB::selectOne('SELECT ST_IsValid(coverage) AND NOT ST_IsEmpty(coverage) AS valid FROM delivery_zones WHERE id = ?', [$zoneId])->valid ?? false;
+                if ($valid !== true) {
+                    throw new ApiError(409, 'CONFLICT', 'The zone shape is not valid and cannot be activated.');
+                }
+            }
+
+            $updated = DB::update(
+                'UPDATE delivery_zones SET status = ?, version = version + 1, updated_at = NOW() WHERE id = ? AND version = ?',
+                [$target->value, $zoneId, $expectedVersion],
+            );
+            if ($updated !== 1) {
+                throw new ApiError(409, 'CONFLICT', 'The zone was changed by someone else. Reload it and try again.');
+            }
+
+            $after = ['status' => $target->value] + ($reason === null ? [] : ['reason' => $reason]);
+            $this->audit->record($actorId, 'zone.status_changed', 'delivery_zone', $zoneId, (string) $row->city_id, before: ['status' => $current->value], after: $after);
         });
     }
 

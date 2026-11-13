@@ -452,8 +452,8 @@ paths:
         Needs `zones.write` for the zone's city. Send the `version` you
         loaded; if the zone has changed since, the edit is refused with 409
         and nothing is written. Only `name`, `priority` and `geometry` can
-        change; each successful edit adds 1 to `version`. Status changes are
-        not available yet. Any change to an archived zone is 409.
+        change; each successful edit adds 1 to `version`. Status has its own
+        routes. Any change to an archived zone is 409.
       operationId: adminZonesUpdate
       parameters:
         - { $ref: "#/components/parameters/CsrfToken" }
@@ -472,6 +472,119 @@ paths:
       responses:
         "200":
           description: Updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ZoneResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/zones/{zone}/activate:
+    parameters:
+      - name: zone
+        in: path
+        required: true
+        schema: { type: string }
+        description: Zone id. Letter case is ignored.
+    post:
+      tags: [Admin]
+      summary: Put a delivery zone live
+      description: |
+        Needs `zones.write` for the zone's city. Allowed from draft or paused,
+        only while the city is active, and only with `confirm: true`. 409 for
+        any other status, an inactive city or a stale `version`.
+      operationId: adminZonesActivate
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version, confirm]
+              properties:
+                version: { type: integer, minimum: 1 }
+                confirm: { type: boolean, enum: [true] }
+      responses:
+        "200":
+          description: The zone in its new status; `version` has gone up by 1.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ZoneResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/zones/{zone}/pause:
+    parameters:
+      - name: zone
+        in: path
+        required: true
+        schema: { type: string }
+        description: Zone id. Letter case is ignored.
+    post:
+      tags: [Admin]
+      summary: Pause an active delivery zone
+      description: |
+        Needs `zones.write` for the zone's city. Allowed from active only; a
+        reason is required. 409 for any other status or a stale `version`.
+      operationId: adminZonesPause
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version, reason]
+              properties:
+                version: { type: integer, minimum: 1 }
+                reason: { type: string, minLength: 1, maxLength: 255, description: Kept in the audit log. }
+      responses:
+        "200":
+          description: The zone in its new status; `version` has gone up by 1.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ZoneResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/zones/{zone}/archive:
+    parameters:
+      - name: zone
+        in: path
+        required: true
+        schema: { type: string }
+        description: Zone id. Letter case is ignored.
+    post:
+      tags: [Admin]
+      summary: Archive a delivery zone
+      description: |
+        Needs `zones.write` for the zone's city. Allowed from draft or paused;
+        an active zone must be paused first. Archiving is final. 409 for any
+        other status or a stale `version`.
+      operationId: adminZonesArchive
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version]
+              properties:
+                version: { type: integer, minimum: 1 }
+                reason: { type: string, minLength: 1, maxLength: 255, description: Kept in the audit log. }
+      responses:
+        "200":
+          description: The zone in its new status; `version` has gone up by 1.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ZoneResponse" }

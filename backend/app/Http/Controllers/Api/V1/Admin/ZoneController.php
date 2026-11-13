@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Application\Commands\ZoneService;
 use App\Application\Queries\AccessChecker;
+use App\Domain\Geo\CityStatus;
 use App\Domain\Geo\GeometryLimits;
 use App\Domain\Geo\InvalidZoneGeometry;
 use App\Domain\Geo\ZoneGeometry;
@@ -93,7 +94,7 @@ class ZoneController extends Controller
         $id = $this->readableZone($zone);
         $this->requireWrite((string) DB::table('delivery_zones')->where('id', $id)->value('city_id'));
 
-        // Slug and city are fixed after creation; status moves through C-05.
+        // Slug and city are fixed after creation; status has its own routes.
         $input = $request->validate([
             'version' => ['required', 'integer', 'min:1'],
             'name' => ['sometimes', 'string', 'min:1', 'max:160'],
@@ -106,6 +107,39 @@ class ZoneController extends Controller
         $geometry = isset($input['geometry']) ? $this->geometry($input['geometry']) : null;
 
         $this->zones->update((string) $this->user()->id, $id, (int) $input['version'], $fields, $geometry);
+
+        return ApiResponse::data($request, $this->load($id));
+    }
+
+    /**
+     * Putting a zone live is confirmed explicitly (spec 6.4): the request
+     * must carry `confirm: true`.
+     */
+    public function activate(Request $request, string $zone): JsonResponse
+    {
+        return $this->transition($request, $zone, CityStatus::Active, ['confirm' => ['required', 'accepted']]);
+    }
+
+    public function pause(Request $request, string $zone): JsonResponse
+    {
+        return $this->transition($request, $zone, CityStatus::Paused, ['reason' => ['required', 'string', 'min:1', 'max:255']]);
+    }
+
+    public function archive(Request $request, string $zone): JsonResponse
+    {
+        return $this->transition($request, $zone, CityStatus::Archived, ['reason' => ['sometimes', 'string', 'min:1', 'max:255']]);
+    }
+
+    /** @param  array<string, list<string>>  $rules */
+    private function transition(Request $request, string $zone, CityStatus $target, array $rules): JsonResponse
+    {
+        $id = $this->readableZone($zone);
+        $this->requireWrite((string) DB::table('delivery_zones')->where('id', $id)->value('city_id'));
+
+        $input = $request->validate(['version' => ['required', 'integer', 'min:1']] + $rules);
+        $reason = isset($input['reason']) ? (string) $input['reason'] : null;
+
+        $this->zones->changeStatus((string) $this->user()->id, $id, (int) $input['version'], $target, $reason);
 
         return ApiResponse::data($request, $this->load($id));
     }

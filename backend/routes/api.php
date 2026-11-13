@@ -40,5 +40,8 @@ Route::middleware(EnsureSurfaceSession::class)->group(function (): void {
         Route::post('/cities/{city}/zones', [ZoneController::class, 'store'])->name('admin.zones.store');
         Route::get('/zones/{zone}', [ZoneController::class, 'show'])->name('admin.zones.show');
         Route::patch('/zones/{zone}', [ZoneController::class, 'update'])->name('admin.zones.update');
+        Route::post('/zones/{zone}/activate', [ZoneController::class, 'activate'])->name('admin.zones.activate');
+        Route::post('/zones/{zone}/pause', [ZoneController::class, 'pause'])->name('admin.zones.pause');
+        Route::post('/zones/{zone}/archive', [ZoneController::class, 'archive'])->name('admin.zones.archive');
     });
 });
