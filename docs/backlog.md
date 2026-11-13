@@ -55,7 +55,7 @@ Status key: `todo`, `blocked`, `done`.
 | B-05 | Permission resolver and scope policies | PermissionResolverTest, ScopePolicyTest | D-01, B-01 | done: `AccessChecker` (AccessCheckerTest, 11 tests) — deny by default, scope and status read from storage on every check |
 | B-06 | Role grant and revoke service | No self-grant, no grant above own role or scope; revoke race test; audit row | B-05, B-07 | done as a service: `RoleGrantService` (16 tests) — no self-grant, nothing at or above own role, nothing outside own scope, audited in the same transaction. No HTTP endpoint yet; the simultaneous grant/revoke race test is not written |
 | B-07 | Audit service | Atomic with the change; AuditRedactionTest; no update or delete path | D-01 | done as a service: `AuditLogger` with redaction (AuditAndCatalogueTest); request IP and correlation ID are accepted but nothing passes them in yet |
-| B-08 | Mobile token exchange | MobileTokenScopeTest | B-02 | todo |
+| B-08 | Mobile token exchange | MobileTokenScopeTest | B-02 | done: issue, refresh, revoke and `/rider/me` (RiderTokenTest, 13 tests; ten real requests); no rider approval flow, no device attestation, no Flutter sign-in screen |
 | B-09 | MFA challenge step and production gate | Privileged login refused in production config without MFA | B-00 | partial: the production gate is built and tested (admin sign-in refused in production); the TOTP challenge itself is not built |
 | B-10 | Route coverage test | Every registered route has auth and a policy or is on an explicit public list | B-05 | done: RouteCoverageTest (8 tests); no gaps found |
 | B-11 | Error envelope | ApiErrorEnvelopeTest | A-04 | done: one renderer for every API error; nothing internal leaks even with debug on (ApiErrorEnvelopeTest) |

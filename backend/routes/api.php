@@ -6,7 +6,9 @@ use App\Http\Controllers\Api\V1\Admin\OversightController;
 use App\Http\Controllers\Api\V1\Admin\ZoneController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\PublicGeoController;
+use App\Http\Controllers\Api\V1\RiderAuthController;
 use App\Http\Middleware\EnsureAdminSurface;
+use App\Http\Middleware\EnsureRiderToken;
 use App\Http\Middleware\EnsureSurfaceSession;
 use Illuminate\Support\Facades\Route;
 
@@ -31,6 +33,15 @@ Route::post('/auth/register', [AuthController::class, 'register'])->middleware('
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:30,1')->name('auth.login');
 Route::post('/auth/password/forgot', [AuthController::class, 'forgotPassword'])->middleware('throttle:10,1')->name('auth.password.forgot');
 Route::post('/auth/password/reset', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1')->name('auth.password.reset');
+
+// Rider app: bearer tokens, not cookies. Per-account limiting is in the controller.
+Route::post('/auth/mobile/token', [RiderAuthController::class, 'issue'])->middleware('throttle:30,1')->name('auth.mobile.token');
+
+Route::middleware(EnsureRiderToken::class)->group(function (): void {
+    Route::post('/auth/mobile/token/refresh', [RiderAuthController::class, 'refresh'])->name('auth.mobile.refresh');
+    Route::delete('/auth/mobile/token', [RiderAuthController::class, 'revoke'])->name('auth.mobile.revoke');
+    Route::get('/rider/me', [RiderAuthController::class, 'me'])->name('rider.me');
+});
 
 Route::middleware(EnsureSurfaceSession::class)->group(function (): void {
     Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');

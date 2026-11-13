@@ -58,6 +58,8 @@
 
 | T29 | 1 | I | Customer position written to access logs through the URL | Serviceability takes the position in a POST body; a position in the query string is refused (ADR-013) | ServiceabilityTest |
 
+| T30 | 2/3 | E | A rider token used on browser or admin routes, or a browser session used on rider routes | Separate guards; the token guard accepts bearer tokens only; each route has exactly one guard | RiderTokenTest, RouteCoverageTest |
+
 ## Residual risks and open items
 
 - The MFA factor (ADR-011) is not built; T05 is closed. Privileged production login stays blocked until both are closed.

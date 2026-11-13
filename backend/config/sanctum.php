@@ -26,7 +26,9 @@ return [
     // token from GET /api/v1/auth/csrf instead.
     'routes' => false,
 
-    'guard' => ['web'],
+    // Empty on purpose: the `sanctum` guard accepts bearer tokens only. A
+    // browser session must never satisfy a token-protected (rider) route.
+    'guard' => [],
 
     // Personal access tokens (rider app) arrive with the mobile sign-in slice.
     'expiration' => 60,

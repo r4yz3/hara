@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Http\Middleware\EnsureAdminSurface;
 use App\Http\Middleware\EnsureInternalRequest;
+use App\Http\Middleware\EnsureRiderToken;
 use App\Http\Middleware\EnsureSurfaceSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Route as RoutingRoute;
@@ -37,6 +38,7 @@ class RouteCoverageTest extends TestCase
         'auth.login',
         'auth.password.forgot',
         'auth.password.reset',
+        'auth.mobile.token',
     ];
 
     /** @return list<RoutingRoute> */
@@ -62,12 +64,15 @@ class RouteCoverageTest extends TestCase
     public function test_every_route_is_public_on_purpose_or_behind_the_session_guard(): void
     {
         foreach ($this->routes() as $route) {
-            $guarded = in_array(EnsureSurfaceSession::class, $route->gatherMiddleware(), true);
+            // Exactly one guard: a browser session or a rider token, never both.
+            // Parenthesised: `xor` binds more loosely than `=`.
+            $guarded = (in_array(EnsureSurfaceSession::class, $route->gatherMiddleware(), true)
+                xor in_array(EnsureRiderToken::class, $route->gatherMiddleware(), true));
             $public = in_array($route->getName(), self::PUBLIC_ROUTES, true);
 
             $this->assertTrue(
-                $guarded xor $public,
-                "{$route->getName()} ({$route->uri()}) must be either on the public list or behind the session guard, not both and not neither.",
+                ($guarded xor $public),
+                "{$route->getName()} ({$route->uri()}) must be either on the public list or behind exactly one guard (session or rider token).",
             );
         }
     }

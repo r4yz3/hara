@@ -1,0 +1,13 @@
+0. token table present: 1
+1. rider not yet approved: 401  (expect 401)
+2. approved rider signs in: token issued=yes, abilities=["rider:profile"]
+   stored as a hash only: true
+3. own profile with the token: 200  (expect 200)
+4. no token: 401  (expect 401)
+5. rider token on a browser route: 401  (expect 401)
+6. rider token on an admin route, admin origin: 401  (expect 401)
+7. refresh: new token differs=yes; old token now: 401 (expect 401); new token: 200 (expect 200)
+8. rider suspended, same token: 401  (expect 401)
+9. sign out: 204 (expect 204); afterwards: 401 (expect 401)
+10. device marked revoked: true
+cleanup: throwaway rider left: 0, tokens left: 0

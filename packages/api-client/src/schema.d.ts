@@ -151,6 +151,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/mobile/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign in from the rider app
+         * @description Issues a bearer token for an approved rider on a named device. The
+         *     token carries only the `rider:profile` ability and expires after 60
+         *     minutes. A wrong password, an unknown address, a customer, a rider who
+         *     is not approved and a suspended account all get the same 401. Five
+         *     failures for one account from one address within a minute give 429.
+         *     Send no Origin header; this endpoint is not for browsers.
+         */
+        post: operations["authMobileToken"];
+        /**
+         * Sign out of the rider app
+         * @description Deletes the token and marks its device revoked.
+         */
+        delete: operations["authMobileRevoke"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/mobile/token/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Swap a valid token for a new one
+         * @description The old token is deleted as the new one is issued, on the same device.
+         *     An expired token cannot be refreshed; the rider signs in again.
+         */
+        post: operations["authMobileRefresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rider/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The signed-in rider's own profile
+         * @description Refused if the rider is no longer approved, the account is suspended or the device was revoked.
+         */
+        get: operations["riderMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/logout": {
         parameters: {
             query?: never;
@@ -553,6 +623,29 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        RiderToken: {
+            /** @description Shown once. Store it in the device keystore. */
+            token: string;
+            /** @constant */
+            token_type: "Bearer";
+            abilities: string[];
+            /** Format: date-time */
+            expires_at: string;
+        };
+        RiderTokenResponse: {
+            data: components["schemas"]["RiderToken"];
+            meta: components["schemas"]["Meta"];
+        };
+        RiderProfile: {
+            id: string;
+            user_id: string;
+            name: string;
+            email: string;
+            /** @enum {string} */
+            status: "approved";
+            /** Format: date-time */
+            approved_at: string | null;
+        };
         PageMeta: {
             request_id: string;
             next_cursor: string | null;
@@ -962,6 +1055,104 @@ export interface operations {
             403: components["responses"]["Error"];
             422: components["responses"]["Error"];
             429: components["responses"]["Error"];
+        };
+    };
+    authMobileToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    email: string;
+                    /** Format: password */
+                    password: string;
+                    device_name: string;
+                    /** @enum {string} */
+                    platform: "android";
+                };
+            };
+        };
+        responses: {
+            /** @description Token issued. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiderTokenResponse"];
+                };
+            };
+            401: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    authMobileRevoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Signed out. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    authMobileRefresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description New token. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiderTokenResponse"];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    riderMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Rider profile. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RiderProfile"];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            401: components["responses"]["Error"];
         };
     };
     authLogout: {

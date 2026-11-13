@@ -5,6 +5,19 @@ Last updated: 2026-11-13, Sprint 4 in progress (roles, permissions, audit and si
 ## Summary
 Sprint 1 documents await human review. The Docker stack now starts healthy and the backend checks run inside it against PostGIS and Redis. The Sprint 2 gate ("clean clone boot smoke with logs") is **still not met**: the boot was done in the working tree, not from a clean clone, and CI has never run. The product owner supplied front-end reference images; the customer home screen is built in that direction.
 
+## Sprint 4, fifth slice: rider app sign-in (2026-11-13)
+Evidence: `docs/qa/evidence/sprint4-rider-token-check.txt` (`dev.ps1 check`, exit 0; 365 backend tests) and `sprint4-rider-token-smoke.txt` (ten real requests against the running stack).
+
+- `POST /api/v1/auth/mobile/token` issues a bearer token to an approved rider on a named Android device. The token carries one ability (`rider:profile`), expires after 60 minutes and is stored only as a SHA-256. A wrong password, unknown address, customer, unapproved rider and suspended account all get the same 401; five failures per account and address per minute give 429.
+- `POST /api/v1/auth/mobile/token/refresh` swaps a valid token for a new one on the same device and deletes the old one in the same transaction. `DELETE /api/v1/auth/mobile/token` deletes the token and marks the device revoked. `GET /api/v1/rider/me` returns the rider's own profile.
+- `EnsureRiderToken` re-reads the rider's approval, the account status and the device on every request, so suspension or device revocation applies immediately.
+- Tokens and browser sessions are kept apart in both directions: the `sanctum` guard accepts bearer tokens only, so a browser session cannot reach a rider route, and a rider token is refused on every browser and admin route (tested with a rider who also holds `platform_owner`).
+- `personal_access_tokens` migration added with ULID owner columns (the package's own assumes integer ids).
+- RouteCoverageTest now requires each non-public route to sit behind exactly one guard: session or rider token.
+- Tests: RiderTokenTest (13).
+
+Not done: there is no way to become an approved rider except by editing the database (onboarding and approval are Phase 2), so no real rider can sign in yet. An expired token cannot be refreshed, so a rider idle for an hour signs in again; there is no separate long-lived refresh token. The Flutter app has no sign-in screen and stores no token. iOS is refused. Device attestation ("verified device" in the spec) is not implemented: a device is whatever the client names itself.
+
 ## Sprint 4, fourth slice: password recovery; security fixes to the guard and backups (2026-11-13)
 Evidence: `docs/qa/evidence/sprint4-recovery-check.txt` (`dev.ps1 check`, exit 0; 352 backend tests), `sprint4-password-recovery-browser.txt`, and the re-run `restore-drill.txt`.
 

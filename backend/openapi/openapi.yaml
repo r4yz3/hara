@@ -16,6 +16,7 @@ servers:
 tags:
   - name: Health
   - name: Auth
+  - name: Rider
   - name: Geography
   - name: Admin
 paths:
@@ -243,6 +244,88 @@ paths:
         "403": { $ref: "#/components/responses/Error" }
         "422": { $ref: "#/components/responses/Error" }
         "429": { $ref: "#/components/responses/Error" }
+  /api/v1/auth/mobile/token:
+    post:
+      tags: [Rider]
+      summary: Sign in from the rider app
+      description: |
+        Issues a bearer token for an approved rider on a named device. The
+        token carries only the `rider:profile` ability and expires after 60
+        minutes. A wrong password, an unknown address, a customer, a rider who
+        is not approved and a suspended account all get the same 401. Five
+        failures for one account from one address within a minute give 429.
+        Send no Origin header; this endpoint is not for browsers.
+      operationId: authMobileToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, device_name, platform]
+              properties:
+                email: { type: string, maxLength: 255 }
+                password: { type: string, maxLength: 1024, format: password }
+                device_name: { type: string, minLength: 1, maxLength: 120 }
+                platform: { type: string, enum: [android] }
+      responses:
+        "201":
+          description: Token issued.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RiderTokenResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+    delete:
+      tags: [Rider]
+      summary: Sign out of the rider app
+      description: Deletes the token and marks its device revoked.
+      operationId: authMobileRevoke
+      security:
+        - riderToken: []
+      responses:
+        "204": { description: Signed out. }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/v1/auth/mobile/token/refresh:
+    post:
+      tags: [Rider]
+      summary: Swap a valid token for a new one
+      description: |
+        The old token is deleted as the new one is issued, on the same device.
+        An expired token cannot be refreshed; the rider signs in again.
+      operationId: authMobileRefresh
+      security:
+        - riderToken: []
+      responses:
+        "201":
+          description: New token.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RiderTokenResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/v1/rider/me:
+    get:
+      tags: [Rider]
+      summary: The signed-in rider's own profile
+      description: Refused if the rider is no longer approved, the account is suspended or the device was revoked.
+      operationId: riderMe
+      security:
+        - riderToken: []
+      responses:
+        "200":
+          description: Rider profile.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data: { $ref: "#/components/schemas/RiderProfile" }
+                  meta: { $ref: "#/components/schemas/Meta" }
+        "401": { $ref: "#/components/responses/Error" }
   /api/v1/auth/logout:
     post:
       tags: [Auth]
@@ -925,6 +1008,10 @@ security:
   - sessionCookie: []
 components:
   securitySchemes:
+    riderToken:
+      type: http
+      scheme: bearer
+      description: Rider app token from `POST /api/v1/auth/mobile/token`. Never valid on browser or admin routes.
     sessionCookie:
       type: apiKey
       in: cookie
@@ -958,6 +1045,35 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/ErrorResponse" }
   schemas:
+    RiderToken:
+      type: object
+      additionalProperties: false
+      required: [token, token_type, abilities, expires_at]
+      properties:
+        token: { type: string, description: Shown once. Store it in the device keystore. }
+        token_type: { type: string, const: Bearer }
+        abilities:
+          type: array
+          items: { type: string }
+        expires_at: { type: string, format: date-time }
+    RiderTokenResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/RiderToken" }
+        meta: { $ref: "#/components/schemas/Meta" }
+    RiderProfile:
+      type: object
+      additionalProperties: false
+      required: [id, user_id, name, email, status, approved_at]
+      properties:
+        id: { type: string }
+        user_id: { type: string }
+        name: { type: string }
+        email: { type: string }
+        status: { type: string, enum: [approved] }
+        approved_at: { type: [string, "null"], format: date-time }
     PageMeta:
       type: object
       additionalProperties: false
