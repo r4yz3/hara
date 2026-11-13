@@ -253,28 +253,41 @@ paths:
         "422": { $ref: "#/components/responses/Error" }
         "429": { $ref: "#/components/responses/Error" }
   /api/v1/locations/serviceability:
-    get:
+    post:
       tags: [Geography]
       summary: Can this point be delivered to?
       description: |
         Polygon containment only: it does not check that a route exists. A
-        point on a zone boundary is inside. The position is not stored or
-        logged. `NO_ACTIVE_ZONE` means nothing is open anywhere;
-        `OUTSIDE_COVERAGE` means zones exist but none covers the point.
-        Limited to 60 requests a minute per address.
+        point on a zone boundary is inside. `NO_ACTIVE_ZONE` means nothing is
+        open anywhere; `OUTSIDE_COVERAGE` means zones exist but none covers
+        the point. Limited to 60 requests a minute per address.
+
+        This is a POST although it changes nothing: the position is personal
+        data, and a query string is written to access logs by servers and
+        proxies. A position sent in the URL is refused with 422, and the
+        position is neither stored nor logged by the API (ADR-013). Browser
+        clients send the usual `X-CSRF-TOKEN` header.
       operationId: serviceability
       security: []
-      parameters:
-        - name: latitude
-          in: query
-          required: true
-          schema: { type: string, pattern: '^-?\d{1,3}(\.\d{1,12})?$' }
-          description: Decimal degrees, -90 to 90.
-        - name: longitude
-          in: query
-          required: true
-          schema: { type: string, pattern: '^-?\d{1,3}(\.\d{1,12})?$' }
-          description: Decimal degrees, -180 to 180.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [latitude, longitude]
+              properties:
+                latitude:
+                  oneOf:
+                    - { type: string, pattern: '^-?\d{1,3}(\.\d{1,12})?$' }
+                    - { type: number, minimum: -90, maximum: 90 }
+                  description: Decimal degrees, -90 to 90.
+                longitude:
+                  oneOf:
+                    - { type: string, pattern: '^-?\d{1,3}(\.\d{1,12})?$' }
+                    - { type: number, minimum: -180, maximum: 180 }
+                  description: Decimal degrees, -180 to 180.
       responses:
         "200":
           description: The decision.
@@ -287,6 +300,7 @@ paths:
                 properties:
                   data: { $ref: "#/components/schemas/Serviceability" }
                   meta: { $ref: "#/components/schemas/Meta" }
+        "403": { $ref: "#/components/responses/Error" }
         "422": { $ref: "#/components/responses/Error" }
         "429": { $ref: "#/components/responses/Error" }
   /api/v1/admin/cities:

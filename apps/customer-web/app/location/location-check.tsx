@@ -2,7 +2,7 @@
 
 import { useRef, useState, type FormEvent } from "react";
 
-import { apiGet, describeFailure } from "@food-delivery/session";
+import { apiSend, describeFailure } from "@food-delivery/session";
 
 type Named = { id: string; name: string };
 type Decision = { serviceable: boolean; reason: "NO_ACTIVE_ZONE" | "OUTSIDE_COVERAGE" | null; city: Named | null; zone: Named | null };
@@ -59,8 +59,12 @@ export function LocationCheck() {
     }
 
     setBusy(true);
-    const query = new URLSearchParams({ latitude: lat, longitude: lon });
-    const result = await apiGet<{ data: Decision }>(`/api/v1/locations/serviceability?${query}`);
+    // In the request body, never the URL: a position in a query string is
+    // written to access logs along the way (ADR-013).
+    const result = await apiSend<{ data: Decision }>("POST", "/api/v1/locations/serviceability", {
+      latitude: lat,
+      longitude: lon,
+    });
     setBusy(false);
 
     if (result.ok) {
@@ -87,8 +91,10 @@ export function LocationCheck() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setLocating(false);
-        setLatitude(position.coords.latitude.toFixed(6));
-        setLongitude(position.coords.longitude.toFixed(6));
+        // Four decimals is about 11 metres: enough to place a point in a
+        // delivery area, and no more precise than the question needs.
+        setLatitude(position.coords.latitude.toFixed(4));
+        setLongitude(position.coords.longitude.toFixed(4));
         setLocateNote("Filled in from this device. Check the numbers, then press Check.");
       },
       () => {

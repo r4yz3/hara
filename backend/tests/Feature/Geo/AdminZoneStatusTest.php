@@ -67,12 +67,12 @@ class AdminZoneStatusTest extends AuthTestCase
         $city = $this->city();
         $zone = $this->zone($city);
 
-        $this->getJson('/api/v1/locations/serviceability?latitude=10.01&longitude=100.01')->assertJsonPath('data.serviceable', false);
+        $this->postJson('/api/v1/locations/serviceability', ['latitude' => '10.01', 'longitude' => '100.01'])->assertJsonPath('data.serviceable', false);
 
         $this->via('admin')->postJson("/api/v1/admin/zones/{$zone}/activate", ['version' => 1, 'confirm' => true])
             ->assertOk()->assertJsonPath('data.status', 'active')->assertJsonPath('data.version', 2);
 
-        $this->getJson('/api/v1/locations/serviceability?latitude=10.01&longitude=100.01')
+        $this->postJson('/api/v1/locations/serviceability', ['latitude' => '10.01', 'longitude' => '100.01'])
             ->assertJsonPath('data.serviceable', true)->assertJsonPath('data.zone.id', $zone);
 
         $audit = DB::table('audit_logs')->where('action', 'zone.status_changed')->sole();
@@ -109,7 +109,7 @@ class AdminZoneStatusTest extends AuthTestCase
 
         $audit = DB::table('audit_logs')->where('action', 'zone.status_changed')->sole();
         $this->assertSame('Road closed', json_decode((string) $audit->after_json, true)['reason']);
-        $this->getJson('/api/v1/locations/serviceability?latitude=10.01&longitude=100.01')->assertJsonPath('data.serviceable', false);
+        $this->postJson('/api/v1/locations/serviceability', ['latitude' => '10.01', 'longitude' => '100.01'])->assertJsonPath('data.serviceable', false);
     }
 
     public function test_status_moves_only_along_allowed_transitions(): void

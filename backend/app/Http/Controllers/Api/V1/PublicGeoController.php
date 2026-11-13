@@ -75,15 +75,31 @@ class PublicGeoController extends Controller
 
     public function serviceability(Request $request, ServiceabilityQuery $query): JsonResponse
     {
-        // Plain decimal numbers only: no exponents, no "NaN", no arrays.
-        $decimal = 'regex:/\A-?\d{1,3}(\.\d{1,12})?\z/';
-        $request->validate([
-            'latitude' => ['required', 'string', $decimal],
-            'longitude' => ['required', 'string', $decimal],
-        ]);
+        // A position in the query string would be written to access logs by
+        // every server and proxy on the way, so it is refused outright (ADR-013).
+        if ($request->query->has('latitude') || $request->query->has('longitude')) {
+            throw ValidationException::withMessages([
+                'latitude' => ['Send the position in the request body, not in the URL.'],
+                'longitude' => ['Send the position in the request body, not in the URL.'],
+            ]);
+        }
+
+        // A plain decimal, as a JSON string or number: no exponents, no "NaN", no arrays.
+        $decimal = function (string $attribute, mixed $value, \Closure $fail): void {
+            if (! is_string($value) && ! is_int($value) && ! is_float($value)) {
+                $fail("The {$attribute} must be a number.");
+            } elseif (preg_match('/\A-?\d{1,3}(\.\d{1,12})?\z/', (string) $value) !== 1) {
+                $fail("The {$attribute} must be a plain decimal number.");
+            }
+        };
+        $body = $request->json()->all();
+        validator($body, [
+            'latitude' => ['present', $decimal],
+            'longitude' => ['present', $decimal],
+        ])->validate();
 
         try {
-            $point = Coordinates::fromLatitudeLongitude((float) $request->query('latitude'), (float) $request->query('longitude'));
+            $point = Coordinates::fromLatitudeLongitude((float) $body['latitude'], (float) $body['longitude']);
         } catch (InvalidArgumentException $e) {
             $field = str_starts_with($e->getMessage(), 'Latitude') ? 'latitude' : 'longitude';
 

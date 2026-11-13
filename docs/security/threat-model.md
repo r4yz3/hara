@@ -56,6 +56,8 @@
 | T27 | 2 | S | Open redirect through the post-login return URL | Only same-origin relative paths accepted | Playwright scenario 7 |
 | T28 | 1 | S | Development seeder or bootstrap command run in production | Environment gate in code, tested | Seeder gate test |
 
+| T29 | 1 | I | Customer position written to access logs through the URL | Serviceability takes the position in a POST body; a position in the query string is refused (ADR-013) | ServiceabilityTest |
+
 ## Residual risks and open items
 
 - T05 and the MFA factor (ADR-011) are unresolved. Privileged production login stays blocked until both are closed.

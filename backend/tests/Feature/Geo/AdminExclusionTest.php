@@ -62,7 +62,7 @@ class AdminExclusionTest extends AuthTestCase
 
     private function serviceable(): bool
     {
-        return (bool) $this->getJson('/api/v1/locations/serviceability?latitude=10.01&longitude=100.01')->json('data.serviceable');
+        return (bool) $this->postJson('/api/v1/locations/serviceability', ['latitude' => '10.01', 'longitude' => '100.01'])->json('data.serviceable');
     }
 
     public function test_exclusion_routes_need_a_session(): void

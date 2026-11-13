@@ -21,3 +21,5 @@ synthetic demo zone (a 0.02-degree square at longitude 100, latitude 10). Values
 
 Not covered: the "Use this device's location" button (needs a permission prompt), the rate-limit and
 network-error messages, the "nothing open anywhere" answer, keyboard-only use, a screen reader, dark theme.
+
+Later the same day: the check was changed from a GET with the position in the URL to a POST with the position in the body (ADR-013). Steps 3 and 4 above were made with the GET form; the POST form was re-run for step 3 and gave the same answer.

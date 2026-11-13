@@ -57,7 +57,7 @@ Status key: `todo`, `blocked`, `done`.
 | B-07 | Audit service | Atomic with the change; AuditRedactionTest; no update or delete path | D-01 | done as a service: `AuditLogger` with redaction (AuditAndCatalogueTest); request IP and correlation ID are accepted but nothing passes them in yet |
 | B-08 | Mobile token exchange | MobileTokenScopeTest | B-02 | todo |
 | B-09 | MFA challenge step and production gate | Privileged login refused in production config without MFA | B-00 | partial: the production gate is built and tested (admin sign-in refused in production); the TOTP challenge itself is not built |
-| B-10 | Route coverage test | Every registered route has auth and a policy or is on an explicit public list | B-05 | todo |
+| B-10 | Route coverage test | Every registered route has auth and a policy or is on an explicit public list | B-05 | done: RouteCoverageTest (8 tests); no gaps found |
 | B-11 | Error envelope | ApiErrorEnvelopeTest | A-04 | done: one renderer for every API error; nothing internal leaks even with debug on (ApiErrorEnvelopeTest) |
 
 ## Sprint 5 — city and serviceability API (Slice C)
@@ -86,7 +86,7 @@ Status key: `todo`, `blocked`, `done`.
 | U-02 | `packages/ui` components and Storybook | Form, table, nav, dialog, toast, state components; axe clean | U-01 | done for web: 42 pairs measured and enforced by test (`docs/ux/contrast-report.md`); four tokens added, two restricted. Rider app theme not yet covered |
 | U-03 | UI state matrix | Each view has loading, empty, error, forbidden, offline, validation, conflict, slow | U-02 | todo |
 | U-04 | Map component | Client-only load; placeholder when `MAP_STYLE_URL` empty; no default centre; attribution | U-02 | todo |
-| U-05 | Admin: login, overview, cities, zones editor, users, audit, settings | Playwright scenarios 3–6, 9, 10 | C-11, U-04 | partial: shell, overview, `/login`, cities list and create, city detail with status changes and zone create/activate/pause/archive built and run by hand in a browser; no map editor, no zone editing, no exclusions, users, audit or settings screens, and no Playwright scenarios |
+| U-05 | Admin: login, overview, cities, zones editor, users, audit, settings | Playwright scenarios 3–6, 9, 10 | C-11, U-04 | partial: shell, overview, `/login`, cities list and create, city detail with status changes and zone create/activate/pause/archive built and run by hand in a browser; audit log screen built; no map editor, no zone editing, no exclusions, users or settings screens, and no Playwright scenarios |
 | U-06 | Customer: home, location, login, account, labelled previews | Playwright scenarios 1, 2, 5, 7, 8 | C-11, U-04 | partial: home with a live service banner, `/login`, and `/location` (coordinates or device location to a serviceability answer) built and run by hand in a browser; no map pin, address entry, saved addresses or account page, and no Playwright scenarios |
 | U-07 | Merchant shell | Scoped, no fabricated data, disabled actions labelled | C-11, U-02 | partial: overview shell and `/login` built; no merchant account exists to sign in with, and branch data waits for its API |
 | U-08 | Rider shell | Flutter tests in spec 10.3; no location permission request | A-09, B-08 | partial: home restyled with shared tokens, 7 widget tests; login and device run still open |

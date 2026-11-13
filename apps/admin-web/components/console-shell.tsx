@@ -17,7 +17,7 @@ const navigation: { group: string; items: NavItem[] }[] = [
       { label: "Cities", href: "/cities" },
       { label: "Delivery zones", note: "Inside Cities" },
       { label: "Roles and access", note: "Not built yet" },
-      { label: "Audit log", note: "Not built yet" },
+      { label: "Audit log", href: "/audit" },
       { label: "Settings", note: "Not built yet" },
     ],
   },

@@ -57,7 +57,8 @@ class ServiceabilityTest extends TestCase
     /** @return TestResponse<JsonResponse> */
     private function check(mixed $latitude, mixed $longitude): TestResponse
     {
-        return $this->getJson('/api/v1/locations/serviceability?'.http_build_query(['latitude' => $latitude, 'longitude' => $longitude]));
+        // In the body, never the URL: a position in a query string ends up in access logs.
+        return $this->postJson('/api/v1/locations/serviceability', ['latitude' => $latitude, 'longitude' => $longitude]);
     }
 
     public function test_nothing_configured_is_not_serviceable_and_invents_no_location(): void
@@ -170,11 +171,36 @@ class ServiceabilityTest extends TestCase
         foreach ([[91, 100], [-91, 100], [10, 181], [10, -181], ['abc', 100], [10, ''], ['10; DROP TABLE cities', 100], ['NaN', 100], ['1e999', 100], [[10], 100]] as [$latitude, $longitude]) {
             $this->check($latitude, $longitude)->assertStatus(422)->assertJsonPath('error.code', 'VALIDATION_ERROR');
         }
-        $this->getJson('/api/v1/locations/serviceability')->assertStatus(422)->assertJsonStructure(['error' => ['fields' => ['latitude', 'longitude']]]);
-        $this->getJson('/api/v1/locations/serviceability?latitude=10')->assertStatus(422);
+        $this->postJson('/api/v1/locations/serviceability', [])->assertStatus(422)->assertJsonStructure(['error' => ['fields' => ['latitude', 'longitude']]]);
+        $this->postJson('/api/v1/locations/serviceability', ['latitude' => '10'])->assertStatus(422);
 
         $spatial = array_filter(DB::getQueryLog(), fn (array $q): bool => str_contains($q['query'], 'delivery_zones'));
         $this->assertSame([], $spatial);
+    }
+
+    public function test_a_position_is_never_accepted_in_the_url(): void
+    {
+        $this->zone($this->city(), $this->square(100.0, 10.0));
+
+        // The old GET form is gone.
+        $this->getJson('/api/v1/locations/serviceability?latitude=10.01&longitude=100.01')->assertStatus(405);
+
+        // A POST that carries the position in its query string is refused, even with a valid body.
+        $this->postJson('/api/v1/locations/serviceability?latitude=10.01&longitude=100.01', ['latitude' => '10.01', 'longitude' => '100.01'])
+            ->assertStatus(422)->assertJsonStructure(['error' => ['fields' => ['latitude', 'longitude']]]);
+        $this->postJson('/api/v1/locations/serviceability?longitude=100.01', ['latitude' => '10.01', 'longitude' => '100.01'])
+            ->assertStatus(422);
+    }
+
+    public function test_decimal_strings_and_json_numbers_are_both_accepted(): void
+    {
+        $this->zone($this->city(), $this->square(100.0, 10.0));
+
+        $this->postJson('/api/v1/locations/serviceability', ['latitude' => '10.01', 'longitude' => '100.01'])->assertJsonPath('data.serviceable', true);
+        $this->postJson('/api/v1/locations/serviceability', ['latitude' => 10.01, 'longitude' => 100.01])->assertJsonPath('data.serviceable', true);
+        $this->postJson('/api/v1/locations/serviceability', ['latitude' => 10, 'longitude' => 100])->assertJsonPath('data.serviceable', true);
+        $this->postJson('/api/v1/locations/serviceability', ['latitude' => true, 'longitude' => 100.01])->assertStatus(422);
+        $this->postJson('/api/v1/locations/serviceability', ['latitude' => null, 'longitude' => 100.01])->assertStatus(422);
     }
 
     public function test_response_never_exposes_geometry_or_internal_fields(): void

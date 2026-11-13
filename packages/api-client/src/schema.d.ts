@@ -193,17 +193,22 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        get?: never;
+        put?: never;
         /**
          * Can this point be delivered to?
          * @description Polygon containment only: it does not check that a route exists. A
-         *     point on a zone boundary is inside. The position is not stored or
-         *     logged. `NO_ACTIVE_ZONE` means nothing is open anywhere;
-         *     `OUTSIDE_COVERAGE` means zones exist but none covers the point.
-         *     Limited to 60 requests a minute per address.
+         *     point on a zone boundary is inside. `NO_ACTIVE_ZONE` means nothing is
+         *     open anywhere; `OUTSIDE_COVERAGE` means zones exist but none covers
+         *     the point. Limited to 60 requests a minute per address.
+         *
+         *     This is a POST although it changes nothing: the position is personal
+         *     data, and a query string is written to access logs by servers and
+         *     proxies. A position sent in the URL is refused with 422, and the
+         *     position is neither stored nor logged by the API (ADR-013). Browser
+         *     clients send the usual `X-CSRF-TOKEN` header.
          */
-        get: operations["serviceability"];
-        put?: never;
-        post?: never;
+        post: operations["serviceability"];
         delete?: never;
         options?: never;
         head?: never;
@@ -950,17 +955,21 @@ export interface operations {
     };
     serviceability: {
         parameters: {
-            query: {
-                /** @description Decimal degrees, -90 to 90. */
-                latitude: string;
-                /** @description Decimal degrees, -180 to 180. */
-                longitude: string;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Decimal degrees, -90 to 90. */
+                    latitude: string | number;
+                    /** @description Decimal degrees, -180 to 180. */
+                    longitude: string | number;
+                };
+            };
+        };
         responses: {
             /** @description The decision. */
             200: {
@@ -974,6 +983,7 @@ export interface operations {
                     };
                 };
             };
+            403: components["responses"]["Error"];
             422: components["responses"]["Error"];
             429: components["responses"]["Error"];
         };

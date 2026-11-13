@@ -22,3 +22,4 @@ Rule 1 of `AGENTS.md` requires discrepancies to be reported here rather than res
 | 12 | Native PHP | PHP 8.3+ | PHP optional natively, Docker preferred | The workstation's native PHP 8.5 lacks PostgreSQL extensions. All backend commands run in the `api` container |
 | 13 | Brand | "Brand and preferred design identity?" is an open decision | Wireframes use `BRAND` | No brand is assumed. The working folder name is not treated as the brand. UI uses a neutral placeholder name from configuration |
 | 14 | Spec file name | — | Section 14 prompt referenced the old file name | The spec was renamed on 2026-11-12; references were updated |
+| 15 | Serviceability method | `GET` with query parameters | `GET` with query parameters | Built as `POST` with a JSON body so the customer's position never appears in a URL. See ADR-013 |

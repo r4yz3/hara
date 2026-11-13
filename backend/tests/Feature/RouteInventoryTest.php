@@ -31,7 +31,6 @@ class RouteInventoryTest extends TestCase
             'GET|HEAD api/v1/admin/zones/{zone}',
             'GET|HEAD api/v1/admin/zones/{zone}/exclusions',
             'GET|HEAD api/v1/auth/csrf',
-            'GET|HEAD api/v1/locations/serviceability',
             'GET|HEAD api/v1/me',
             'GET|HEAD api/v1/public/cities',
             'GET|HEAD api/v1/public/config',
@@ -48,6 +47,7 @@ class RouteInventoryTest extends TestCase
             'POST api/v1/auth/login',
             'POST api/v1/auth/logout',
             'POST api/v1/auth/register',
+            'POST api/v1/locations/serviceability',
         ], $registered);
     }
 }
