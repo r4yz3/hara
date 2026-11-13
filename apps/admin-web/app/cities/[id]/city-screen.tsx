@@ -9,6 +9,7 @@ import { apiGet, apiSend, describeFailure, type ApiFailure, type ApiResult } fro
 
 import { FieldError, LoadProblem, Notice, Panel, StatusPill, dangerButton, fieldClass, focusFirstInvalid, primaryButton, quietButton } from "@/components/ui";
 import { ZoneExclusions } from "./zone-exclusions";
+import { ZoneMap } from "./zone-map";
 
 type Envelope<T> = { data: T };
 type Message = { tone: "ok" | "problem"; text: string; stale?: boolean } | null;
@@ -462,6 +463,7 @@ function EditZone({ zone, onCancel, onSaved }: { zone: Zone; onCancel: () => voi
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<ApiFailure | null>(null);
   const conflicted = failure?.kind === "conflict";
+  const [shapeText, setShapeText] = useState(JSON.stringify(zone.geometry) ?? "");
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -512,8 +514,11 @@ function EditZone({ zone, onCancel, onSaved }: { zone: Zone; onCancel: () => voi
       </label>
       <label className="flex flex-col gap-1.5 text-sm font-medium sm:col-span-2">
         Shape (GeoJSON)
-        <textarea name="geometry" rows={8} defaultValue={JSON.stringify(zone.geometry)} required readOnly={busy} spellCheck={false} className={`${fieldClass} py-2 font-mono text-sm`} />
+        <textarea name="geometry" rows={8} value={shapeText} onChange={(event) => setShapeText(event.target.value)} required readOnly={busy} spellCheck={false} className={`${fieldClass} py-2 font-mono text-sm`} />
       </label>
+      <div className="sm:col-span-2">
+        <ZoneMap shapeText={shapeText} />
+      </div>
       {failure ? (
         <div className="sm:col-span-2">
           <Notice tone="problem">
@@ -539,6 +544,7 @@ function CreateZone({ cityId, onCreated }: { cityId: string; onCreated: () => Pr
   const [busy, setBusy] = useState(false);
   const [fields, setFields] = useState<Record<string, string[]>>({});
   const [message, setMessage] = useState<Message>(null);
+  const [shapeText, setShapeText] = useState("");
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -569,6 +575,7 @@ function CreateZone({ cityId, onCreated }: { cityId: string; onCreated: () => Pr
 
     if (result.ok) {
       form.reset();
+      setShapeText("");
       setMessage({ tone: "ok", text: `Added ${result.value.data.name} as a draft.` });
       await onCreated();
       return;
@@ -596,7 +603,7 @@ function CreateZone({ cityId, onCreated }: { cityId: string; onCreated: () => Pr
       </h2>
       <Panel dashed>
         <p className="text-sm text-text-secondary">
-          Map drawing is not built yet and no map provider is chosen, so the shape is entered as GeoJSON. The server checks
+          Map drawing is not built yet and no map provider is chosen, so the shape is entered as GeoJSON; the map beside it only previews the shape once a style is configured. The server checks
           it and stores its own normalised copy.
         </p>
         <form onSubmit={onSubmit} noValidate className="grid gap-4 sm:grid-cols-3">
@@ -652,6 +659,8 @@ function CreateZone({ cityId, onCreated }: { cityId: string; onCreated: () => Pr
               rows={7}
               required
               spellCheck={false}
+              value={shapeText}
+              onChange={(event) => setShapeText(event.target.value)}
               aria-invalid={geometryErrors.length > 0 ? true : undefined}
               aria-describedby="zone-geometry-hint zone-geometry-error"
               className={`${fieldClass} py-2 font-mono text-sm`}
@@ -660,6 +669,9 @@ function CreateZone({ cityId, onCreated }: { cityId: string; onCreated: () => Pr
               Positions are longitude first, then latitude. Each ring must end where it starts.
             </p>
             <FieldError id="zone-geometry-error" messages={geometryErrors} />
+          </div>
+          <div className="sm:col-span-3">
+            <ZoneMap shapeText={shapeText} />
           </div>
           <div className="flex flex-col gap-2 sm:col-span-3">
             <button type="submit" disabled={busy} aria-busy={busy} className={`${primaryButton} w-fit`}>

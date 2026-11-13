@@ -448,6 +448,19 @@ What the tests cover: liveness body; readiness hidden from public addresses and 
 - Next.js 16 ships its own agent guidance per app (`apps/*/AGENTS.md`) saying its APIs differ from older versions.
 - The Android application ID is the placeholder `com.example.rider_app`. It must change before any release and depends on the brand decision.
 
+## November 14 map component (U-04)
+
+- **Built:** `MapView` in `packages/ui` (`@food-delivery/ui/map`), used on the admin zone create form and the zone editor (`apps/admin-web/app/cities/[id]/zone-map.tsx`) beside the GeoJSON field, which stays the source of truth and fully usable.
+  - The style URL is read at run time from `GET /api/v1/public/config` (`map_style_url`). Only an https URL counts; empty shows a labelled "Map not configured" placeholder.
+  - There is no default centre or zoom. The view is fitted only to the bounds of the shape in the text field; with no valid shape it says it is not centred anywhere. Bounds are also written as text.
+  - Attribution is always rendered. With the library in use it adds MapLibre's `AttributionControl`.
+  - Map code loads only on the client, through a dynamic `load()` that is called only when a style URL is set.
+- **Not done:** `maplibre-gl` is not in `pnpm-lock.yaml`, and no package was added. `loadMapLibrary` returns null, so with a style set the area says "Map library not installed" (TODO in `packages/ui/src/map-view.tsx`: replace with `import("maplibre-gl")`). When it is added, the CSP in `packages/config` (img-src, connect-src, worker-src) needs the chosen style host; that file was not touched. No drawing, no tiles ever rendered, no retry path exercised in a browser (the failed state is code only), and no zone-status pattern layer or mirror table on the map. The tile provider is still a human decision (ADR-007).
+- **Tests:** `packages/ui/test/map-state.test.mjs` (6: placeholder for empty/invalid style, https only, no centre, bounds, no centre/zoom/coordinate literals in sources, attribution present) and `tests/browser/map.spec.ts` (5 at 3 viewports: placeholder with empty config, bounds from the shape, editor bounds, library-missing state with attribution, axe on the map area).
+- **Commands run:** `pnpm install --offline` (workspace link and lockfile entry only); `pnpm lint` exit 0; `pnpm typecheck` exit 0; `pnpm test` exit 0 (ui 6 pass); `pnpm --filter admin-web build` exit 0; `npx playwright test tests/browser/map.spec.ts tests/browser/state-matrix.spec.ts` 114 passed. The first state-matrix run failed because the placeholder had `role="status"` and clashed with existing `getByRole("status")` checks; the role was removed.
+- **Files:** `packages/ui/{package.json,src/map-state.ts,src/map-view.tsx,test/map-state.test.mjs}`, `apps/admin-web/{package.json,next.config.ts,app/cities/[id]/city-screen.tsx,app/cities/[id]/zone-map.tsx}`, `tests/browser/map.spec.ts`, `pnpm-lock.yaml`, `docs/backlog.md`, this file.
+- **Rollback:** revert those files and run `pnpm install`; no backend or API change.
+
 ## Sprint 1 (unchanged)
 Done and awaiting review: versions, ADR-000 to ADR-011, diagram, phase boundaries, threat model, permission matrix, backlog, acceptance tests. Open items: ADR-011 (session separation, MFA factor, email verification), ADR-002 caps, ADR-007 tile provider, city status values, permission matrix questions.
 
