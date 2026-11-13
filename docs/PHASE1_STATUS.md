@@ -1,6 +1,119 @@
 # Phase 1 status
 
-Last updated: 2026-11-14. Phase 1 has working browser authentication, rider token endpoints, and city, zone and serviceability APIs. Sprint 8 acceptance remains open.
+Last updated: 2026-11-14. **The Phase 1 gate is not passed.** Staging does not exist (E-07, human), several decisions and document reviews are open, and the rider app has never run on a device. Nothing here is a production-readiness claim: everything built is local, mocked or sandbox-level unless a line says "hosted CI". The dated sections below the definition-of-done checklist are history and are kept unchanged; where they contradict this section, this section is newer.
+
+## Phase 1 position (2026-11-14)
+
+How to read it: "evidence" names a file under `docs/qa/evidence/` or a test. Where a result is only recorded as text in a dated section below and no output file was saved, the line says "no saved output". Anything not re-checked while writing this section is marked "unverified".
+
+### Done (built and tested locally)
+
+| Item | Evidence |
+|---|---|
+| Workstation scripts: all nine `dev.ps1` tasks (A-10, PowerShell only) | `a10-dev-tasks-check.txt`, `a10-full-check.txt` |
+| Compose stack (api, PostGIS, Redis, Mailpit), health routes, separate test database (A-01 to A-07, A-12) | `sprint2-check-7.txt`, `sprint3-check.txt` |
+| Migrations 001 to 016, fresh, rollback and re-migrate; constraints, GiST indexes, append-only audit log (D-01 to D-06) | `sprint3-check.txt` (MigrationRollbackTest, SchemaTest) |
+| Registration, sign-in, sign-out, `/me`, one session cookie per app, CSRF, throttling (B-02, B-04) | `sprint4-auth-check.txt`, `sprint4-auth-smoke.txt` |
+| Password recovery, existing sessions ended on reset (B-03) | `sprint4-recovery-check.txt`, `sprint4-password-recovery-browser.txt`, `phase1-2026-11-14-batch-check.txt` |
+| Roles, permissions, `AccessChecker`, `RoleGrantService`, `AuditLogger`, concurrent grant race test (B-05 to B-07) | `sprint4-rbac-check.txt`, `phase1-2026-11-14-batch-check.txt` |
+| Rider bearer-token sign-in, refresh, revoke, 30-day cap, `/rider/me` (B-08) | `sprint4-rider-token-check.txt`, `sprint4-rider-token-smoke.txt`, `phase1-2026-11-14-rider-session-cap-check.txt` |
+| Staff two-step sign-in (TOTP), recovery codes, owner reset, production gate (B-09, built; the review of the recovery design is blocked below) | `phase1-2026-11-14-mfa-check.txt`, `phase1-2026-11-14-mfa-browser.txt`, `phase1-2026-11-14-admin-gate.txt` |
+| Route coverage and error envelope (B-10, B-11) | `sprint4-auth-check.txt`; RouteCoverageTest, ApiErrorEnvelopeTest |
+| City, zone, exclusion, status-transition, serviceability, public config, audit log and system status APIs (C-02, C-04 to C-10) | `sprint5-cities-check.txt`, `sprint5-zones-check.txt`, `sprint5-zone-status-check.txt`, `sprint5-exclusions-check.txt`, `sprint5-config-plan-check.txt`, `sprint5-oversight-check.txt` |
+| Zone geometry validator and seeded fuzz tests (C-03) | `sprint5-geometry-fuzz-check.txt` |
+| Cross-tenant suite for city scope (C-12) | `sprint5-cross-tenant-check.txt` |
+| Staff access API and `/access` screen (users part of U-05) | Screenshots `screens/admin/access-*.png`; the backend check (523 tests) is recorded as text only, no saved output; the newest saved backend run is `phase1-2026-11-14-mfa-check.txt` (485 tests) |
+| Admin cities, zones, exclusions, status dialogs, settings and audit screens (U-05 except map drawing) | `sprint6-admin-cities-browser.txt`, `phase1-2026-11-14-zone-edit.txt`, `phase1-2026-11-14-zone-exclusions.txt`, `phase1-2026-11-14-city-dialog.txt`, `phase1-2026-11-14-admin-settings.txt`, `phase1-2026-11-14-live-coverage.txt` |
+| Customer home banner and `/location` delivery-area check by POST (ADR-013) | `sprint6-customer-location-browser.txt`, `phase1-2026-11-14-closed-coverage.txt` |
+| Structured logs, request ids, named events (E-01 except the gaps below) | `sprint7-structured-logs-check.txt` |
+| Production guard (E-06) | `sprint7-ops-check.txt`; ProductionGuardTest |
+| Backup and restore drill, local (E-03) | `restore-drill.txt` |
+| Container scan job, run locally (E-04) | `sprint7-container-scan-check.txt` |
+| Production images, deploy and rollback rehearsal on a production-like local stack (E-05, not a real host) | `e05-rollback-rehearsal.txt`, `e05-full-check.txt`, `sprint7-trusted-proxy-check.txt` |
+| Generated API types checked for drift (C-11, types only) | `sprint5-api-types-check.txt` |
+| Browser suites: default Chromium run at 375, 768 and 1440 with axe, and one live run | `x01-2026-11-14-playwright-default.txt` (267 passed, 66 opt-in skipped), `x01-2026-11-14-playwright-live.txt` (1 passed). Later runs (354 passed and 66 skipped after the error screens; 63 passed in `customer.spec.ts`) are recorded as text in the sections below, no saved output |
+| Screenshots of every built screen at 360/375, 768, 1440 (U-09; API mocked) | `docs/qa/evidence/screens/`, rider images `rider-home-390-*.png` |
+| Hosted CI green for web, backend and security on `099a3db` | `x01-2026-11-14-hosted-ci.txt`. The current head is `102476e`; no hosted result for the later commits is saved (unverified) |
+| Hardcoded-city, coordinate, map-centre and invented-data text searches | `x01-2026-11-14-text-searches.txt` (no problem found) |
+| Skills synchronised; ADR-000 to ADR-014, threat model, permission matrix and operations docs exist | `skills-lock.json`; `docs/architecture/decisions/`, `docs/security/`, `docs/operations/` (presence only; review is open below) |
+
+### Partial (what is missing)
+
+| Item | What is missing |
+|---|---|
+| U-02 `packages/ui`, Storybook | The backlog row says "done for web" and repeats the U-01 text. `packages/ui/src` holds `map-view`, `problem-page`, `fault` and `map-state` only. There is no Storybook (no `.storybook`) and no toast component; forms, tables and dialogs live in the apps. |
+| U-03 UI state matrix | 11 views by 9 states: 69 covered, 30 not applicable, 0 gaps in cells (`docs/qa/ui-state-matrix.md`). Open: offline cached reads (G1), toasts (G3), `global-error.tsx` built but not reached by a browser test (G4a). |
+| U-04 map component | Placeholder, fit-to-shape and attribution only. `maplibre-gl` is not installed, no tile was ever rendered, no drawing, no CSP change for a style host. |
+| U-05 admin console | No map drawing. Staff invitation, suspension, and name or email editing are not built. |
+| U-06 customer | Home, `/login`, `/location`, `/account`. No map pin, address entry or saved addresses. The admin half of scenario 5 is `test.fixme` in `customer.spec.ts`; it is covered only by the opt-in live run. `/account` is not in the screenshot spec. |
+| U-07 merchant shell | Overview and `/login` only. No merchant account exists, so sign-in and the merchant cookie have never been exercised live. |
+| U-08 rider shell | Sign-in, sign-out and home built; 47 Flutter tests. Never run on a device or against the real API; token in memory only; no Android SDK or JDK on this workstation. |
+| B-02 | `PATCH /me` not built. |
+| B-08 | No rider approval flow (Phase 2) and no device attestation. |
+| B-09 | No QR code, no way to turn two-step off, enrolment-only redirect only from sign-in and `/security`, city-scoped staff get 403 not 404 on the reset route. |
+| A-10 | Makefile never run (`make` is not installed). |
+| A-11, C-01, C-11 | Workflows ran green on `099a3db`; not independently audited. Request helpers in `packages/session` are hand written, not generated. |
+| E-01 | `outbox.failure` (no outbox worker) and alerts (need a host) not done; no log shipping or retention. |
+| E-02 | API headers, CORS negatives and cookie attributes tested. The web apps send a baseline CSP only, with no script, style or connect restriction (deferred, see blocked). |
+| E-03 | Local drill only: no schedule, off-machine copy, encryption, fault injection or staging restore. Backups are unencrypted. |
+| E-04 | The image scan was proven locally; whether the hosted `image` job ran is not shown in the saved CI file (unverified). No Flutter dependency audit. |
+| E-05 | Rehearsed locally under `APP_ENV=staging`: no TLS, no real host, incident roles unnamed, no deploy procedure for the web or rider apps. |
+| C-12 | City scope only; merchant scope waits for merchant endpoints. |
+| X-01 | Clean-clone `up`, `migrate`, `seed-demo`, backend tests and Makefile not run; manual screen-reader and keyboard review not done; staging not possible. |
+| X-03 | Phase 2 backlog drafted (`docs/phase2-backlog.md`), awaiting product owner review. |
+| Rider location permission check | Only a grep of the manifest and `pubspec.yaml` is recorded; `phase1-acceptance.md` still says "not run". |
+
+### Blocked on a human decision
+
+| Item | Exact decision needed |
+|---|---|
+| C-13 geometry caps | Approve or change the proposed 5,000 vertices and 2 degrees extent in `backend/config/geo.php`, then set `GEO_CAPS_APPROVED` (ADR-002). |
+| U-10 tile provider | Choose a provider, or accept the labelled placeholder for Phase 1 (ADR-007). OpenStreetMap public tiles are excluded. |
+| Map library install | After U-10: approve adding a pinned `maplibre-gl` and the CSP change for the chosen style host. |
+| E-07 staging hosting | Provide a host and a domain layout that satisfies ADR-011 (https, separate origins per app, Secure cookies). Blocks the staging gate, a staging restore, and HSTS and cookie checks over real HTTPS. |
+| E-02 CSP rendering trade-off | Deferred by the product owner on 2026-11-14: a nonce-based script and style CSP needs per-request rendering, which conflicts with `cacheComponents` in every web app. Decide between nonces (dynamic rendering) and keeping the baseline CSP. |
+| Sprint 1 documents review | Human review of versions, ADR-000 to ADR-011, threat model, permission matrix, phase boundaries and acceptance tests; open items are listed in the Sprint 1 section below. |
+| ADR-011 recovery-code review | Approve or change the recovery design: ten codes per enrolment, single use, keyed hashes (rotating `APP_KEY` invalidates unused codes). Email-verification timing is also still open in ADR-011. |
+| Service worker and offline | Whether to build a service worker or client cache for offline cached reads, given shared staff devices and cache invalidation after sign-out or a 403 (matrix gap G1). |
+| Toast design | Whether to build a toast component and what it looks like; success feedback is inline text today (G3). |
+| Support sees names | Whether `support` should see staff names and email addresses on `/access`. Built behaviour: addresses are masked (`j***@domain`) for support only. I found no written decision in the repository, so the question itself comes from the product owner's list and is unverified here. Permission-matrix question 4 (zone geometry) is a different question and is answered. |
+| Staff invite flow | Whether and how a new staff person is brought in (email invitation). An email-lookup grant endpoint was avoided because it would reveal which accounts exist. |
+
+Other open decisions in the backlog and ADRs, not in the list above: city status values (D-07, provisional), object storage (ADR-012, needed at the first file-storing feature), Android SDK and JDK install, final Android application id and brand, a real mail provider.
+
+### Future and out of scope (spec 1.2)
+
+Not built and not exposed as working routes (the route and OpenAPI tests fail if one appears): live merchant onboarding approvals, menu CRUD beyond skeletons, cart and checkout, payment processor integration, ledger posting, dispatch scoring and offers, live rider location recording, push notifications, public restaurant ratings, production geocoding, route-time guarantees, automated payouts. Launch city, coverage polygon, payouts, labour and insurance, and production release remain human decisions (AGENTS.md rule 20).
+
+## Definition of done (spec 1.3)
+
+| # | Criterion | Verdict | Evidence and gap |
+|---|---|---|---|
+| 1 | `setup`, `up`, `migrate`, `seed-demo`, `check` through Make and PowerShell | Partial | All nine `dev.ps1` tasks ran (`a10-dev-tasks-check.txt`); `setup` ran in a clean clone (`x01-2026-11-14-clean-clone.txt`). Makefile never run; `up`, `migrate`, `seed-demo` not run in the clone. |
+| 2 | API boots with isolated databases, Redis, PostGIS; fresh migrate and rollback | Met (local) | `sprint3-check.txt`, MigrationRollbackTest, `food_delivery_test` forced by `tests/bootstrap.php`. |
+| 3 | Register, login, logout, current user under a selected secure design | Met (local) | `sprint4-auth-check.txt`, `sprint4-auth-smoke.txt`; ADR-011 accepted 2026-11-13. |
+| 4 | Admin creates and disables a city, draws and creates and disables a zone; no assumed coordinates or timezone | Partial | City and zone lifecycle met through the API and GeoJSON screens, live run `phase1-2026-11-14-live-coverage.txt`. "Draw" is not met: no map (U-10 blocked). Text searches found no hardcoded city or centre; the only place name is the `Asia/Manila` display timezone default (ADR-004). |
+| 5 | Serviceability reliable inside and outside; useful not-configured answer | Met (local) | ServiceabilityTest, `sprint5-config-plan-check.txt` (GiST plan). Geometry caps are unapproved (C-13). |
+| 6 | Cross-tenant access denied for guessed IDs | Met for city scope | `sprint5-cross-tenant-check.txt`. Merchant scope cannot be tested yet (no merchant endpoints). |
+| 7 | Four shells work at narrow and wide viewports; placeholders disabled and labelled | Partial | Web: Chromium at 375, 768 and 1440 with axe (`x01-2026-11-14-playwright-default.txt`). Rider: widget tests only, never on a device. Merchant has no account. Screen reader and dark theme not checked. |
+| 8 | CI runs lint, types, tests, schema validation, OpenAPI diff, security scans | Met for `099a3db` | `x01-2026-11-14-hosted-ci.txt`. Later commits unverified. |
+| 9 | README, ADRs, threat model, test evidence | Met (presence) | `README.md`, `docs/architecture/decisions/`, `docs/security/threat-model.md`, `docs/qa/evidence/`. Human review is open. |
+
+Other gate conditions (spec 15 and section 12): "MFA for admin production access" is built but its recovery design is unreviewed and no deployed admin exists; "Staging database backup restored successfully" is not met (no staging); "Proper map attribution, valid tile access terms" is not met (no provider); the spec 15 human checklist has not been ticked by a human. The Sprint 7 gate ("production-like staging with documented rollback") is met only as a local rehearsal. Sprint 8's rule applies: an open critical failure blocks the phase. No failing security, authorization, geometry or migration test is known.
+
+**Gate verdict: not passed.** Passing needs E-07 staging and the staging checks, the human reviews and decisions above (at minimum the Sprint 1 documents, the ADR-011 recovery codes, C-13, and U-10 or an accepted placeholder), and a hosted CI result for the final commit.
+
+## Inconsistencies found among the documents (2026-11-14)
+
+- `docs/qa/phase1-acceptance.md` still says "All 27 default cases passed", rider location permission "not run" and the DoD 4 hardcoded-coordinate review "open"; the X-01 section and its text searches supersede these.
+- `docs/backlog.md` U-02 says "done for web" but repeats U-01's text, and Storybook and a toast are absent.
+- Sections below give three different U-03 matrix totals (48/28/5, then 64/30/5, now 69/30/0); the matrix file is authoritative.
+- The "Sprint 4, second slice" section says the admin app refuses all sign-in in production because TOTP is unbuilt; TOTP was built later.
+- The trailing "Blocked on a human", "Rollback" and "Next steps" sections predate Docker and are stale; this section replaces them.
+- The latest saved backend output is 485 tests; the 523 figure in the roles-and-access section has no saved output.
+- `CLAUDE.md` "Current state" said TOTP was not built; updated with this change.
+
+---
 
 ## November 14 matrix gaps G6 and G7, X-01 text searches
 

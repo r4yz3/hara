@@ -1,0 +1,44 @@
+U-03 check: merchant-web global-error.tsx under a production build when the root layout throws
+Date: 2026-11-14 (workstation run)
+Result: PASS for the runtime path. The check needed a workaround (see step 3); the first attempt as specified did not exercise the fault.
+
+Fault: apps/merchant-web/app/layout.tsx, first line of RootLayout:
+  if (process.env.FAULT_LAYOUT === "1") throw new Error("LAYOUT-SECRET-DETAIL");
+The file was reverted with `git checkout -- apps/merchant-web/app/layout.tsx`; `git diff` on it is empty.
+
+1. Build with the fault unset
+   Command: pnpm --filter merchant-web build   (run inside apps/merchant-web as `pnpm build`)
+   Result: exit 0. "/" is prerendered as static HTML ("/"), so the layout runs at build time only.
+
+2. Start with FAULT_LAYOUT=1 on the prerendered build, then request "/"
+   Command: FAULT_LAYOUT=1 pnpm exec next start -p 3011
+   curl http://localhost:3011/  -> HTTP 200, normal Merchant portal page, no fault.
+   Finding: a runtime env var is never read for a prerendered route, so this does not test the layout error path.
+
+3. Build with the fault set at build time
+   Command: FAULT_LAYOUT=1 pnpm build
+   Result: exit 1. "Error occurred prerendering page /" (LAYOUT-SECRET-DETAIL). Build aborts.
+   Finding: a layout throw on a static route fails the build; global-error.tsx is not reached at build time.
+
+4. Runtime path (workaround): clean build (fault unset), then moved .next/server/app/index.{html,rsc,meta,segments}
+   aside so "/" must render per request, started with FAULT_LAYOUT=1 on port 3011, then restored those files.
+   curl http://localhost:3011/  -> HTTP 500. Raw SSR HTML has no visible error text (the shell renders client-side).
+   Server log: "Error: LAYOUT-SECRET-DETAIL" with a digest (logged server-side only).
+
+5. Headless Chromium (Playwright 1.65.0, repo copy), script kept outside the repo, loads http://localhost:3011/:
+   httpStatus: 500
+   document title: "Something went wrong"
+   body text: "Something went wrong / This page could not be shown. Nothing you entered has been saved. Try again, or go back to the home page. / Reference: 12808415 / Try again / Go to the home page"
+   global-error text (from packages/ui/src/problem-page.tsx ErrorScreen) present: YES
+   "LAYOUT-SECRET-DETAIL" in rendered text: NO
+   "LAYOUT-SECRET-DETAIL" in rendered HTML: NO
+   Console errors: 500 response; React minified error #441 (hydration after a root-layout error).
+
+Conclusions
+- global-error.tsx renders with its own html/body when the root layout throws at request time, with the approved copy and a digest-based reference only.
+- The raw error message does not reach the browser text or HTML.
+- curl alone shows only the shell; use a browser to see the error screen.
+- A layout throw on a prerendered route fails `next build`; the runtime error screen only applies to dynamic rendering.
+- Note: apps/merchant-web/app/test-faults/[kind] returns 404 in production by design, so it cannot be used for this check.
+
+Rollback: layout.tsx reverted; no tracked file changed. .next was restored to the clean build output. Temporary logs removed.
