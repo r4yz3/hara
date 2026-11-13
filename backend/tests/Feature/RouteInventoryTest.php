@@ -23,9 +23,11 @@ class RouteInventoryTest extends TestCase
 
         $this->assertSame([
             'DELETE api/v1/admin/exclusions/{exclusion}',
+            'GET|HEAD api/v1/admin/audit-logs',
             'GET|HEAD api/v1/admin/cities',
             'GET|HEAD api/v1/admin/cities/{city}',
             'GET|HEAD api/v1/admin/cities/{city}/zones',
+            'GET|HEAD api/v1/admin/system/status',
             'GET|HEAD api/v1/admin/zones/{zone}',
             'GET|HEAD api/v1/admin/zones/{zone}/exclusions',
             'GET|HEAD api/v1/auth/csrf',

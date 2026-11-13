@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Admin\CityController;
 use App\Http\Controllers\Api\V1\Admin\ExclusionController;
+use App\Http\Controllers\Api\V1\Admin\OversightController;
 use App\Http\Controllers\Api\V1\Admin\ZoneController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\PublicGeoController;
@@ -48,5 +49,7 @@ Route::middleware(EnsureSurfaceSession::class)->group(function (): void {
         Route::get('/zones/{zone}/exclusions', [ExclusionController::class, 'index'])->name('admin.exclusions.index');
         Route::post('/zones/{zone}/exclusions', [ExclusionController::class, 'store'])->name('admin.exclusions.store');
         Route::delete('/exclusions/{exclusion}', [ExclusionController::class, 'destroy'])->name('admin.exclusions.destroy');
+        Route::get('/audit-logs', [OversightController::class, 'auditLogs'])->name('admin.audit-logs.index');
+        Route::get('/system/status', [OversightController::class, 'systemStatus'])->name('admin.system.status');
     });
 });

@@ -728,6 +728,103 @@ paths:
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/audit-logs:
+    get:
+      tags: [Admin]
+      summary: Audit trail, newest first
+      description: |
+        Needs `audit.read`. Staff holding it everywhere see every entry;
+        staff holding it for certain cities see only entries tied to those
+        cities. Sensitive values in `before` and `after` are redacted, and
+        the address hash is never returned.
+      operationId: adminAuditLogsIndex
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Cursor" }
+        - { name: action, in: query, schema: { type: string, maxLength: 120 }, description: Exact match. }
+        - { name: subject_type, in: query, schema: { type: string, maxLength: 80 } }
+        - { name: subject_id, in: query, schema: { type: string } }
+        - { name: actor_user_id, in: query, schema: { type: string } }
+        - { name: city_id, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: One page of entries.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/AuditEntry" }
+                  meta: { $ref: "#/components/schemas/PageMeta" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/system/status:
+    get:
+      tags: [Admin]
+      summary: Deployment status summary
+      description: |
+        Needs `system.status.read` with global scope. Dependency checks are
+        up or down only. No secret, host name or connection detail is
+        returned.
+      operationId: adminSystemStatus
+      responses:
+        "200":
+          description: The summary.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    required: [environment, debug, checks, postgis, cities, zones, features, map_style_configured, geometry_caps_approved]
+                    properties:
+                      environment: { type: string }
+                      debug: { type: boolean, description: Must be false in production. }
+                      checks:
+                        type: object
+                        additionalProperties: false
+                        required: [database, redis]
+                        properties:
+                          database: { type: boolean }
+                          redis: { type: boolean }
+                      postgis: { type: boolean }
+                      cities:
+                        type: object
+                        additionalProperties: false
+                        required: [draft, active, paused, archived]
+                        properties:
+                          draft: { type: integer }
+                          active: { type: integer }
+                          paused: { type: integer }
+                          archived: { type: integer }
+                      zones:
+                        type: object
+                        additionalProperties: false
+                        required: [draft, active, paused, archived]
+                        properties:
+                          draft: { type: integer }
+                          active: { type: integer }
+                          paused: { type: integer }
+                          archived: { type: integer }
+                      features:
+                        type: object
+                        additionalProperties: { type: boolean }
+                      map_style_configured: { type: boolean }
+                      geometry_caps_approved: { type: boolean }
+                  meta: { $ref: "#/components/schemas/Meta" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
 security:
   - sessionCookie: []
 components:
@@ -850,6 +947,21 @@ components:
             coordinates: { type: array, items: {} }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
+    AuditEntry:
+      type: object
+      additionalProperties: false
+      required: [id, actor_user_id, action, subject_type, subject_id, city_id, before, after, correlation_id, created_at]
+      properties:
+        id: { type: string }
+        actor_user_id: { type: [string, "null"], description: Null for actions taken by the system. }
+        action: { type: string }
+        subject_type: { type: string }
+        subject_id: { type: [string, "null"] }
+        city_id: { type: [string, "null"] }
+        before: { type: [object, "null"] }
+        after: { type: [object, "null"] }
+        correlation_id: { type: [string, "null"] }
+        created_at: { type: string, format: date-time }
     PublicCity:
       type: object
       additionalProperties: false
