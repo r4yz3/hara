@@ -4,8 +4,11 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Scheduled and manual runs scan the whole history; push and pull request
+  # runs scan only their own commits (and cannot scan a first push).
   schedule:
     - cron: "17 3 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: read
