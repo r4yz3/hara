@@ -29,11 +29,11 @@ const categories = [
   { label: "Drinks", glyph: "🧋" },
 ];
 
-const tabs = [
+const tabs: { label: string; icon: typeof HomeIcon; current: boolean; href?: string }[] = [
   { label: "Home", icon: HomeIcon, current: true },
   { label: "Orders", icon: ReceiptIcon, current: false },
   { label: "Saved", icon: HeartIcon, current: false },
-  { label: "Account", icon: UserIcon, current: false },
+  { label: "Account", icon: UserIcon, current: false, href: "/account" },
 ];
 
 function SoonBadge() {
@@ -167,7 +167,7 @@ export default function Home() {
         className="fixed inset-x-0 bottom-0 border-t border-border bg-surface px-2 pb-[env(safe-area-inset-bottom)] md:hidden"
       >
         <ul className="mx-auto flex max-w-md justify-between">
-          {tabs.map(({ label, icon: TabIcon, current }) => (
+          {tabs.map(({ label, icon: TabIcon, current, href }) => (
             <li key={label} className="flex-1">
               {current ? (
                 <span
@@ -177,6 +177,14 @@ export default function Home() {
                   <TabIcon />
                   {label}
                 </span>
+              ) : href ? (
+                <Link
+                  href={href}
+                  className="flex min-h-14 w-full flex-col items-center justify-center gap-0.5 text-xs text-text-secondary"
+                >
+                  <TabIcon />
+                  {label}
+                </Link>
               ) : (
                 <button
                   type="button"
