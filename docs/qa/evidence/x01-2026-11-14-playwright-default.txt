@@ -1,0 +1,5 @@
+# X-01 default Playwright suite, 2026-11-14. Command: pnpm exec playwright test --reporter=line (repo root, Chromium, 3 viewports, synthetic API fixtures)
+# Result: 267 passed, 66 skipped (opt-in: live, screenshots), exit 0. Final lines:
+[333/333] [desktop] › tests\browser\state-matrix.spec.ts:849:1 › access: roles that failed to load say so, and Try again recovers
+  66 skipped
+  267 passed (2.7m)

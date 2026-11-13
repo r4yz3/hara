@@ -500,6 +500,26 @@ What the tests cover: liveness body; readiness hidden from public addresses and 
 - **Files:** `packages/ui/{package.json,src/map-state.ts,src/map-view.tsx,test/map-state.test.mjs}`, `apps/admin-web/{package.json,next.config.ts,app/cities/[id]/city-screen.tsx,app/cities/[id]/zone-map.tsx}`, `tests/browser/map.spec.ts`, `pnpm-lock.yaml`, `docs/backlog.md`, this file.
 - **Rollback:** revert those files and run `pnpm install`; no backend or API change.
 
+## November 14 X-01 acceptance run (local)
+
+Every result below is from real output saved in `docs/qa/evidence/x01-2026-11-14-*.txt`. Nothing was committed or pushed.
+
+| Acceptance item | Result | Evidence |
+|---|---|---|
+| Default Playwright suite (`pnpm exec playwright test`, Chromium, 375/768/1440, synthetic API) | pass: 267 passed, 66 skipped (live and screenshot specs are opt-in), exit 0, 2.7 min | `x01-2026-11-14-playwright-default.txt` |
+| Live Playwright (`BROWSER_LIVE=1`, desktop, Docker API; password read from the untracked `.env` into the process environment only) | pass: 1 passed (city and GeoJSON zone control live serviceability) | `x01-2026-11-14-playwright-live.txt` |
+| Accessibility: axe at three viewports (customer banner and empty state, outside coverage, map area, staff MFA, state matrix, admin dialogs) | pass: runs inside the default suite above with no violations. Keyboard and dialog focus cases are in the same suite. Screen reader, dark theme and Android TalkBack not checked | same file |
+| DoD 1, clean clone | partial: `git clone` of the local repo, then `dev.ps1 setup` exit 0; in the clone `pnpm lint`, `typecheck`, `test`, `build`, `pint --test`, `phpstan` (with `--memory-limit=1G`), `flutter analyze` and `flutter test` (47 passed, 2 skipped) all exit 0 | `x01-2026-11-14-clean-clone.txt` |
+| Clean clone `up`, `migrate`, `seed-demo`, `check` with the Docker stack | not run: a second stack would collide with the running one, and backend database tests would hit the shared test database. Makefile not run (`make` not installed) | n/a |
+| DoD 8, hosted CI | pass: web, backend and security succeeded for `099a3db` (the first query showed them in progress; re-queried to completion); the previous push and dependabot PR runs are green | `x01-2026-11-14-hosted-ci.txt` |
+| Staging | blocked on the human (E-07) | n/a |
+| Phase boundary: rider app requests no location permission | grep found no permission entries in `AndroidManifest.xml` or `pubspec.yaml`; not a full review | not saved |
+| Hardcoded city search; invented-data text search | not run | n/a |
+
+- Findings: no product bug. `phpstan analyse` without `--memory-limit` crashes at PHP's 128M default on this workstation; `dev.ps1 check` already passes the flag.
+- Process note: the scratch directory is shared with other agents. A first clone under the generic name `clone` was deleted by someone else, so the run was repeated in a uniquely named directory, which was then removed.
+- Rollback: delete the four evidence files and revert the X-01 row and three acceptance rows; no code changed.
+
 ## Sprint 1 (unchanged)
 Done and awaiting review: versions, ADR-000 to ADR-011, diagram, phase boundaries, threat model, permission matrix, backlog, acceptance tests. Open items: ADR-011 (session separation, MFA factor, email verification), ADR-002 caps, ADR-007 tile provider, city status values, permission matrix questions.
 

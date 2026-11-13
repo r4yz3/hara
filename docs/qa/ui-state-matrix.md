@@ -1,7 +1,7 @@
 # UI state matrix (backlog U-03)
 
 Spec: `FOOD_DELIVERY_PHASE1_IMPLEMENTATION.md` section 8.7 (states) and 8.8 (accessibility).
-Tests: `tests/browser/state-matrix.spec.ts` (this item) and `tests/browser/phase1.spec.ts` (earlier items, cited as `phase1`).
+Tests: `tests/browser/state-matrix.spec.ts` (this item), `tests/browser/customer.spec.ts` (the customer account, cited as `account:`) and `tests/browser/phase1.spec.ts` (earlier items, cited as `phase1`).
 Every test runs in the phone (375), tablet (768) and desktop (1440) projects. The API is replaced by route
 interception, so no real data, account or position is involved. Sign-in, forgot-password and reset-password pages are
 not in this matrix (they are being changed separately).
@@ -9,13 +9,13 @@ not in this matrix (they are being changed separately).
 ## How to read a cell
 
 - `covered (test)`: a browser test forces the state and asserts what the user sees. Tests that start with a view name
-  (`cities:`, `city:`, `exclusions:`, `audit:`, `settings:`, `location:`) are in `state-matrix.spec.ts`.
+  (`cities:`, `city:`, `exclusions:`, `audit:`, `settings:`, `location:`, `access:`) are in `state-matrix.spec.ts`; `account:` tests are in `tests/browser/customer.spec.ts`.
 - `n/a (reason)`: the view cannot reach the state.
 - `gap (reason)`: reachable, not proven by a test, or not built.
 
 Where a view shows an error, it names what happened (`describeFailure` in `packages/session`) and keeps entered data.
 Axe (WCAG 2.2 AA tags, plus a no-horizontal-scroll check) runs in the forbidden and error states of the admin
-cities, city, audit and settings views, the location view's validation and offline states, and the admin overview.
+cities, city, audit and settings views, the location view's validation and offline states, and the admin overview. It also runs on the admin access view (loaded, empty, error and grant-form states) and the customer account view (loaded and error states).
 
 ## Matrix
 
@@ -23,6 +23,7 @@ cities, city, audit and settings views, the location view's validation and offli
 |---|---|---|---|---|---|---|---|---|---|
 | Customer `/` | gap (the banner has a Suspense fallback, but its data is fetched on the server from a fixed fixture, so a browser test cannot slow it) | covered (phase1 "customer home shows the empty restaurant state") | gap (the banner has a "could not check" state with a reload instruction, but a browser test cannot make the server-side fetch fail; the session pill part is covered: "customer: the session pill says so...") | n/a (public page, no authorization) | n/a (nothing is fetched by the browser after load except the session pill, covered above) | gap (the "areas are open" banner needs a second server-side fixture) | n/a (no form) | n/a (nothing is changed) | n/a (no submit) |
 | Customer `/location` | n/a (no data is loaded; the form is the page) | n/a (no list; the idle form is the starting state) | covered (phase1 "customer can retry a delivery check after an API error") | n/a (public endpoint; the page always has a Back link) | covered ("location: offline reports the lost connection...") | covered (phase1, same test, "outside our delivery areas" answer) | covered ("location: an empty or malformed position focuses...", "...a refused position from the server focuses...") | n/a (nothing versioned) | covered ("location: a slow check shows progress and cannot be submitted twice") |
+| Customer `/account` | covered ("account: shows progress while loading") | covered ("account: an account with no name or email says so"; the empty case is blank fields, not a list) | covered ("account: a server error offers a retry that recovers") | gap (a 403 from `/api/v1/me` shows the server's message with no Retry and no back link, and no test sends one; a 401 goes to sign-in, covered by "scenario 7: /account without a session...") | covered ("account: a lost connection is reported, with a retry"; this is a load-time offline, the sign-out offline path is not separately tested) | covered ("account: shows the signed-in customer's own name and email"; "account: sign out ends the session once...") | n/a (no form) | n/a (read-only; sign-out has no version) | gap (Sign out is disabled while it runs, but "account: sign out ends the session once..." clicks once and never holds the request, so a second press while slow is not proven) |
 | Merchant `/` | covered ("merchant: the session pill shows progress...", the only thing the page loads) | covered (phase1 "merchant overview keeps unavailable actions disabled"; every panel says what is missing) | covered ("merchant: the session pill says so when the server cannot be reached") | n/a (no API data; there is no merchant account to be refused yet) | n/a (static page; the pill states are covered) | n/a (no action can succeed; every action is disabled and labelled) | n/a (no form) | n/a | n/a (no submit) |
 | Admin `/` | gap (Suspense row for the API check is fetched on the server; cannot be slowed from the browser) | n/a (layout preview panels are labelled and hold no list) | gap (the "API is not reachable" row exists and tells staff to reload; its server-side fetch cannot be forced to fail) | n/a (static; no API data) | n/a (static) | covered ("admin overview reports the live API row...", accepts reachable or not, asserts no invented figures, axe clean) | n/a | n/a | n/a |
 | Admin `/cities` | covered ("cities: progress while slow...") | covered (same test, "No cities yet") | covered ("cities: a server error offers a retry") | covered ("cities: forbidden explains and leads back...") | covered ("cities: working offline keeps the form...") | covered ("cities: a rejected create ... then succeeds") | covered (same test; focus moves to the first refused field, `aria-invalid` set) | n/a (create has no version; the list is read-only) | covered ("cities: a slow create blocks a second submit") |
@@ -30,8 +31,9 @@ cities, city, audit and settings views, the location view's validation and offli
 | Coverage exclusions panel (inside `/cities/[id]`) | covered ("exclusions: a refused or malformed shape...", the "Working..." status; the panel loads on open) | covered (phase1 "No coverage exclusions.") | covered ("exclusions: a failed load offers Retry...") | covered ("exclusions: forbidden is stated in place...": the message is in place and the page navigation stays) | covered (same test as Error) | covered ("exclusions: an added exclusion is listed, and a removal needs confirmation") | covered ("exclusions: a refused or malformed shape focuses the shape field...") | n/a (exclusions have no version) | covered (same test as Validation: one POST while slow) |
 | Admin `/audit` | covered ("audit: progress while slow...") | covered (same test, "No entries") | covered ("audit: a server error retries...") | covered (same test, with back link) | covered ("audit: loading older entries offline...") | covered ("audit: loading older entries offline...", entries and "End of the log.") | n/a (optional free-text filters; an empty filter is valid) | n/a (read-only) | covered ("audit: a slow filter shows progress and ignores a second Apply") |
 | Admin `/settings` | covered ("settings: progress while the status is slow") | n/a (the endpoint always returns a status document) | covered (phase1 "admin settings retry a failed status request...") | covered (phase1 "...show a permission denial...", "settings: forbidden is accessible and leads back...") | covered ("settings: forbidden ... offline refresh reports and recovers") | covered (phase1, "Service checks" shown) | n/a (read-only) | n/a (read-only) | covered ("settings: progress while the status is slow"; the only control, Refresh, is replaced by the progress text while a request runs) |
+| Admin `/access` | covered ("access: progress while slow, then only the people the API returned"; the "Load more people" progress is not tested) | covered ("access: an empty directory says so and invents nobody") | covered ("access: a server error retries and forbidden leads back"; a failed roles load: "access: roles that failed to load say so, and Try again recovers") | covered ("access: a server error retries and forbidden leads back": a 403 states the refusal and links "Back to overview") | covered ("access: a refused or offline removal is reported in the dialog and can be repeated"; this is an action offline, an offline first load is not tested) | covered ("access: progress while slow..." for the list; "access: removing a role..." and "access: the grant form..." for the confirmation messages) | covered ("access: the grant form checks its fields, sends the chosen scope, and reports a refusal": focus moves to Person) | covered (same test: a 409 shows the server's message in the form; no version, so no reload prompt, and a retry sends again without re-choosing) | covered ("access: removing a role needs confirmation, cancel sends nothing, one confirmation sends one request": Removing... is disabled and one DELETE is sent; the grant form's busy state is not separately tested) |
 
-Totals (9 views by 9 states = 81 cells): 48 covered, 28 n/a, 5 gap.
+Totals (11 views by 9 states = 99 cells): 62 covered, 30 n/a, 7 gap.
 
 ## Changes made to close gaps
 
@@ -61,6 +63,10 @@ Totals (9 views by 9 states = 81 cells): 48 covered, 28 n/a, 5 gap.
 - G5. The Next.js development overlay badge can sit over bottom-left controls on a phone and intercept pointer
   clicks in the dev server; the audit offline test uses keyboard activation for that reason. It does not exist in a
   production build.
+- G6. Customer `/account` forbidden (a 403 from `/api/v1/me`): the screen shows the server's message with no Retry and
+  no back link, and no test covers it. Adding a back link is a design choice (where a customer goes after a 403).
+- G7. Customer `/account` sign-out held slow: the button is disabled while the request runs, but no test holds the
+  logout request to prove a second press is ignored. A test in `tests/browser/customer.spec.ts` would close it.
 
 ## Accessibility notes (spec 8.8)
 

@@ -1,0 +1,15 @@
+completed	success	feat(admin): roles and access screen with staff grant/revoke API (U-05)	web	main	push	43504504130	5m23s	2026-11-13T20:45:38Z
+completed	success	feat(admin): roles and access screen with staff grant/revoke API (U-05)	backend	main	push	43504504106	1m29s	2026-11-13T20:45:38Z
+completed	success	feat(admin): roles and access screen with staff grant/revoke API (U-05)	security	main	push	43504504078	2m16s	2026-11-13T20:45:38Z
+completed	success	test(web): responsive screenshots of every built screen (U-09)	web	main	push	43501363363	4m15s	2026-11-13T20:25:06Z
+completed	success	test(web): responsive screenshots of every built screen (U-09)	security	main	push	43501363318	2m17s	2026-11-13T20:25:06Z
+completed	success	chore(deps-dev): bump eslint from 9.39.5 to 10.14.0	web	dependabot/npm_and_yarn/eslint-10.14.0	pull_request	43499353377	3m51s	2026-11-13T20:12:16Z
+completed	success	chore(deps-dev): bump eslint from 9.39.5 to 10.14.0	security	dependabot/npm_and_yarn/eslint-10.14.0	pull_request	43499353214	2m53s	2026-11-13T20:12:16Z
+completed	success	chore(deps-dev): bump tailwindcss from 4.3.3 to 4.3.5	security	dependabot/npm_and_yarn/tailwindcss-4.3.5	pull_request	43499331594	2m13s	2026-11-13T20:12:07Z
+completed	success	chore(deps-dev): bump tailwindcss from 4.3.3 to 4.3.5	web	dependabot/npm_and_yarn/tailwindcss-4.3.5	pull_request	43499331353	3m20s	2026-11-13T20:12:07Z
+completed	success	chore(deps): bump react-dom from 19.3.0 to 19.3.1	security	dependabot/npm_and_yarn/react-dom-19.3.1	pull_request	43499322715	2m19s	2026-11-13T20:12:03Z
+
+# Re-queried after the run above (the three 099a3db runs had been in progress):
+{"conclusion":"success","headSha":"099a3db425410d6b6cd15ab2290b4ff5e89d45cb","status":"completed","workflowName":"web"}
+{"conclusion":"success","headSha":"099a3db425410d6b6cd15ab2290b4ff5e89d45cb","status":"completed","workflowName":"backend"}
+{"conclusion":"success","headSha":"099a3db425410d6b6cd15ab2290b4ff5e89d45cb","status":"completed","workflowName":"security"}

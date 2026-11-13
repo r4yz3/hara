@@ -1,0 +1,8 @@
+# X-01 live Playwright suite, 2026-11-14. Command: BROWSER_LIVE=1 DEMO_PASSWORD=<from local .env, not recorded> pnpm exec playwright test tests/browser/live-coverage.spec.ts --project=desktop --reporter=list
+# Run against the Docker API on :8000. Synthetic records written to the dev database and archived by the test.
+
+Running 1 test using 1 worker
+
+  ok 1 [desktop] › tests\browser\live-coverage.spec.ts:9:1 › a city and its GeoJSON zone control live serviceability (16.4s)
+
+  1 passed (25.5s)

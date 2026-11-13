@@ -8,14 +8,14 @@ Result key: `not run`, `pass`, `fail`, `blocked`.
 
 | # | Criterion | Evidence | Result |
 |---|---|---|---|
-| 1 | `setup`, `up`, `migrate`, `seed-demo`, `check` work through Make and PowerShell | Clean-clone transcript on this workstation | not run |
+| 1 | `setup`, `up`, `migrate`, `seed-demo`, `check` work through Make and PowerShell | `docs/qa/evidence/x01-2026-11-14-clean-clone.txt` | partial: `setup` passes in a fresh clone; `up`, `migrate`, `seed-demo`, `check` not run there (would reuse the running stack); Makefile not run (`make` missing) |
 | 2 | API boots with isolated databases; fresh migrate and rollback verified | Healthy Compose stack and MigrationRollbackTest in the isolated test database | pass locally |
 | 3 | Register, login, logout, current user | Feature tests B-02 | pass locally |
 | 4 | Admin creates and disables a city, creates and disables a polygon zone; no assumed coordinates or timezone | Feature tests C-02, C-04, C-05 and local live Chromium run with synthetic GeoJSON | City and zone lifecycle verified locally; map drawing and repository-wide hardcoded-coordinate review remain open |
 | 5 | Serviceability returns inside/outside correctly and `NO_ACTIVE_ZONE` when nothing is configured | ServiceabilityTest | pass locally |
 | 6 | Cross-tenant access denied for guessed or edited IDs | CrossTenantIsolationTest, route coverage test | pass for implemented city-scoped endpoints; merchant endpoints are pending |
-| 7 | Four shells work at narrow and wide viewports; placeholders disabled and labelled | Playwright 8; Flutter widget tests; screenshots | not run |
-| 8 | CI runs lint, types, tests, schema validation, OpenAPI diff, security scans | Link to a green run | not run in this verification |
+| 7 | Four shells work at narrow and wide viewports; placeholders disabled and labelled | `docs/qa/evidence/x01-2026-11-14-playwright-default.txt`; Flutter widget tests (47 pass, 2 skipped, in the clean clone) | pass locally for Chromium at 375, 768 and 1440 wide; the rider app has never run on a device |
+| 8 | CI runs lint, types, tests, schema validation, OpenAPI diff, security scans | `docs/qa/evidence/x01-2026-11-14-hosted-ci.txt`: web, backend and security succeeded on `099a3db`; earlier pushes and dependabot PRs green | pass for what the workflows define; not independently audited |
 | 9 | README, ADRs, threat model, test evidence exist | `README.md`, `docs/architecture/decisions/`, `docs/security/threat-model.md`, `docs/qa/evidence/` | pass for artifact presence |
 
 ## Geometry cases (must all pass)

@@ -1,0 +1,77 @@
+# X-01 clean clone, 2026-11-14. git clone F:\PROJECTS\hara (local path, HEAD 099a3db) into a scratch dir; deleted afterwards.
+# dev.ps1 setup: exit 0 (pnpm install --frozen-lockfile, composer install, key:generate, flutter pub get)
+# Not run: dev.ps1 up/migrate/seed-demo/check (would reuse the running stack and ports), backend database tests, Makefile (make not installed).
+# Note: first phpstan call without --memory-limit crashed at the 128M default; dev.ps1 check passes --memory-limit=1G; rerun with it: [OK] No errors.
+
+  70/107 [==================>---------]  65%
+  80/107 [====================>-------]  74%
+  90/107 [=======================>----]  84%
+ 100/107 [==========================>-]  93%
+ 107/107 [============================] 100%
+Generating optimized autoload files
+> Illuminate\Foundation\ComposerScripts::postAutoloadDump
+> @php artisan package:discover --ansi
+
+   INFO  Discovering packages.  
+
+  laravel/boost ................................................................................................. DONE
+  laravel/mcp ................................................................................................... DONE
+  laravel/pail .................................................................................................. DONE
+  laravel/roster ................................................................................................ DONE
+  laravel/sanctum ............................................................................................... DONE
+  laravel/tinker ................................................................................................ DONE
+  nesbot/carbon ................................................................................................. DONE
+  nunomaduro/collision .......................................................................................... DONE
+  nunomaduro/termwind ........................................................................................... DONE
+
+84 packages you are using are looking for funding.
+Use the `composer fund` command to find out more!
+==> generate APP_KEY
+
+   INFO  Application key set successfully.  
+
+==> flutter pub get
+Resolving dependencies...
+Downloading packages...
+  clock 1.1.2 (1.1.3 available)
+  matcher 0.12.19 (0.12.20 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.17.0 (1.19.0 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  test_api 0.7.10 (0.7.15 available)
+  vector_math 2.2.0 (2.4.4 available)
+Got dependencies!
+7 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+
+##### checks in the clone
+2:==> pnpm lint
+15:exit 0
+16:==> pnpm typecheck
+37:exit 0
+38:==> pnpm test
+111:exit 0
+112:==> pnpm build
+205:exit 0
+206:==> pint --test
+207:{"tool":"pint","result":"passed"}
+209:exit 0
+210:==> phpstan
+217:    + FullyQualifiedErrorId : NativeCommandError
+220:     Error                                                                                                              
+222:     Child process error: PHPStan process crashed because it reached configured PHP memory limit: 128M                  
+225:     Child process error (exit code 255):                                                                               
+239: [ERROR] Found 2 errors                                                                                                
+241:??  Result is incomplete because of severe errors. ??
+242:   Fix these errors first and then re-run PHPStan
+243:   to get all reported errors.
+246:exit 1
+247:==> flutter analyze
+261:No issues found! (ran in 3.3s)
+263:exit 0
+264:==> flutter test
+286:00:00 +8: C:/Users/justi/AppData/Local/Temp/claude/f42a4daf8a86c311/c1907160-d55c-4bf0-ae71-abd72712c2ce/scratchpad/x01-clean-clone/apps/rider-flutter/test/core/rider_api_test.dart: signIn a socket error is offline
+288:00:00 +10: C:/Users/justi/AppData/Local/Temp/claude/f42a4daf8a86c311/c1907160-d55c-4bf0-ae71-abd72712c2ce/scratchpad/x01-clean-clone/apps/rider-flutter/test/core/rider_api_test.dart: signIn any other error is unexpected
+326:00:04 +46 ~2: C:/Users/justi/AppData/Local/Temp/claude/f42a4daf8a86c311/c1907160-d55c-4bf0-ae71-abd72712c2ce/scratchpad/x01-clean-clone/apps/rider-flutter/test/sign_in_test.dart: an error message is announced as a live region
+327:00:04 +47 ~2: All tests passed!
+329:exit 0
