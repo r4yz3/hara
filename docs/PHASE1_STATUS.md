@@ -2,6 +2,21 @@
 
 Last updated: 2026-11-14. Phase 1 has working browser authentication, rider token endpoints, and city, zone and serviceability APIs. Sprint 8 acceptance remains open.
 
+## November 14 screenshot evidence (U-09)
+
+- Command (PowerShell, repository root; the spec starts the three dev servers itself, so ports 3000-3002 must be free):
+  `$env:SCREENSHOTS=1; pnpm exec playwright test tests/browser/screenshots.spec.ts --workers=1`
+  Without `SCREENSHOTS=1` the spec skips and writes nothing. Result: 57 passed (19 screens x 3 viewport projects).
+- Output: 76 PNGs, 2.7 MB, in `docs/qa/evidence/screens/<app>/<screen>-<width>.png`. Widths are 1440, 768, 375 and 360 (the phone project writes both 375 and 360). The Next.js dev-server badge is hidden before capture.
+  - customer: home, login, forgot-password, reset-password, location.
+  - merchant: home, login, forgot-password, reset-password.
+  - admin: overview, login, forgot-password, reset-password, security, cities-empty, cities-list, city-detail, audit, settings.
+- Data: the apps are real running dev builds, but the API is replaced by route interception, as in `state-matrix.spec.ts`. Names on screen are labelled "Synthetic"; the signed-in screens (security, cities, city, audit, settings) use a mocked session and mocked answers, not a real account or password. The customer home banner comes from the existing public-config stub (service closed).
+- The spec logs `OVERFLOW <screen> @<width>` if a page scrolls sideways; none was logged.
+- Rider: `RENDER_EVIDENCE=1 flutter test test/render_evidence_test.dart --update-goldens` in `apps/rider-flutter` passed and rewrote `docs/qa/evidence/rider-home-390-dark.png` and `-light.png`.
+- Not covered: screens that only appear after real interaction (city and zone forms with errors, exclusions, MFA setup steps); those are exercised by the browser tests but not captured. Rollback: delete `docs/qa/evidence/screens/` and `tests/browser/screenshots.spec.ts`.
+- `pnpm lint` and `pnpm typecheck` pass.
+
 ## November 14 staff two-step sign-in: screens and recovery (B-09)
 
 Evidence: `docs/qa/evidence/phase1-2026-11-14-mfa-check.txt` (`dev.ps1 check`, exit 0; 485 backend tests) and `phase1-2026-11-14-mfa-browser.txt` (`pnpm test:browser --workers=2`, exit 0; 171 passed, 3 opt-in skips). Both were run after all three agents had finished.
