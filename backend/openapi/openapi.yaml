@@ -1127,6 +1127,154 @@ paths:
         "403": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
         "422": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/users:
+    get:
+      tags: [Admin]
+      summary: Staff members and their grants
+      description: |
+        Needs `users.read`. Lists people who hold a live staff role, by id,
+        with the grants the caller may see: global reach sees every grant,
+        city reach sees only grants anchored to those cities (so global
+        grants and other cities are absent, not hidden). Support sees the
+        address masked (`email_masked`). Accounts without a staff role are
+        never listed. `can_revoke` says whether a revoke would be allowed; it
+        is advice for the screen and the revoke request is checked in full.
+      operationId: adminUsersIndex
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Cursor" }
+      responses:
+        "200":
+          description: One page of staff members, by id.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/StaffMember" }
+                  meta: { $ref: "#/components/schemas/PageMeta" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/roles:
+    get:
+      tags: [Admin]
+      summary: Roles the caller may hand out, and where
+      description: |
+        Needs `users.read`. Lists only roles one of the caller's own grants
+        is entitled to assign, with the scopes that grant covers: `global`
+        (a deployment-wide grant), `all_cities`, or specific `city_ids`. The
+        list is empty for a caller who may assign nothing. `platform_owner`
+        and onboarding roles never appear. This only fills a form; the grant
+        request is checked in full.
+      operationId: adminRolesIndex
+      responses:
+        "200":
+          description: Assignable roles.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/AssignableRole" }
+                  meta: { $ref: "#/components/schemas/PageMeta" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/users/{user}/roles:
+    parameters:
+      - name: user
+        in: path
+        required: true
+        schema: { type: string }
+        description: Id of a staff member the caller can see. Letter case is ignored.
+    post:
+      tags: [Admin]
+      summary: Grant a role to a staff member
+      description: |
+        Needs `users.roles.assign`, and the caller must hold a role entitled
+        to hand out the requested one over the same scope (ADR-005), so a
+        city manager can grant only the dispatcher role in their own city.
+        404 when the person is not a staff member within the caller's view
+        (including a caller without `users.read`). 403 for a role or scope
+        the caller may not hand out, for `platform_owner` and onboarding
+        roles whoever asks, and for the caller's own account. 409 when the
+        person already holds that role there or the account is not active.
+        404 for a city that does not exist. Written with the audit row
+        `role.granted` in one transaction. The person must already hold a
+        staff role: inviting someone new is not built.
+      operationId: adminUsersRolesStore
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [role, scope_type]
+              properties:
+                role: { type: string, maxLength: 40, description: "A role slug from `GET /admin/roles`." }
+                scope_type: { type: string, enum: [global, city] }
+                scope_id: { type: [string, "null"], description: "Required for `city`, forbidden for `global`." }
+      responses:
+        "201":
+          description: Granted. Returns the person as the caller now sees them.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data: { $ref: "#/components/schemas/StaffMember" }
+                  meta: { $ref: "#/components/schemas/Meta" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/users/{user}/roles/{grant}:
+    parameters:
+      - name: user
+        in: path
+        required: true
+        schema: { type: string }
+      - name: grant
+        in: path
+        required: true
+        schema: { type: string }
+        description: Id of one of the person's grants, from `GET /admin/users`.
+    delete:
+      tags: [Admin]
+      summary: Revoke a role from a staff member
+      description: |
+        Whoever could not have granted it cannot revoke it: needs
+        `users.roles.assign` and an entitled role over the same scope. 404
+        when the person or the grant is not within the caller's view, or the
+        grant is not that person's. 403 for `platform_owner` (never
+        revocable here) and for the caller's own grants. A person who loses
+        their last staff role loses admin access on their next request.
+        Written with the audit row `role.revoked` in one transaction.
+      operationId: adminUsersRolesDestroy
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      responses:
+        "204":
+          description: Revoked.
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
   /api/v1/admin/audit-logs:
     get:
       tags: [Admin]
@@ -1379,6 +1527,50 @@ components:
             coordinates: { type: array, items: {} }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
+    StaffGrant:
+      type: object
+      additionalProperties: false
+      required: [id, role, role_label, scope_type, scope_id, city_name, granted_at, can_revoke]
+      properties:
+        id: { type: string }
+        role: { type: string }
+        role_label: { type: string }
+        scope_type: { type: string, enum: [global, city] }
+        scope_id: { type: [string, "null"] }
+        city_name: { type: [string, "null"], description: Name of the city for a city grant. }
+        granted_at: { type: string, format: date-time }
+        can_revoke: { type: boolean }
+    StaffMember:
+      type: object
+      additionalProperties: false
+      required: [id, name, email, email_masked, status, mfa_enrolled, is_self, grants]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string, description: "Masked (first letter, then asterisks) when `email_masked` is true." }
+        email_masked: { type: boolean }
+        status: { type: string, enum: [active, suspended] }
+        mfa_enrolled: { type: boolean }
+        is_self: { type: boolean }
+        grants:
+          type: array
+          items: { $ref: "#/components/schemas/StaffGrant" }
+    AssignableRole:
+      type: object
+      additionalProperties: false
+      required: [slug, label, scope_types, global, all_cities, city_ids]
+      properties:
+        slug: { type: string }
+        label: { type: string }
+        scope_types:
+          type: array
+          items: { type: string, enum: [global, city] }
+        global: { type: boolean, description: The caller may grant it deployment-wide. }
+        all_cities: { type: boolean, description: The caller may grant it in any city. }
+        city_ids:
+          type: array
+          items: { type: string }
+          description: Cities where the caller may grant it, when not all.
     AuditEntry:
       type: object
       additionalProperties: false

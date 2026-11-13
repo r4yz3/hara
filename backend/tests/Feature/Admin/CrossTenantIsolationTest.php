@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\City;
+use App\Models\User;
 use Illuminate\Routing\Route as RoutingRoute;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,10 @@ class CrossTenantIsolationTest extends AuthTestCase
 
     private string $exclusion;
 
+    private string $theirStaff;
+
+    private string $theirGrant;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -46,6 +51,10 @@ class CrossTenantIsolationTest extends AuthTestCase
             "INSERT INTO delivery_zones (id, city_id, name, slug, status, coverage) VALUES (?, ?, 'Theirs', 'theirs', 'draft', ST_Multi(ST_GeomFromGeoJSON(?)))",
             [$this->zone, $this->other->id, self::SQUARE],
         );
+        $staff = User::factory()->create(['email' => 'their-staff@example.com']);
+        $this->theirStaff = $staff->id;
+        $this->grantRole($staff, 'dispatcher', 'city', $this->other->id);
+        $this->theirGrant = (string) DB::table('user_role_scopes')->where('user_id', $staff->id)->value('id');
         $this->exclusion = strtolower((string) Str::ulid());
         DB::insert(
             "INSERT INTO coverage_exclusions (id, delivery_zone_id, reason, geometry) VALUES (?, ?, 'Theirs', ST_Multi(ST_GeomFromGeoJSON(?)))",
@@ -76,6 +85,8 @@ class CrossTenantIsolationTest extends AuthTestCase
             'admin.exclusions.index' => ['GET', "zones/{$this->zone}/exclusions", []],
             'admin.exclusions.store' => ['POST', "zones/{$this->zone}/exclusions", ['reason' => 'Planted', 'geometry' => $geometry]],
             'admin.exclusions.destroy' => ['DELETE', "exclusions/{$this->exclusion}", []],
+            'admin.users.roles.store' => ['POST', "users/{$this->theirStaff}/roles", ['role' => 'dispatcher', 'scope_type' => 'city', 'scope_id' => $city]],
+            'admin.users.roles.destroy' => ['DELETE', "users/{$this->theirStaff}/roles/{$this->theirGrant}", []],
         ];
     }
 
@@ -86,6 +97,7 @@ class CrossTenantIsolationTest extends AuthTestCase
             DB::table('cities')->where('id', $this->other->id)->get(),
             DB::table('delivery_zones')->where('city_id', $this->other->id)->orderBy('id')->get(['id', 'name', 'slug', 'status', 'priority', 'version', 'updated_at']),
             DB::table('coverage_exclusions')->where('delivery_zone_id', $this->zone)->orderBy('id')->get(['id', 'reason', 'active_from', 'active_until']),
+            DB::table('user_role_scopes')->where('user_id', $this->theirStaff)->orderBy('id')->get(['id', 'revoked_at']),
             DB::table('audit_logs')->where('scope_city_id', $this->other->id)->count(),
         ]);
     }

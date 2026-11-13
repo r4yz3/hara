@@ -107,7 +107,90 @@ class RoleGrantService
         });
     }
 
-    private function assertMayAssign(User $actor, User $target, string $roleSlug, Scope $scope, bool $checkScopeTarget = true): void
+    /**
+     * Whether `revoke` would be allowed for this grant, without logging a
+     * denial. For showing or hiding a button; the real check still runs on
+     * the request.
+     */
+    public function mayRevoke(User $actor, string $targetUserId, string $roleSlug, Scope $scope): bool
+    {
+        try {
+            $this->assertMayAssign($actor, (new User)->forceFill(['id' => $targetUserId]), $roleSlug, $scope, checkScopeTarget: false, log: false);
+
+            return true;
+        } catch (AccessDenied) {
+            return false;
+        }
+    }
+
+    /**
+     * Roles the actor could hand out, and where: a conservative reading of
+     * the rules `assertMayAssign` enforces, used to fill a form. A role is
+     * listed only when one of the actor's own grants both carries
+     * `users.roles.assign` and is entitled to hand that role out. The
+     * request itself is still checked in full.
+     *
+     * @return list<array{slug: string, label: string, scope_types: list<string>, global: bool, all_cities: bool, city_ids: list<string>}>
+     */
+    public function assignableRoles(User $actor): array
+    {
+        if (DB::table('users')->where('id', $actor->getKey())->value('status') !== 'active') {
+            return [];
+        }
+
+        $mine = DB::table('user_role_scopes')
+            ->join('roles', 'roles.id', '=', 'user_role_scopes.role_id')
+            ->join('role_permissions', 'role_permissions.role_id', '=', 'roles.id')
+            ->join('permissions', 'permissions.id', '=', 'role_permissions.permission_id')
+            ->where('user_role_scopes.user_id', $actor->getKey())
+            ->whereNull('user_role_scopes.revoked_at')
+            ->where('permissions.slug', 'users.roles.assign')
+            ->get(['roles.slug', 'user_role_scopes.scope_type', 'user_role_scopes.scope_id']);
+
+        $out = [];
+
+        /** @var array<string, array{label: string, scope_types: list<string>, assignable_by: list<string>|null}> $roles */
+        $roles = config('rbac.roles');
+
+        foreach ($roles as $slug => $role) {
+            if ($slug === 'platform_owner' || $role['assignable_by'] === null) {
+                continue;
+            }
+
+            $entitled = ['platform_owner', ...$role['assignable_by']];
+            $global = false;
+            $allCities = false;
+            $cityIds = [];
+
+            foreach ($mine as $grant) {
+                if (! in_array($grant->slug, $entitled, true)) {
+                    continue;
+                }
+
+                if ($grant->scope_type === 'global') {
+                    $global = $global || in_array('global', $role['scope_types'], true);
+                    $allCities = $allCities || in_array('city', $role['scope_types'], true);
+                } elseif ($grant->scope_type === 'city' && in_array('city', $role['scope_types'], true)) {
+                    $cityIds[] = (string) $grant->scope_id;
+                }
+            }
+
+            if ($global || $allCities || $cityIds !== []) {
+                $out[] = [
+                    'slug' => $slug,
+                    'label' => $role['label'],
+                    'scope_types' => array_values(array_intersect($role['scope_types'], ['global', 'city'])),
+                    'global' => $global,
+                    'all_cities' => $allCities,
+                    'city_ids' => array_values(array_unique($cityIds)),
+                ];
+            }
+        }
+
+        return $out;
+    }
+
+    private function assertMayAssign(User $actor, User $target, string $roleSlug, Scope $scope, bool $checkScopeTarget = true, bool $log = true): void
     {
         if ($actor->getKey() === $target->getKey()) {
             throw AccessDenied::because(AccessDenied::SELF_GRANT);
@@ -129,7 +212,7 @@ class RoleGrantService
             throw AccessDenied::because(AccessDenied::SCOPE_NOT_ALLOWED_FOR_ROLE);
         }
 
-        if (! $this->access->allows($actor, 'users.roles.assign', $scope)) {
+        if (! $this->access->allows($actor, 'users.roles.assign', $scope, $log)) {
             throw AccessDenied::because(AccessDenied::NOT_PERMITTED);
         }
 

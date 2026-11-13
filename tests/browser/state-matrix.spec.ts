@@ -663,3 +663,201 @@ test("exclusions: an added exclusion is listed, and a removal needs confirmation
   await page.getByRole("button", { name: "Confirm removal" }).click();
   await expect(page.getByText("No coverage exclusions.")).toBeVisible();
 });
+
+// ---------------------------------------------------------------- admin /access (roles and access)
+
+const people = {
+  self: {
+    id: "person-self", name: "Synthetic owner", email: "owner@example.test", email_masked: false, status: "active",
+    mfa_enrolled: true, is_self: true,
+    grants: [{ id: "grant-self", role: "platform_owner", role_label: "Platform owner", scope_type: "global", scope_id: null, city_name: null, granted_at: "2026-01-01T00:00:00Z", can_revoke: false }],
+  },
+  dispatcher: {
+    id: "person-1", name: "Synthetic dispatcher", email: "dispatcher@example.test", email_masked: false, status: "active",
+    mfa_enrolled: false, is_self: false,
+    grants: [{ id: "grant-1", role: "dispatcher", role_label: "Dispatcher", scope_type: "city", scope_id: "test-city", city_name: "Synthetic city", granted_at: "2026-02-03T00:00:00Z", can_revoke: true }],
+  },
+};
+const assignable = { slug: "dispatcher", label: "Dispatcher", scope_types: ["city"], global: false, all_cities: false, city_ids: ["test-city"] };
+
+async function mockAccess(page: Page, options: { members?: object[]; roles?: object[]; usersHandler?: (route: Route) => unknown } = {}) {
+  await basics(page);
+  await api(page, "/api/v1/admin/users", options.usersHandler ?? ((route) =>
+    route.fulfill({ json: { data: options.members ?? [people.self, people.dispatcher], meta: { next_cursor: null } } })));
+  await api(page, "/api/v1/admin/roles", (route) => route.fulfill({ json: { data: options.roles ?? [assignable], meta: { next_cursor: null } } }));
+  await api(page, "/api/v1/admin/cities", (route) => route.fulfill({ json: { data: [city], meta: { next_cursor: null } } }));
+}
+
+test("access: progress while slow, then only the people the API returned", async ({ page }) => {
+  const held = gate();
+  await mockAccess(page, {
+    usersHandler: async (route) => { await held.opened; await route.fulfill({ json: { data: [people.self, people.dispatcher], meta: { next_cursor: null } } }); },
+  });
+  await page.goto(`${admin}/access`);
+  await expect(page.getByText("Loading people…")).toHaveAttribute("aria-busy", "true");
+  held.open();
+  await expect(page.getByText("Synthetic dispatcher", { exact: true })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Roles of Synthetic owner" })).toContainText("Platform owner");
+  await expect(page.getByRole("list", { name: "Roles of Synthetic dispatcher" })).toContainText("Dispatcher · Synthetic city");
+  await expect(page.getByText("Two-step sign-in: not set up")).toBeVisible();
+  // The signed-in person's own role cannot be removed, and the screen says so.
+  await expect(page.getByText("Your own role", { exact: true })).toBeVisible();
+  await assertAccessible(page);
+});
+
+test("access: an empty directory says so and invents nobody", async ({ page }) => {
+  await mockAccess(page, { members: [], roles: [] });
+  await page.goto(`${admin}/access`);
+  await expect(page.getByText("Nobody to show")).toBeVisible();
+  await expect(page.getByText("You can view access but not change it")).toBeVisible();
+  await expect(page.getByRole("form", { name: "Give a role" })).toHaveCount(0);
+  await assertAccessible(page);
+});
+
+test("access: a server error retries and forbidden leads back", async ({ page }) => {
+  await basics(page);
+  await api(page, "/api/v1/admin/roles", (route) => route.fulfill({ json: { data: [], meta: { next_cursor: null } } }));
+  let status = 500;
+  await api(page, "/api/v1/admin/users", (route) => status === 200
+    ? route.fulfill({ json: { data: [people.dispatcher], meta: { next_cursor: null } } })
+    : route.fulfill({ status, json: {} }));
+  await page.goto(`${admin}/access`);
+  await expect(page.getByRole("main").getByRole("alert")).toContainText("could not complete");
+  await assertAccessible(page);
+  status = 200;
+  await page.getByRole("button", { name: "Try again" }).press("Enter");
+  await expect(page.getByText("Synthetic dispatcher", { exact: true })).toBeVisible();
+
+  status = 403;
+  await page.goto(`${admin}/access`);
+  await expect(page.getByRole("main").getByRole("alert")).toContainText("You are not allowed");
+  await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
+  await page.getByRole("link", { name: "Back to overview" }).click();
+  await expect(page).toHaveURL(`${admin}/`);
+});
+
+test("access: a viewer sees masked addresses and no way to change anything", async ({ page }) => {
+  const masked = { ...people.dispatcher, email: "d***@example.test", email_masked: true, grants: [{ ...people.dispatcher.grants[0], can_revoke: false }] };
+  await mockAccess(page, { members: [masked], roles: [] });
+  await page.goto(`${admin}/access`);
+  await expect(page.getByText("d***@example.test")).toBeVisible();
+  await expect(page.getByText("Address hidden for your role.")).toBeVisible();
+  await expect(page.getByText("You cannot remove this")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Remove/ })).toHaveCount(0);
+  await expect(page.getByText("You can view access but not change it")).toBeVisible();
+  await assertAccessible(page);
+});
+
+test("access: removing a role needs confirmation, cancel sends nothing, one confirmation sends one request", async ({ page }) => {
+  let removed = false;
+  const deletes: string[] = [];
+  const held = gate();
+  await mockAccess(page, {
+    usersHandler: (route) => route.fulfill({ json: { data: removed ? [people.self] : [people.self, people.dispatcher], meta: { next_cursor: null } } }),
+  });
+  await api(page, "/api/v1/admin/users/person-1/roles/grant-1", async (route) => {
+    deletes.push(method(route));
+    await held.opened;
+    removed = true;
+    await route.fulfill({ status: 204 });
+  });
+  await page.goto(`${admin}/access`);
+  const remove = page.getByRole("button", { name: "Remove Dispatcher (Synthetic city) from Synthetic dispatcher" });
+  await remove.press("Enter");
+
+  const dialog = page.getByRole("dialog", { name: "Remove Dispatcher from Synthetic dispatcher?" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText("only staff role");
+  await dialog.getByRole("button", { name: "Cancel" }).press("Enter");
+  await expect(dialog).toHaveCount(0);
+  expect(deletes).toEqual([]);
+
+  await remove.press("Enter");
+  const confirm = page.getByRole("dialog").getByRole("button", { name: "Yes, remove" });
+  await confirm.press("Enter");
+  await expect(page.getByRole("dialog").getByRole("button", { name: "Removing…" })).toBeDisabled();
+  held.open();
+  await expect(page.getByRole("status").filter({ hasText: "Removed Dispatcher (Synthetic city) from Synthetic dispatcher." })).toBeVisible();
+  await expect(page.getByText("Synthetic dispatcher", { exact: true })).toHaveCount(0);
+  expect(deletes).toEqual(["DELETE"]);
+});
+
+test("access: a refused or offline removal is reported in the dialog and can be repeated", async ({ page, context }) => {
+  let refuse = true;
+  await mockAccess(page);
+  await api(page, "/api/v1/admin/users/person-1/roles/grant-1", (route) => refuse
+    ? route.fulfill({ status: 403, json: { error: { code: "FORBIDDEN", message: "You are not allowed to do that." } } })
+    : route.fulfill({ status: 204 }));
+  await page.goto(`${admin}/access`);
+  await page.getByRole("button", { name: /^Remove Dispatcher/ }).press("Enter");
+  const dialog = page.getByRole("dialog");
+  const confirm = dialog.getByRole("button", { name: "Yes, remove" });
+
+  await confirm.press("Enter");
+  await expect(dialog.getByRole("alert")).toContainText("You are not allowed to do that.");
+  await expect(confirm).toBeEnabled();
+
+  await setOffline(context, true);
+  await confirm.press("Enter");
+  await expect(dialog.getByRole("alert")).toContainText("could not reach the server");
+  await setOffline(context, false);
+
+  refuse = false;
+  const sent = page.waitForRequest((request) => request.url().endsWith("/users/person-1/roles/grant-1") && request.method() === "DELETE");
+  await confirm.press("Enter");
+  await sent;
+  await expect(dialog).toHaveCount(0);
+});
+
+test("access: the grant form checks its fields, sends the chosen scope, and reports a refusal", async ({ page }) => {
+  const posts: unknown[] = [];
+  let conflict = true;
+  const second = { ...people.dispatcher, id: "person-2", name: "Another dispatcher", email: "another@example.test", grants: [{ ...people.dispatcher.grants[0], id: "grant-2" }] };
+  await mockAccess(page, { members: [people.self, people.dispatcher, second] });
+  await api(page, "/api/v1/admin/users/person-2/roles", (route) => {
+    posts.push(route.request().postDataJSON());
+    return conflict
+      ? route.fulfill({ status: 409, json: { error: { code: "CONFLICT", message: "They already hold that role there." } } })
+      : route.fulfill({ status: 201, json: { data: second } });
+  });
+  await page.goto(`${admin}/access`);
+  const form = page.getByRole("form", { name: "Give a role" });
+
+  // The signed-in person is not offered: nobody changes their own roles.
+  await expect(form.getByLabel("Person").locator("option", { hasText: "Synthetic owner" })).toHaveCount(0);
+
+  await form.getByRole("button", { name: "Give role" }).press("Enter");
+  await expect(form.getByLabel("Person")).toBeFocused();
+  await expect(form).toContainText("Choose a person.");
+  expect(posts).toEqual([]);
+
+  await form.getByLabel("Person").selectOption("person-2");
+  await form.getByLabel("Role").selectOption("dispatcher");
+  await expect(form.getByLabel("Applies to").locator("option", { hasText: "Synthetic city" })).toHaveCount(1);
+  await form.getByLabel("Applies to").selectOption("city:test-city");
+  await form.getByRole("button", { name: "Give role" }).press("Enter");
+  await expect(form.getByRole("alert")).toContainText("They already hold that role there.");
+  expect(posts).toEqual([{ role: "dispatcher", scope_type: "city", scope_id: "test-city" }]);
+
+  conflict = false;
+  await form.getByRole("button", { name: "Give role" }).press("Enter");
+  await expect(page.getByRole("status").filter({ hasText: "Granted Dispatcher (Synthetic city) to Another dispatcher." })).toBeVisible();
+  expect(posts).toHaveLength(2);
+  await assertAccessible(page);
+});
+
+test("access: roles that failed to load say so, and Try again recovers", async ({ page }) => {
+  await basics(page);
+  await api(page, "/api/v1/admin/users", (route) => route.fulfill({ json: { data: [people.self, people.dispatcher], meta: { next_cursor: null } } }));
+  await api(page, "/api/v1/admin/cities", (route) => route.fulfill({ json: { data: [city], meta: { next_cursor: null } } }));
+  let healthy = false;
+  await api(page, "/api/v1/admin/roles", (route) => healthy
+    ? route.fulfill({ json: { data: [assignable], meta: { next_cursor: null } } })
+    : route.fulfill({ status: 500, json: {} }));
+  await page.goto(`${admin}/access`);
+  const alert = page.getByRole("alert").filter({ hasText: "could not complete" });
+  await expect(alert).toBeVisible();
+  healthy = true;
+  await page.getByRole("button", { name: "Try again" }).press("Enter");
+  await expect(page.getByRole("form", { name: "Give a role" })).toBeVisible();
+});

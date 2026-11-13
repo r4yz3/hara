@@ -21,7 +21,7 @@ class AccessChecker
      * grant scope covers the target, target relationship resolved from stored
      * data (never from the request).
      */
-    public function allows(User $user, string $permission, Scope $target): bool
+    public function allows(User $user, string $permission, Scope $target, bool $log = true): bool
     {
         foreach ($this->grantScopes($user, $permission) as $scope) {
             if ($this->covers($scope, $target)) {
@@ -30,13 +30,17 @@ class AccessChecker
         }
 
         // The `rbac.denied` event (spec 11.3). Callers turn this into a 403
-        // or a 404; the log records the real reason either way.
-        Log::warning('rbac.denied', [
-            'user_id' => $user->getKey(),
-            'permission' => $permission,
-            'scope_type' => $target->type,
-            'scope_id' => $target->id,
-        ]);
+        // or a 404; the log records the real reason either way. A caller that
+        // only asks "would this be allowed?" (to fill a screen) passes
+        // $log = false.
+        if ($log) {
+            Log::warning('rbac.denied', [
+                'user_id' => $user->getKey(),
+                'permission' => $permission,
+                'scope_type' => $target->type,
+                'scope_id' => $target->id,
+            ]);
+        }
 
         return false;
     }

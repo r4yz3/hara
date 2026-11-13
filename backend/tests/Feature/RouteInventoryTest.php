@@ -23,12 +23,15 @@ class RouteInventoryTest extends TestCase
 
         $this->assertSame([
             'DELETE api/v1/admin/exclusions/{exclusion}',
+            'DELETE api/v1/admin/users/{user}/roles/{grant}',
             'DELETE api/v1/auth/mobile/token',
             'GET|HEAD api/v1/admin/audit-logs',
             'GET|HEAD api/v1/admin/cities',
             'GET|HEAD api/v1/admin/cities/{city}',
             'GET|HEAD api/v1/admin/cities/{city}/zones',
+            'GET|HEAD api/v1/admin/roles',
             'GET|HEAD api/v1/admin/system/status',
+            'GET|HEAD api/v1/admin/users',
             'GET|HEAD api/v1/admin/zones/{zone}',
             'GET|HEAD api/v1/admin/zones/{zone}/exclusions',
             'GET|HEAD api/v1/auth/csrf',
@@ -43,6 +46,7 @@ class RouteInventoryTest extends TestCase
             'POST api/v1/admin/cities',
             'POST api/v1/admin/cities/{city}/zones',
             'POST api/v1/admin/users/{user}/mfa/reset',
+            'POST api/v1/admin/users/{user}/roles',
             'POST api/v1/admin/zones/{zone}/activate',
             'POST api/v1/admin/zones/{zone}/archive',
             'POST api/v1/admin/zones/{zone}/exclusions',

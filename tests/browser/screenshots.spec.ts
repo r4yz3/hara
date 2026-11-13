@@ -82,6 +82,16 @@ const shots: Shot[] = [
     setup: (page) => api(page, "/api/v1/admin/audit-logs", (route) => route.fulfill(list([entry]))),
   },
   {
+    app: "admin", name: "access", url: "/access", wait: "Synthetic dispatcher",
+    setup: async (page) => {
+      const grant = { id: "grant-1", role: "dispatcher", role_label: "Dispatcher", scope_type: "city", scope_id: "test-city", city_name: "Synthetic city", granted_at: "2026-02-03T00:00:00Z", can_revoke: true };
+      const person = { id: "person-1", name: "Synthetic dispatcher", email: "dispatcher@example.test", email_masked: false, status: "active", mfa_enrolled: false, is_self: false, grants: [grant] };
+      await api(page, "/api/v1/admin/users", (route) => route.fulfill(list([person])));
+      await api(page, "/api/v1/admin/roles", (route) => route.fulfill(list([{ slug: "dispatcher", label: "Dispatcher", scope_types: ["city"], global: false, all_cities: false, city_ids: ["test-city"] }])));
+      await api(page, "/api/v1/admin/cities", (route) => route.fulfill(list([city])));
+    },
+  },
+  {
     app: "admin", name: "settings", url: "/settings", wait: "Service checks",
     setup: (page) => api(page, "/api/v1/admin/system/status", (route) => route.fulfill({ json: { data: systemStatus } })),
   },

@@ -713,6 +713,120 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Staff members and their grants
+         * @description Needs `users.read`. Lists people who hold a live staff role, by id,
+         *     with the grants the caller may see: global reach sees every grant,
+         *     city reach sees only grants anchored to those cities (so global
+         *     grants and other cities are absent, not hidden). Support sees the
+         *     address masked (`email_masked`). Accounts without a staff role are
+         *     never listed. `can_revoke` says whether a revoke would be allowed; it
+         *     is advice for the screen and the revoke request is checked in full.
+         */
+        get: operations["adminUsersIndex"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Roles the caller may hand out, and where
+         * @description Needs `users.read`. Lists only roles one of the caller's own grants
+         *     is entitled to assign, with the scopes that grant covers: `global`
+         *     (a deployment-wide grant), `all_cities`, or specific `city_ids`. The
+         *     list is empty for a caller who may assign nothing. `platform_owner`
+         *     and onboarding roles never appear. This only fills a form; the grant
+         *     request is checked in full.
+         */
+        get: operations["adminRolesIndex"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{user}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Id of a staff member the caller can see. Letter case is ignored. */
+                user: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Grant a role to a staff member
+         * @description Needs `users.roles.assign`, and the caller must hold a role entitled
+         *     to hand out the requested one over the same scope (ADR-005), so a
+         *     city manager can grant only the dispatcher role in their own city.
+         *     404 when the person is not a staff member within the caller's view
+         *     (including a caller without `users.read`). 403 for a role or scope
+         *     the caller may not hand out, for `platform_owner` and onboarding
+         *     roles whoever asks, and for the caller's own account. 409 when the
+         *     person already holds that role there or the account is not active.
+         *     404 for a city that does not exist. Written with the audit row
+         *     `role.granted` in one transaction. The person must already hold a
+         *     staff role: inviting someone new is not built.
+         */
+        post: operations["adminUsersRolesStore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{user}/roles/{grant}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user: string;
+                /** @description Id of one of the person's grants, from `GET /admin/users`. */
+                grant: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Revoke a role from a staff member
+         * @description Whoever could not have granted it cannot revoke it: needs
+         *     `users.roles.assign` and an entitled role over the same scope. 404
+         *     when the person or the grant is not within the caller's view, or the
+         *     grant is not that person's. 403 for `platform_owner` (never
+         *     revocable here) and for the caller's own grants. A person who loses
+         *     their last staff role loses admin access on their next request.
+         *     Written with the audit row `role.revoked` in one transaction.
+         */
+        delete: operations["adminUsersRolesDestroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/audit-logs": {
         parameters: {
             query?: never;
@@ -855,6 +969,42 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             updated_at: string;
+        };
+        StaffGrant: {
+            id: string;
+            role: string;
+            role_label: string;
+            /** @enum {string} */
+            scope_type: "global" | "city";
+            scope_id: string | null;
+            /** @description Name of the city for a city grant. */
+            city_name: string | null;
+            /** Format: date-time */
+            granted_at: string;
+            can_revoke: boolean;
+        };
+        StaffMember: {
+            id: string;
+            name: string;
+            /** @description Masked (first letter, then asterisks) when `email_masked` is true. */
+            email: string;
+            email_masked: boolean;
+            /** @enum {string} */
+            status: "active" | "suspended";
+            mfa_enrolled: boolean;
+            is_self: boolean;
+            grants: components["schemas"]["StaffGrant"][];
+        };
+        AssignableRole: {
+            slug: string;
+            label: string;
+            scope_types: ("global" | "city")[];
+            /** @description The caller may grant it deployment-wide. */
+            global: boolean;
+            /** @description The caller may grant it in any city. */
+            all_cities: boolean;
+            /** @description Cities where the caller may grant it, when not all. */
+            city_ids: string[];
         };
         AuditEntry: {
             id: string;
@@ -2115,6 +2265,134 @@ export interface operations {
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
             422: components["responses"]["Error"];
+        };
+    };
+    adminUsersIndex: {
+        parameters: {
+            query?: {
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque value from `meta.next_cursor` of the previous page. */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One page of staff members, by id. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StaffMember"][];
+                        meta: components["schemas"]["PageMeta"];
+                    };
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    adminRolesIndex: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Assignable roles. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AssignableRole"][];
+                        meta: components["schemas"]["PageMeta"];
+                    };
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    adminUsersRolesStore: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path: {
+                /** @description Id of a staff member the caller can see. Letter case is ignored. */
+                user: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description A role slug from `GET /admin/roles`. */
+                    role: string;
+                    /** @enum {string} */
+                    scope_type: "global" | "city";
+                    /** @description Required for `city`, forbidden for `global`. */
+                    scope_id?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Granted. Returns the person as the caller now sees them. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StaffMember"];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    adminUsersRolesDestroy: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path: {
+                user: string;
+                /** @description Id of one of the person's grants, from `GET /admin/users`. */
+                grant: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revoked. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
         };
     };
     adminAuditLogsIndex: {
