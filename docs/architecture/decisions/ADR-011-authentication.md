@@ -21,6 +21,10 @@ The spec requires "an explicitly selected secure auth design" (1.3), cookie sess
 ## As built (2026-11-13)
 One session guard is used, not three. Separation comes from a per-app cookie name chosen from the request's Origin, plus the app's name stored in the session and compared on every authenticated request; a mismatch ends the session. The CSRF token is served by `GET /api/v1/auth/csrf` and sent in `X-CSRF-TOKEN`; Sanctum's shared-cookie route is disabled.
 
+On 2026-11-14 the temporary MFA gate was aligned with the production configuration guard. Admin sign-in is available only under `local` and `testing`. Other environments refuse password-only admin sign-in and invalidate existing admin sessions when they reach a protected route. Hosted admin testing stays blocked pending reviewed enrollment, challenge and recovery flows.
+
+Browser sign-in stores a Laravel-generated HMAC of the current password hash in the session. Protected requests check it against the current account hash, so password resets invalidate existing browser sessions on their next protected request without scanning Redis. Sessions issued before this change require sign-in again.
+
 ## Original options and what is still open
 1. **Session separation between surfaces.** With one API domain, a browser logged into the admin app and the customer app could share one session cookie. Options: separate cookie names and guards per origin, or separate API hostnames per surface. To be decided and threat-modelled before Sprint 4.
 2. **MFA factor.** TOTP is the likely choice; secrets need encryption at rest and a reviewed recovery flow. Until MFA is implemented and reviewed, privileged login is refused when `APP_ENV=production`. Tests use a deterministic bypass that cannot be enabled in production.

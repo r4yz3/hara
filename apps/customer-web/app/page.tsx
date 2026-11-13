@@ -104,7 +104,11 @@ export default function Home() {
             </h2>
             <SoonBadge />
           </div>
-          <ul className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-8 md:overflow-visible md:px-0">
+          <ul
+            tabIndex={0}
+            aria-labelledby="categories-heading"
+            className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-border-strong md:mx-0 md:grid md:grid-cols-8 md:overflow-visible md:px-0"
+          >
             {categories.map((category) => (
               <li
                 key={category.label}

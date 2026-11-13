@@ -61,9 +61,7 @@ class AuthController extends Controller
     {
         $surface = $this->surfaceOrFail($request);
 
-        // ADR-011: until two-step verification is built and reviewed, the
-        // admin surface does not open in production at all.
-        if ($surface === 'admin' && app()->environment('production')) {
+        if (! $surfaces->isOpen($surface)) {
             throw ApiError::forbidden('Staff sign-in is unavailable until two-step verification is enabled.');
         }
 
@@ -90,9 +88,13 @@ class AuthController extends Controller
 
         RateLimiter::clear($throttleKey);
 
-        Auth::guard('web')->login($user);
+        $guard = Auth::guard('web');
+        $guard->login($user);
         $request->session()->regenerate();
-        $request->session()->put('surface', $surface);
+        $request->session()->put([
+            'surface' => $surface,
+            'password_hash_web' => $guard->hashPasswordForCookie($user->getAuthPassword()),
+        ]);
 
         DB::table('users')->where('id', $user->id)->update(['last_login_at' => now()]);
         Log::info('auth.login', ['user_id' => $user->id, 'surface' => $surface]);

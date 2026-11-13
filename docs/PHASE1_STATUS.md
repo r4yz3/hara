@@ -1,6 +1,87 @@
 # Phase 1 status
 
-Last updated: 2026-11-13, Sprint 4 in progress (roles, permissions, audit and sign-in done; recovery, MFA and mobile tokens not started). Sprint 3 gate met; Sprint 2 gate still open.
+Last updated: 2026-11-14. Phase 1 has working browser authentication, rider token endpoints, and city, zone and serviceability APIs. Sprint 8 acceptance remains open.
+
+## November 14 admin system settings
+
+- Added a read-only settings page in the admin navigation. It reads the existing system status endpoint and shows service checks, deployment settings, feature flags and active coverage counts.
+- `pnpm test:browser --workers=2` passed 27 cases with three opt-in skips. The settings cases verify 503 retry and a 403 without status data. The live desktop test loaded the page through a seeded owner session. Admin lint, typecheck and production build passed.
+- Changed the console navigation, settings page and component, browser suites and documentation. Evidence is in `docs/qa/evidence/phase1-2026-11-14-admin-settings.txt` and `admin-settings-375.png`. Revert these files to remove the page. There are no API or schema changes.
+
+## November 14 zone exclusions
+
+- Admin zone cards now list coverage exclusions with cursor paging, add GeoJSON exclusions with optional UTC start/end, and confirm removal. Errors remain visible and failed adds keep the form values.
+- `pnpm test:browser --workers=2` passed 21 default Chromium cases, with three opt-in skips. The live desktop test passed and showed that adding an exclusion removes the edited zone from the customer's result and removing the exclusion restores it. The optional timestamp fields were checked for rendering and accessibility in Chromium. Backend feature tests cover time-window behavior.
+- Admin lint, typecheck and production build passed. Evidence is in `docs/qa/evidence/phase1-2026-11-14-zone-exclusions.txt` and `admin-zone-exclusions-375.png`. Changed the admin city screen, the zone exclusions component, browser suites and acceptance docs. Revert those changes to remove the UI. The existing API and schema are unchanged.
+
+## November 14 GeoJSON zone editing
+
+- Admin staff can open a zone and edit its name, priority and GeoJSON with the existing version precondition. On conflict, the draft stays visible and the stale save is disabled. Cancel and reopen loads the latest server version.
+- `pnpm test:browser --workers=2` passed 21 cases, including axe checks for the conflict state at all three viewports. Three live cases were skipped by default. The separate desktop live coverage run saved the edit, activated version 3, and showed the updated zone name to the customer.
+- Changed the admin city screen, browser suites and acceptance documentation. Revert these changes to remove the editor. No API or schema change was needed. Map drawing and exclusion management remain open.
+
+## November 14 city status confirmation
+
+- City activate, pause and archive use a native dialog. Focus opens on Cancel, Escape returns it to the invoking control, and an API failure appears inside the dialog for retry.
+- `pnpm test:browser --workers=2` passed 18 cases, including keyboard and axe checks at all three viewports. Three opt-in cases were skipped. The separate live desktop test passed with the new confirmation. Admin lint and typecheck also passed.
+- Changed the admin city screen, browser tests and acceptance documentation. Evidence is in `docs/qa/evidence/phase1-2026-11-14-city-dialog.txt` and `admin-city-confirmation-375.png`. Revert those changes to restore inline confirmation. No API or schema changes were needed.
+
+## November 14 closed coverage browser check
+
+- The customer server-rendered banner now has a deterministic test for closed coverage at all three viewports. The Playwright config starts a loopback fixture for the server-side request in the default suite. Live mode still points to Laravel. No database records were changed.
+- `pnpm test:browser --workers=2` exited 0 with 15 passing cases and three skips for the opt-in live test. See `docs/qa/evidence/phase1-2026-11-14-closed-coverage.txt`.
+- Revert the Playwright config, fixture, customer test assertions and documentation to roll back. No application or schema change was needed.
+
+## November 14 live coverage browser check
+
+- Added `tests/browser/live-coverage.spec.ts` and documented the opt-in command in README. It uses the existing local demo owner and customer accounts. Traces and screenshots are disabled for this credentialed case.
+- `pnpm test:browser --project=desktop --workers=1 tests/browser/live-coverage.spec.ts` passed against local Laravel and PostGIS with `BROWSER_LIVE=1` and the demo password supplied in the process environment. The run covered a 422 for a self-intersecting polygon, exact MultiPolygon persistence, activation, a positive customer check, and a 404 for the customer on an admin endpoint.
+- The original run used default priority and did not select the intended zone in the seeded environment. The test now uses explicit priority and checks the selected zone ID. Cleanup archives the created zone and city through the API. A database query confirmed zero active browser test cities after the run.
+- Rollback removes the test and documentation. Archived synthetic records and append-only audit entries remain as evidence of the local run. Map drawing, no-city browser state and hosted verification remain open.
+
+## November 14 browser and accessibility checks
+
+- `pnpm exec playwright install chromium` and `pnpm test:browser --workers=2` ran successfully. Five cases passed at each of three viewports, for 15 total. Four cases check horizontal overflow and run axe against WCAG A/AA tags. The fifth verifies that sign-in rejects an external return URL. The suite uses synthetic responses for the browser API calls under test, and the customer server-rendered banner reflects the local stack when available.
+- Axe identified a keyboard-focus gap on the customer category list at 375 pixels. The list now has a visible focus outline and supports arrow-key scrolling. The browser regression checks movement and records `docs/qa/evidence/customer-category-keyboard-375.png`.
+- Added the Playwright config, browser cases, pinned development dependencies and a web workflow step. Updated the customer home, README and acceptance checklist. Hosted workflow execution and live browser city and zone scenarios remain unverified.
+- `.\infra\scripts\dev.ps1 check` exited 0 with 409 backend tests and 7 Flutter widget tests passing. Two opt-in render tests were skipped. Web lint, types, tests and builds passed. `pnpm audit` reported no known vulnerabilities.
+- Revert the browser configuration, dependencies, workflow and customer home markup together to roll back. No schema or API changes were needed.
+
+## November 14 role concurrency and API contract
+
+- Added `ConcurrentRoleGrantTest` for B-06. A separate PostgreSQL session waits for a revoke transaction and creates one active replacement with the expected audit entries. It shares the process and lock-wait setup with the zone race test. Both passed with `docker compose -f infra/compose.yaml --env-file .env exec -T api php artisan test --no-ansi --filter=Concurrent` (2 tests, 11 assertions).
+- Connected the browser session client's sign-in, CSRF, current-user and error types to the generated OpenAPI contract. The request helpers and runtime behavior are unchanged.
+- Enabled Redocly structure, reference and unique operation ID validation during type generation. Redocly 1.34.24 was already in the lockfile through the generator. A negative test reproduces a malformed response that the default generator accepted. `pnpm install --frozen-lockfile --offline` and `pnpm --filter @food-delivery/api-client test` passed.
+- Rollback is a revert of the test files, API generator and test, session package changes, lockfile entries and documentation. This batch has no database changes.
+
+## November 14 password reset session invalidation
+
+- A browser session previously remained authenticated after a password reset. The regression test first reproduced a 200, then passed with a 401 on the old session and a successful sign-in using the new password. The focused command `docker compose -f infra/compose.yaml --env-file .env exec -T api php artisan test --no-ansi --filter='PasswordRecoveryTest|SessionLoginTest|SessionAndMeTest'` passed 37 tests and 176 assertions.
+- Browser sign-in now records a Laravel-generated password fingerprint in the session, and `EnsureSurfaceSession` checks it on protected requests. This applies to all three browser surfaces. Previously issued sessions require sign-in again. The rider token contract is unchanged.
+- Changed `AuthController.php`, `EnsureSurfaceSession.php`, auth feature tests, OpenAPI, generated API types and documentation. Reverting these files restores the prior session behavior and requires no data migration.
+- The full local check exited 0 with 409 backend tests (33,550 assertions) and 7 Flutter widget tests. Two opt-in render tests were skipped. See `docs/qa/evidence/phase1-2026-11-14-batch-check.txt`.
+
+## November 14 web dependency audit
+
+- `pnpm audit` found one moderate advisory, [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249), in the lint toolchain's `minimatch` dependency. The root `package.json` override and lockfile pin the affected range to the patched 11.0.1 release. `pnpm install --frozen-lockfile` succeeded and the full audit reported no known vulnerabilities after the pin. Revert both override and lockfile changes together if rolling back.
+- After the override, `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` all passed.
+
+## November 14 admin MFA gate
+
+- Closed a gap in B-09. Staging could previously create password-only admin sessions, and production and staging could accept existing admin sessions. `SurfaceAccess` now applies the same local and testing allowlist to sign-in and protected requests. The tests exercise valid CSRF for the deployed login path.
+- `docker compose -f infra/compose.yaml --env-file .env exec -T api php artisan test --no-ansi --filter=SessionLoginTest` reproduced three failures before the fix and passed all 15 tests (72 assertions) afterward.
+- `.\infra\scripts\dev.ps1 check` exited 0 with 407 backend tests and 7 Flutter widget tests passing. Two opt-in render tests were skipped. Web lint, types, tests and builds, backend formatting and analysis, and Flutter analysis passed. Evidence is in `docs/qa/evidence/phase1-2026-11-14-admin-gate.txt`. Composer and pnpm audits reported no known advisories.
+- Changes are in `AuthController.php`, `SurfaceAccess.php`, `SessionLoginTest.php`, the OpenAPI contract, generated API types and the Phase 1 documentation. Regenerated types with `pnpm --filter @food-delivery/api-client generate`.
+- Rollback is a code and documentation revert with no database changes. A revert restores the password-only staging path, so keep hosted admin access closed if reverting. TOTP enrollment, challenge and recovery remain open.
+
+## November 14 checkpoint
+
+- Verified all 25 project skills listed in `skills-lock.json` are present under both `.claude/skills/` and `.agents/skills/`. The directory comparison with `git -c core.safecrlf=false diff --no-index --quiet -- .claude/skills .agents/skills` exited 0. `CLAUDE.md` now records how to resume a slice and keep both skill copies aligned.
+- Added `backend/tests/Integration/ConcurrentZoneUpdateTest.php` for C-04. PostgreSQL reports the second session waiting on the first transaction. After commit the second update raises a 409 and leaves one audited edit at version 2. The existing feature test separately checks the HTTP error response.
+- Verified with `docker compose -f infra/compose.yaml --env-file .env exec -T api php artisan test --filter=ConcurrentZoneUpdateTest` (1 test, 6 assertions), `docker compose -f infra/compose.yaml --env-file .env exec -T api composer audit` and `pnpm audit --prod` (no known advisories reported). Docker Desktop disconnected during the first full check and was restarted before the focused test.
+- The rerun of `.\infra\scripts\dev.ps1 check` exited 0. Web lint, type checks, tests and builds passed. Backend formatting and static analysis passed, with 404 tests and 33,527 assertions against PostGIS. Flutter analysis passed, and 7 widget tests passed with 2 opt-in render tests skipped. Output is in `docs/qa/evidence/phase1-2026-11-14-check.txt`, with local workspace paths removed.
+- Updated `README.md`, `docs/backlog.md` and ADR-000 to reflect the current implementation. Rollback is a revert of these documentation changes, the `CLAUDE.md` update and the added test. There are no application, schema or dependency changes in this slice.
+- Open gates include privileged TOTP and recovery, Playwright and accessibility coverage, rider sign-in and Android verification, a hosted CI run and staging acceptance. See the backlog for the remaining implementation and operator decisions.
 
 ## Summary
 Sprint 1 documents await human review. The Docker stack now starts healthy and the backend checks run inside it against PostGIS and Redis. The Sprint 2 gate ("clean clone boot smoke with logs") is **still not met**: the boot was done in the working tree, not from a clean clone, and CI has never run. The product owner supplied front-end reference images; the customer home screen is built in that direction.
@@ -273,7 +354,7 @@ What the tests cover: liveness body; readiness hidden from public addresses and 
 - **Security fix (ADR-013):** the serviceability check was `GET` with the position in the query string, as the spec writes it. A review of commit `87669f7` flagged that URLs are written to access logs by servers and proxies. It is now `POST /api/v1/locations/serviceability` with the position in the JSON body; the GET form answers 405 and a POST with the position in its query string is refused with 422. The customer screen sends the body and rounds a device-supplied position to four decimals. The browser's request log showed the new call as a POST with no query string. No deployed environment existed, so no real customer position was exposed. Tests: ServiceabilityTest (two added).
 - Route coverage (B-10): RouteCoverageTest requires every route to be either on an explicit public list or behind the session guard, every admin path to be behind the admin-surface guard in the right order, every public API route to be rate limited, and sends an anonymous request to every guarded route expecting 401. It found no gaps. It does not prove each action checks the right permission; that stays with the per-endpoint and cross-tenant tests.
 - Admin audit log screen: `/audit` lists entries newest first with action and record-type filters, a "load older" button, and the redacted before/after values. Run in a browser: six real entries shown, the action filter narrowed to one, and a non-matching filter showed the empty state. Staff with city-only access and the load-older button were not exercised (the log has fewer than 25 entries). `dev.ps1 check` passed with 298 backend tests: `docs/qa/evidence/sprint6-audit-and-post-check.txt`.
-- Not done: a parallel race test for zone edits; a map-based zone editor; screens for exclusions, users and settings.
+- A map-based zone editor and screens for exclusions, users and settings remain open. The November 14 checkpoint records the parallel zone-edit test.
 
 ## Fourth pass: Docker and front-end
 - Stack validated, built and started. Two bugs found only in the container and fixed, each with a test: health routes ran through session middleware, so liveness needed the database; and `artisan serve` dropped the container environment, so the app silently used `backend/.env`.

@@ -1,0 +1,29 @@
+> playwright test "--workers=2"
+Running 24 tests using 2 workers
+  ok  2 [phone] › tests\browser\phase1.spec.ts:16:1 › customer home shows the empty restaurant state (2.5s)
+  ok  4 [tablet] › tests\browser\phase1.spec.ts:16:1 › customer home shows the empty restaurant state (1.4s)
+  ok  5 [phone] › tests\browser\phase1.spec.ts:36:1 › customer can retry a delivery check after an API error (1.4s)
+  ok  6 [tablet] › tests\browser\phase1.spec.ts:36:1 › customer can retry a delivery check after an API error (1.4s)
+  ok  7 [phone] › tests\browser\phase1.spec.ts:67:1 › merchant overview keeps unavailable actions disabled (2.1s)
+  ok  8 [tablet] › tests\browser\phase1.spec.ts:67:1 › merchant overview keeps unavailable actions disabled (1.3s)
+  ok  9 [phone] › tests\browser\phase1.spec.ts:75:1 › an expired admin session offers sign-in with a local return path (2.7s)
+  ok 10 [tablet] › tests\browser\phase1.spec.ts:75:1 › an expired admin session offers sign-in with a local return path (2.7s)
+  ok 11 [phone] › tests\browser\phase1.spec.ts:90:1 › sign-in ignores an external return URL (1.8s)
+  ok 12 [tablet] › tests\browser\phase1.spec.ts:90:1 › sign-in ignores an external return URL (1.8s)
+  ok 14 [tablet] › tests\browser\phase1.spec.ts:105:1 › city status confirmation restores keyboard focus on Escape (2.7s)
+  ok 13 [phone] › tests\browser\phase1.spec.ts:105:1 › city status confirmation restores keyboard focus on Escape (2.8s)
+  ok 15 [tablet] › tests\browser\phase1.spec.ts:127:1 › a stale zone edit keeps the draft available (3.0s)
+  ok 16 [phone] › tests\browser\phase1.spec.ts:127:1 › a stale zone edit keeps the draft available (3.4s)
+  ok 18 [desktop] › tests\browser\phase1.spec.ts:16:1 › customer home shows the empty restaurant state (1.3s)
+  ok 19 [desktop] › tests\browser\phase1.spec.ts:36:1 › customer can retry a delivery check after an API error (1.2s)
+  ok 20 [desktop] › tests\browser\phase1.spec.ts:67:1 › merchant overview keeps unavailable actions disabled (1.1s)
+  ok 21 [desktop] › tests\browser\phase1.spec.ts:75:1 › an expired admin session offers sign-in with a local return path (1.5s)
+  ok 22 [desktop] › tests\browser\phase1.spec.ts:90:1 › sign-in ignores an external return URL (948ms)
+  ok 23 [desktop] › tests\browser\phase1.spec.ts:105:1 › city status confirmation restores keyboard focus on Escape (1.4s)
+  ok 24 [desktop] › tests\browser\phase1.spec.ts:127:1 › a stale zone edit keeps the draft available (2.1s)
+  3 skipped
+  21 passed (39.0s)
+> playwright test "--project=desktop" "--workers=1" "tests/browser/live-coverage.spec.ts"
+Running 1 test using 1 worker
+  ok 1 [desktop] › tests\browser\live-coverage.spec.ts:9:1 › a city and its GeoJSON zone control live serviceability (18.4s)
+  1 passed (28.9s)

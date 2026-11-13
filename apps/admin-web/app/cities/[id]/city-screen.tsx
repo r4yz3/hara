@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
 import type { City, Zone } from "@food-delivery/api-client";
 import { apiGet, apiSend, describeFailure, type ApiFailure, type ApiResult } from "@food-delivery/session";
 
 import { FieldError, LoadProblem, Notice, Panel, StatusPill, dangerButton, fieldClass, primaryButton, quietButton } from "@/components/ui";
+import { ZoneExclusions } from "./zone-exclusions";
 
 type Envelope<T> = { data: T };
 type Message = { tone: "ok" | "problem"; text: string } | null;
@@ -133,8 +134,13 @@ function CityDetails({ city, onChanged }: { city: City; onChanged: () => Promise
   const [busy, setBusy] = useState(false);
   const [fields, setFields] = useState<Record<string, string[]>>({});
   const [message, setMessage] = useState<Message>(null);
-  const [confirming, setConfirming] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState<(typeof NEXT)[string][number] | null>(null);
+  const confirmation = useRef<HTMLDialogElement>(null);
   const archived = city.status === "archived";
+
+  useEffect(() => {
+    if (confirming && !confirmation.current?.open) confirmation.current?.showModal();
+  }, [confirming]);
 
   async function send(body: Record<string, unknown>, done: string) {
     setBusy(true);
@@ -142,9 +148,9 @@ function CityDetails({ city, onChanged }: { city: City; onChanged: () => Promise
     setMessage(null);
     const result = await apiSend<Envelope<City>>("PATCH", `/api/v1/admin/cities/${city.id}`, body);
     setBusy(false);
-    setConfirming(null);
 
     if (result.ok) {
+      confirmation.current?.close();
       setMessage({ tone: "ok", text: done });
       await onChanged();
       return;
@@ -229,40 +235,62 @@ function CityDetails({ city, onChanged }: { city: City; onChanged: () => Promise
             <p className="text-sm text-text-secondary">This city is archived and cannot be changed.</p>
           ) : (
             <div className="flex flex-wrap items-center gap-2">
-              {NEXT[city.status].map((step) =>
-                confirming === step.to ? (
-                  <span key={step.to} className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm">
-                      {step.to === "archived"
-                        ? "Archiving cannot be undone. Continue?"
-                        : step.to === "active"
-                          ? "Customers can be served here once a zone is active. Continue?"
-                          : "This stops service in every zone of this city. Continue?"}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void send({ status: step.to }, `City is now ${step.to}.`)}
-                      className={step.danger ? dangerButton : primaryButton}
-                    >
-                      Yes, {step.label.toLowerCase()}
-                    </button>
-                    <button type="button" disabled={busy} onClick={() => setConfirming(null)} className={quietButton}>
-                      Cancel
-                    </button>
-                  </span>
-                ) : (
-                  <button key={step.to} type="button" disabled={busy} onClick={() => setConfirming(step.to)} className={quietButton}>
-                    {step.label}
-                  </button>
-                ),
-              )}
+              {NEXT[city.status].map((step) => (
+                <button
+                  key={step.to}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    setMessage(null);
+                    setConfirming(step);
+                  }}
+                  className={quietButton}
+                >
+                  {step.label}
+                </button>
+              ))}
             </div>
           )}
         </div>
 
-        {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
+        {message && !confirming ? <Notice tone={message.tone}>{message.text}</Notice> : null}
       </Panel>
+      <dialog
+        ref={confirmation}
+        aria-labelledby="city-confirm-title"
+        aria-describedby="city-confirm-description"
+        onClose={() => setConfirming(null)}
+        onCancel={(event) => { if (busy) event.preventDefault(); }}
+        className="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl border border-border-strong bg-surface p-5 text-text-primary backdrop:bg-black/50"
+      >
+        {confirming ? (
+          <div className="flex flex-col gap-4">
+            <h3 id="city-confirm-title" className="text-lg font-semibold">{confirming.label} {city.name}?</h3>
+            <p id="city-confirm-description" className="text-sm text-text-secondary">
+              {confirming.to === "archived"
+                ? "Archiving cannot be undone."
+                : confirming.to === "active"
+                  ? "Customers can be served here once a zone is active."
+                  : "This stops service in every zone of this city."}
+            </p>
+            {message?.tone === "problem" ? <Notice tone="problem">{message.text}</Notice> : null}
+            <div className="flex flex-wrap gap-2">
+              <button type="button" disabled={busy} onClick={() => confirmation.current?.close()} className={quietButton}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                aria-busy={busy}
+                onClick={() => void send({ status: confirming.to }, `City is now ${confirming.to}.`)}
+                className={confirming.danger ? dangerButton : primaryButton}
+              >
+                {busy ? "Saving…" : `Yes, ${confirming.label.toLowerCase()}`}
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </dialog>
     </section>
   );
 }
@@ -272,6 +300,22 @@ function ZoneRow({ zone, cityActive, onChanged }: { zone: Zone; cityActive: bool
   const [mode, setMode] = useState<"idle" | "activate" | "pause" | "archive">("idle");
   const [reason, setReason] = useState("");
   const [message, setMessage] = useState<Message>(null);
+
+  const [editing, setEditing] = useState<Zone | null>(null);
+
+  async function openEditor() {
+    setBusy(true);
+    setMessage(null);
+    const result = await apiGet<Envelope<Zone>>(`/api/v1/admin/zones/${zone.id}`);
+    setBusy(false);
+    if (!result.ok) {
+      setMessage({ tone: "problem", text: describeFailure(result.failure) });
+    } else if (result.value.data.status === "archived") {
+      await onChanged();
+    } else {
+      setEditing(result.value.data);
+    }
+  }
 
   async function act(action: "activate" | "pause" | "archive", body: Record<string, unknown>) {
     setBusy(true);
@@ -316,9 +360,23 @@ function ZoneRow({ zone, cityActive, onChanged }: { zone: Zone; cityActive: bool
         </p>
       ) : null}
 
-      {mode === "idle" ? (
+      {editing ? (
+        <EditZone
+          zone={editing}
+          onCancel={() => setEditing(null)}
+          onSaved={async () => {
+            setEditing(null);
+            await onChanged();
+          }}
+        />
+      ) : mode === "idle" ? (
         <div className="flex flex-wrap gap-2">
           {steps.length === 0 ? <p className="text-sm text-text-secondary">Archived. No further changes.</p> : null}
+          {zone.status !== "archived" ? (
+            <button type="button" disabled={busy} aria-busy={busy} onClick={() => void openEditor()} className={quietButton}>
+              {busy ? "Loading zone…" : "Edit zone"}
+            </button>
+          ) : null}
           {steps.map((step) => (
             <button
               key={step.to}
@@ -376,7 +434,76 @@ function ZoneRow({ zone, cityActive, onChanged }: { zone: Zone; cityActive: bool
       )}
 
       {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
+      <ZoneExclusions zoneId={zone.id} archived={zone.status === "archived"} />
     </Panel>
+  );
+}
+
+function EditZone({ zone, onCancel, onSaved }: { zone: Zone; onCancel: () => void; onSaved: () => Promise<void> }) {
+  const [busy, setBusy] = useState(false);
+  const [failure, setFailure] = useState<ApiFailure | null>(null);
+  const conflicted = failure?.kind === "conflict";
+
+  async function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy || conflicted) return;
+    const data = new FormData(event.currentTarget);
+    let geometry: unknown;
+    try {
+      geometry = JSON.parse(String(data.get("geometry")));
+    } catch {
+      setFailure({ kind: "validation", fields: { geometry: ["Enter a valid GeoJSON Polygon or MultiPolygon."] } });
+      return;
+    }
+
+    setBusy(true);
+    setFailure(null);
+    const result = await apiSend<Envelope<Zone>>("PATCH", `/api/v1/admin/zones/${zone.id}`, {
+      version: zone.version,
+      name: String(data.get("name")).trim(),
+      priority: Number(data.get("priority")),
+      geometry,
+    });
+    if (result.ok) {
+      await onSaved();
+    } else {
+      setBusy(false);
+      setFailure(result.failure);
+    }
+  }
+
+  return (
+    <form aria-label={`Edit ${zone.name}`} onSubmit={save} className="grid gap-4 sm:grid-cols-2">
+      <label className="flex flex-col gap-1.5 text-sm font-medium">
+        Name
+        <input name="name" defaultValue={zone.name} maxLength={160} required readOnly={busy} className={fieldClass} />
+      </label>
+      <label className="flex flex-col gap-1.5 text-sm font-medium">
+        Priority
+        <input name="priority" type="number" defaultValue={zone.priority} min={-1000} max={1000} required readOnly={busy} className={fieldClass} />
+      </label>
+      <label className="flex flex-col gap-1.5 text-sm font-medium sm:col-span-2">
+        Shape (GeoJSON)
+        <textarea name="geometry" rows={8} defaultValue={JSON.stringify(zone.geometry)} required readOnly={busy} spellCheck={false} className={`${fieldClass} py-2 font-mono text-sm`} />
+      </label>
+      {failure ? (
+        <div className="sm:col-span-2">
+          <Notice tone="problem">
+            {conflicted
+              ? "This zone changed while you were editing. Copy any changes you want to keep, then cancel and reopen the editor to load the latest version."
+              : failure.kind === "validation"
+                ? Object.values(failure.fields).flat().join(" ") || describeFailure(failure)
+                : describeFailure(failure)}
+          </Notice>
+        </div>
+      ) : null}
+      <div className="flex flex-wrap gap-2 sm:col-span-2">
+        <button type="submit" disabled={busy || conflicted} aria-busy={busy} className={primaryButton}>
+          {busy ? "Saving…" : "Save zone"}
+        </button>
+        <button type="button" disabled={busy} onClick={onCancel} className={quietButton}>Cancel edit</button>
+      </div>
+    </form>
   );
 }
 

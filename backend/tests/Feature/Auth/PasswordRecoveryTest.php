@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Mail\PasswordResetLink;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -13,6 +14,22 @@ use Illuminate\Support\Facades\Mail;
 class PasswordRecoveryTest extends AuthTestCase
 {
     private const NEW_PASSWORD = 'a-brand-new-passphrase';
+
+    public function test_a_password_reset_invalidates_an_existing_browser_session(): void
+    {
+        $user = $this->user();
+        $this->login('customer', $user->email)->assertOk();
+        $session = $this->app['session.store']->all();
+        $token = $this->requestToken();
+
+        $this->via('customer')->postJson('/api/v1/auth/password/reset', ['token' => $token, 'password' => self::NEW_PASSWORD])
+            ->assertOk();
+
+        Auth::forgetGuards();
+        $this->withSession($session)->via('customer')->getJson('/api/v1/me')->assertUnauthorized();
+        $this->assertGuest();
+        $this->login('customer', $user->email, self::NEW_PASSWORD)->assertOk();
+    }
 
     protected function setUp(): void
     {

@@ -3,12 +3,15 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Browser sign-in client and sign-in UI shared by the three web apps. Hand-written until the generated API client exists (backlog C-11).",
+  "description": "Browser sign-in client and UI shared by the three web apps.",
   "exports": {
     ".": "./src/index.ts"
   },
   "peerDependencies": {
     "react": "^19"
+  },
+  "dependencies": {
+    "@food-delivery/api-client": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19",

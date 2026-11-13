@@ -18,7 +18,7 @@ Status key: `todo`, `blocked`, `done`.
 
 | ID | Story | Acceptance | Depends on | Status |
 |---|---|---|---|---|
-| A-01 | Install Docker Desktop (human) | `docker compose version` works | — | blocked (human) |
+| A-01 | Install Docker Desktop (human) | `docker compose version` works | — | done: Docker Desktop started and the development stack was brought up on 2026-11-14 |
 | A-02 | Initialize git, `.gitignore`, `.editorconfig`, `.env.example` | No secrets; example values are placeholders | — | done (no commit yet) |
 | A-03 | pnpm workspace with config package | `pnpm install` clean; `packageManager` pinned | A-02 | done |
 | A-04 | Laravel 13 skeleton in `backend/` with module directories | `php artisan about` in the `api` container; architecture test passes | A-01 | done |
@@ -50,13 +50,13 @@ Status key: `todo`, `blocked`, `done`.
 | B-00 | Close ADR-011 open items (human + agent) | Session separation and MFA factor decided and threat-modelled | — | done: decided 2026-11-13 (ADR-011) |
 | B-01 | Approve permission matrix (human) | Reviewer questions answered | — | done: accepted 2026-11-13 |
 | B-02 | Register, login, logout, `/me` | RegisterCustomerTest, SessionLoginTest, SessionLogoutTest, MeEndpointTest | D-01, B-00 | done: csrf, register, login, logout, `/me` (37 feature tests) plus 12 real-request checks in `docs/qa/evidence/sprint4-auth-smoke.txt`. `PATCH /me` not built |
-| B-03 | Password recovery | Generic response; single-use expiring token | B-02 | done: forgot and reset endpoints (PasswordRecoveryTest, 12 tests), screens in all three apps, real email run; sessions are not ended on reset |
+| B-03 | Password recovery | Generic response; single-use expiring token | B-02 | done: forgot and reset endpoints and screens in all three apps; local email run. PasswordRecoveryTest verifies existing browser sessions are rejected on the next protected request after reset |
 | B-04 | Throttling | RateLimitTest | B-02 | done for sign-in: 5 failures per account and address per minute, plus a per-address cap on each auth route (tested) |
 | B-05 | Permission resolver and scope policies | PermissionResolverTest, ScopePolicyTest | D-01, B-01 | done: `AccessChecker` (AccessCheckerTest, 11 tests) — deny by default, scope and status read from storage on every check |
-| B-06 | Role grant and revoke service | No self-grant, no grant above own role or scope; revoke race test; audit row | B-05, B-07 | done as a service: `RoleGrantService` (16 tests) — no self-grant, nothing at or above own role, nothing outside own scope, audited in the same transaction. No HTTP endpoint yet; the simultaneous grant/revoke race test is not written |
+| B-06 | Role grant and revoke service | No self-grant, no grant above own role or scope; revoke race test; audit row | B-05, B-07 | done as a service: `RoleGrantServiceTest` covers permissions and audit. `ConcurrentRoleGrantTest` proves a concurrent replacement waits for revocation and leaves one active grant with the expected audit rows. No HTTP endpoint yet |
 | B-07 | Audit service | Atomic with the change; AuditRedactionTest; no update or delete path | D-01 | done as a service: `AuditLogger` with redaction (AuditAndCatalogueTest); request IP and correlation ID are accepted but nothing passes them in yet |
 | B-08 | Mobile token exchange | MobileTokenScopeTest | B-02 | done: issue, refresh, revoke and `/rider/me` (RiderTokenTest, 13 tests; ten real requests); no rider approval flow, no device attestation, no Flutter sign-in screen |
-| B-09 | MFA challenge step and production gate | Privileged login refused in production config without MFA | B-00 | partial: the production gate is built and tested (admin sign-in refused in production); the TOTP challenge itself is not built |
+| B-09 | MFA challenge step and production gate | Privileged login refused in deployed environments without MFA | B-00 | partial: admin sign-in and existing admin sessions are blocked outside local and testing. SessionLoginTest covers production and staging with the login CSRF check active. TOTP enrollment, challenge and recovery remain open |
 | B-10 | Route coverage test | Every registered route has auth and a policy or is on an explicit public list | B-05 | done: RouteCoverageTest (8 tests); no gaps found |
 | B-11 | Error envelope | ApiErrorEnvelopeTest | A-04 | done: one renderer for every API error; nothing internal leaks even with debug on (ApiErrorEnvelopeTest) |
 
@@ -64,17 +64,17 @@ Status key: `todo`, `blocked`, `done`.
 
 | ID | Story | Acceptance | Depends on | Status |
 |---|---|---|---|---|
-| C-01 | OpenAPI 3.1 document for all Phase 1 routes | Lints clean; CI diff check | A-04 | partial: OpenAPI 3.1 document covers the seven existing routes and a test keeps it equal to the registered routes; no linter or full schema validation yet |
+| C-01 | OpenAPI 3.1 document for all Phase 1 routes | Lints clean; CI diff check | A-04 | OpenApiDocumentTest compares the contract with registered routes. Web tests enforce OpenAPI structure, resolvable references, unique operation IDs and generated type freshness. Hosted workflow results remain unverified |
 | C-02 | City create, read, update, status transitions | CitySlugTest, CityStatusTransitionTest, AdminCityCreateTest | B-05, D-07 | done as API: list, create, show, update with status transitions, scope-filtered, audited (AdminCityTest, 13 tests). Admin UI not built |
 | C-03 | Zone geometry validator | ZoneGeometryValidatorTest, CoordinateBoundsTest, fuzz test | D-01 | done: structural validator (`ZoneGeometry`, ZoneGeometryValidatorTest, 32 cases) with `Coordinates` (27 cases); PostGIS rejects self-intersection at the API (AdminZoneTest); seeded fuzz tests: ZoneGeometryFuzzTest (3,000 random and mutated inputs) and ZoneGeometryPostgisFuzzTest (150 random polygons through the API, compared with `ST_IsValid`). Replayed under 30 and 15 extra seeds; no defect found |
-| C-04 | Zone create and update with versioning | ZoneCreateTest; stale update returns 409; concurrent edit test | C-03, B-05 | done as API: list, create, show, update; version check returns 409 and writes nothing; PostGIS rejects self-intersection; city scope enforced; audited without geometry (AdminZoneTest, 14 tests). The stale-edit test is sequential; a true parallel race test is not written. Admin zone editor not built |
+| C-04 | Zone create and update with versioning | ZoneCreateTest; stale update returns 409; concurrent edit test | C-03, B-05 | done as API: list, create, show, update; version check returns 409 and writes nothing; PostGIS rejects self-intersection; city scope enforced; audited without geometry (AdminZoneTest). ConcurrentZoneUpdateTest verifies two PostgreSQL sessions contend and only the winning update is stored and audited. Admin zone editor remains in U-05 |
 | C-05 | Zone activate and pause | ZoneActivateTest; needs active city, valid geometry, reason on pause | C-04 | done: `POST /admin/zones/{zone}/activate` (needs `confirm: true`, an active city and a valid stored shape) and `/pause` (reason required, kept in the audit row); both check `version` (AdminZoneStatusTest, 8 tests) |
 | C-06 | Zone archive through explicit status transition | Covered by transition test (ADR-000 item 9) | C-04 | done: `POST /admin/zones/{zone}/archive`, from draft or paused only; an active zone must be paused first (AdminZoneStatusTest) |
 | C-07 | Coverage exclusions | Exclusion and time-window tests | C-04 | done: list and create under `/admin/zones/{zone}/exclusions`, delete at `/admin/exclusions/{exclusion}`; optional UTC time window; shape must be valid and overlap the zone; audited without geometry (AdminExclusionTest, 9 tests). No edit: delete and add |
 | C-08 | Serviceability endpoint | Inside, outside, boundary, exclusion, overlap, no active city, invalid coordinate; ServiceabilityContractTest; EXPLAIN uses GiST | C-05, C-07 | done: endpoint built and tested (ServiceabilityTest, which also checks the response fields); a zone activated through the API is shown serviceable (AdminZoneStatusTest); the plan uses the GiST index with 2,500 synthetic zones (ServiceabilityPlanTest) |
 | C-09 | Public config and public cities | PublicCitiesTest; empty until a city is active | C-02 | done: `GET /api/v1/public/cities`, active cities only, public fields only (ServiceabilityTest); `GET /api/v1/public/config` returns currency, display timezone, `service_open`, map style URL and the four feature flags from a fixed list (PublicConfigTest, 5 tests) |
 | C-10 | Audit log and system status endpoints | Cursor, filters, redaction; no secrets | B-07 | done: `GET /admin/audit-logs` (newest first, five filters, city-scoped for city-scoped staff, redacted again on read, no address hash) and `GET /admin/system/status` (global scope only; up/down checks, counts, flags) (AuditLogAndStatusTest, 7 tests) |
-| C-11 | Generated TypeScript client | Generated from C-01; CI fails if stale | C-01 | done for types: `packages/api-client/src/schema.d.ts` is generated from `openapi.yaml` by `openapi-typescript` 7.13.0 (dev dependency, pinned); `pnpm test` fails if it is stale or an operation is missing, and the web workflow now runs when `backend/openapi/**` changes. No request functions yet: `packages/session` still makes its calls by hand and no app imports the types |
+| C-11 | Generated TypeScript client | Generated from C-01; CI fails if stale | C-01 | generated contract types are checked for drift by `pnpm test`. The shared browser session client uses the generated CSRF, sign-in, current-user and error types, and admin code imports types directly. Request helpers are maintained in the app and session packages |
 | C-12 | Cross-tenant suite | CrossTenantIsolationTest across city and merchant scopes | C-02..C-10 | done for city scope: five city-anchored roles try all 12 parameterised admin routes against another city (404, nothing changed); lists exclude the other city; request input cannot widen a grant; revocation applies on the next request. The test fails if a new parameterised admin route is not added to it (CrossTenantIsolationTest, 14 tests). Merchant scope waits for merchant endpoints |
 | C-13 | Approve vertex and extent caps (human) | ADR-002 open item closed | — | blocked (human) |
 
@@ -86,7 +86,7 @@ Status key: `todo`, `blocked`, `done`.
 | U-02 | `packages/ui` components and Storybook | Form, table, nav, dialog, toast, state components; axe clean | U-01 | done for web: 42 pairs measured and enforced by test (`docs/ux/contrast-report.md`); four tokens added, two restricted. Rider app theme not yet covered |
 | U-03 | UI state matrix | Each view has loading, empty, error, forbidden, offline, validation, conflict, slow | U-02 | todo |
 | U-04 | Map component | Client-only load; placeholder when `MAP_STYLE_URL` empty; no default centre; attribution | U-02 | todo |
-| U-05 | Admin: login, overview, cities, zones editor, users, audit, settings | Playwright scenarios 3–6, 9, 10 | C-11, U-04 | partial: shell, overview, `/login`, cities list and create, city detail with status changes and zone create/activate/pause/archive built and run by hand in a browser; audit log screen built; no map editor, no zone editing, no exclusions, users or settings screens, and no Playwright scenarios |
+| U-05 | Admin: login, overview, cities, zones editor, users, audit, settings | Playwright scenarios 3–6, 9, 10 | C-11, U-04 | partial: shell, sign-in, cities, audit, GeoJSON zone create/edit/status, exclusions and read-only system settings are available. Chromium verifies keyboard confirmation, stale edit handling, settings errors and live coverage changes. Map drawing and users remain open |
 | U-06 | Customer: home, location, login, account, labelled previews | Playwright scenarios 1, 2, 5, 7, 8 | C-11, U-04 | partial: home with a live service banner, `/login`, and `/location` (coordinates or device location to a serviceability answer) built and run by hand in a browser; no map pin, address entry, saved addresses or account page, and no Playwright scenarios |
 | U-07 | Merchant shell | Scoped, no fabricated data, disabled actions labelled | C-11, U-02 | partial: overview shell and `/login` built; no merchant account exists to sign in with, and branch data waits for its API |
 | U-08 | Rider shell | Flutter tests in spec 10.3; no location permission request | A-09, B-08 | partial: home restyled with shared tokens, 7 widget tests; login and device run still open |
@@ -109,7 +109,7 @@ Status key: `todo`, `blocked`, `done`.
 
 | ID | Story | Acceptance | Status |
 |---|---|---|---|
-| X-01 | Run every check in `docs/qa/phase1-acceptance.md` | Real output recorded; no invented results | todo |
+| X-01 | Run every check in `docs/qa/phase1-acceptance.md` | Real output recorded; no invented results | partial: local full check passed on 2026-11-14; Playwright, accessibility, clean clone, hosted CI and staging checks remain |
 | X-02 | Final `docs/PHASE1_STATUS.md` | Done, partial, blocked and future separated accurately | todo |
 | X-03 | Phase 2 backlog | Merchant and catalogue stories with open decisions | todo |
 
@@ -117,7 +117,6 @@ Status key: `todo`, `blocked`, `done`.
 
 | # | Decision | Needed before | Reference |
 |---|---|---|---|
-| 1 | Install Docker Desktop | Sprint 2 | A-01 |
 | 2 | City status values | Sprint 3 | D-07 |
 | 3 | Session separation and MFA factor | Sprint 4 | B-00, ADR-011 |
 | 4 | Permission matrix approval | Sprint 4 | B-01 |

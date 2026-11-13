@@ -5,6 +5,11 @@
   "engines": {
     "node": ">=22"
   },
+  "pnpm": {
+    "overrides": {
+      "minimatch@>=7.0.0 <11.0.1": "11.0.1"
+    }
+  },
   "scripts": {
     "dev:customer": "pnpm --filter customer-web dev",
     "dev:merchant": "pnpm --filter merchant-web dev",
@@ -12,6 +17,11 @@
     "lint": "pnpm -r --if-present lint",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
+    "test:browser": "playwright test",
     "build": "pnpm -r --if-present build"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.65.0"
   }
 }

@@ -3,9 +3,9 @@ name: web
 on:
   push:
     branches: [main]
-    paths: ["apps/*-web/**", "packages/**", "backend/openapi/**", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".github/workflows/web.yml"]
+    paths: ["apps/*-web/**", "packages/**", "backend/openapi/**", "tests/browser/**", "playwright.config.ts", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".github/workflows/web.yml"]
   pull_request:
-    paths: ["apps/*-web/**", "packages/**", "backend/openapi/**", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".github/workflows/web.yml"]
+    paths: ["apps/*-web/**", "packages/**", "backend/openapi/**", "tests/browser/**", "playwright.config.ts", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".github/workflows/web.yml"]
 
 permissions:
   contents: read
@@ -32,5 +32,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:browser --workers=2
       - name: Dependency audit
         run: pnpm audit --prod

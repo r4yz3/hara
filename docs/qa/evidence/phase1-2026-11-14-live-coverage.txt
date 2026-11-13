@@ -1,0 +1,4 @@
+> playwright test "--project=desktop" "--workers=1" "tests/browser/live-coverage.spec.ts"
+Running 1 test using 1 worker
+  ok 1 [desktop] › tests\browser\live-coverage.spec.ts:11:1 › a city and its GeoJSON zone control live serviceability (14.0s)
+  1 passed (25.0s)

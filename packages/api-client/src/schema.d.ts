@@ -96,8 +96,8 @@ export interface paths {
          * @description Starts a session on the calling app. A wrong password, an unknown
          *     account, a suspended account and an account not entitled to this app
          *     all produce the same 401. Five failures for one account from one
-         *     address within a minute produce 429. The admin app refuses sign-in in
-         *     production until two-step verification exists.
+         *     address within a minute produce 429. Until two-step verification is
+         *     available, the admin surface refuses sign-in outside local and testing.
          */
         post: operations["authLogin"];
         delete?: never;
@@ -142,7 +142,9 @@ export interface paths {
         /**
          * Set a new password with a reset link's token
          * @description An unknown, used or expired token gives one 422 with the same
-         *     message. On success the token is consumed; the user is not signed in.
+         *     message. On success the token is consumed. Existing browser sessions
+         *     are rejected on their next protected request. The user must sign in
+         *     with the new password.
          */
         post: operations["authPasswordReset"];
         delete?: never;

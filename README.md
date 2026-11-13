@@ -1,6 +1,6 @@
 # Food delivery platform
 
-Philippines-first, multi-vendor food delivery marketplace. **Phase 1, Sprint 2: skeletons only.** There is no ordering, payment, dispatch or tracking, and no launch city is configured. Nothing here is deployable to production.
+Philippines-first, multi-vendor food delivery marketplace. **Phase 1 foundation in progress.** The API supports authentication, role-scoped administration and delivery-area checks. The web and rider apps are at different stages of implementation. See the Phase 1 status for the remaining acceptance gates.
 
 - Plan: `FOOD_DELIVERY_PLATFORM_MASTER_PLAN.md`
 - Current phase: `FOOD_DELIVERY_PHASE1_IMPLEMENTATION.md`
@@ -15,7 +15,7 @@ Philippines-first, multi-vendor food delivery marketplace. **Phase 1, Sprint 2: 
 | `apps/admin-web` | Next.js admin and dispatch console, port 3002 |
 | `apps/rider-flutter` | Flutter rider app (Android) |
 | `backend` | Laravel 13 API, port 8000 |
-| `packages/*` | Shared web packages (placeholders) |
+| `packages/*` | Shared design tokens, UI, session code, web config and generated API types |
 | `infra` | Compose stack, Dockerfile, scripts |
 
 ## Requirements
@@ -37,6 +37,10 @@ pnpm dev:customer                  # or dev:merchant, dev:admin
 ```
 
 On Linux, macOS or WSL the same targets exist in the `Makefile`.
+
+For Chromium browser checks, run `pnpm exec playwright install chromium` once, then `pnpm test:browser --workers=2` from the repository root. Playwright starts the three web apps on ports 3000–3002. The tests cover selected UI states with synthetic API responses and run axe at three viewport widths.
+
+The optional live coverage test requires the local Laravel/PostGIS stack and seeded demo accounts. Set `BROWSER_LIVE=1` and supply the same local `DEMO_PASSWORD` in the test process environment. Run `pnpm test:browser --project=desktop --workers=1 tests/browser/live-coverage.spec.ts`. It writes synthetic records to the development database, then archives them through the API and retains the audit entries.
 
 ## What has been verified
 
@@ -63,7 +67,9 @@ On Linux, macOS or WSL the same targets exist in the `Makefile`.
 
 ## API
 
-The contract is `backend/openapi/openapi.yaml`. Today it covers health checks and sign-in (`/api/v1/auth/csrf`, `register`, `login`, `logout`) and `/api/v1/me`. Registration is off unless `FEATURE_PUBLIC_REGISTRATION=true`.
+The contract is `backend/openapi/openapi.yaml`. It covers health checks, browser authentication and recovery, rider tokens, public configuration and serviceability, and admin cities, zones, exclusions, audit and system status. Registration is off unless `FEATURE_PUBLIC_REGISTRATION=true`.
+
+Admin sessions are available under `local` and `testing` while two-step verification is pending.
 
 ## Health routes
 

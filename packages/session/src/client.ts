@@ -2,23 +2,12 @@
 // Cookies are sent with every call; the API decides which app's session
 // applies from the browser's Origin header, so nothing here names a surface.
 
+import type { operations, Schemas } from "@food-delivery/api-client";
+
 const apiUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
-export type Grant = {
-  role: string;
-  scope_type: "global" | "city" | "merchant" | "branch";
-  scope_id: string | null;
-  permissions: string[];
-};
-
-export type CurrentUser = {
-  id: string;
-  name: string;
-  email: string;
-  email_verified: boolean;
-  surface: "customer" | "merchant" | "admin";
-  grants: Grant[];
-};
+export type CurrentUser = Schemas["CurrentUser"];
+export type Grant = CurrentUser["grants"][number];
 
 /** What went wrong, in terms a screen can act on. */
 export type Failure =
@@ -31,7 +20,7 @@ export type Failure =
 
 export type Result<T> = { ok: true; value: T } | { ok: false; failure: Failure };
 
-type ErrorBody = { error?: { code?: string; message?: string; fields?: Record<string, string[]> } };
+type ErrorBody = { error?: Partial<Schemas["ErrorResponse"]["error"]> };
 
 export async function call(path: string, init: RequestInit = {}): Promise<Response> {
   return fetch(`${apiUrl}${path}`, {
@@ -45,7 +34,7 @@ export async function csrfToken(): Promise<string | null> {
   const response = await call("/api/v1/auth/csrf");
   if (!response.ok) return null;
 
-  const body = (await response.json()) as { data?: { csrf_token?: string } };
+  const body = (await response.json()) as Partial<operations["authCsrf"]["responses"][200]["content"]["application/json"]>;
   return body.data?.csrf_token ?? null;
 }
 
@@ -84,11 +73,12 @@ async function post(path: string, payload?: unknown): Promise<Response | Failure
 }
 
 export async function signIn(email: string, password: string): Promise<Result<CurrentUser>> {
-  const response = await post("/api/v1/auth/login", { email, password });
+  const payload: operations["authLogin"]["requestBody"]["content"]["application/json"] = { email, password };
+  const response = await post("/api/v1/auth/login", payload);
   if (!(response instanceof Response)) return { ok: false, failure: response };
   if (!response.ok) return { ok: false, failure: await toFailure(response) };
 
-  const body = (await response.json()) as { data: CurrentUser };
+  const body = (await response.json()) as Schemas["CurrentUserResponse"];
   return { ok: true, value: body.data };
 }
 
@@ -108,7 +98,7 @@ export async function currentUser(): Promise<Result<CurrentUser | null>> {
     if (response.status === 401) return { ok: true, value: null };
     if (!response.ok) return { ok: false, failure: await toFailure(response) };
 
-    const body = (await response.json()) as { data: CurrentUser };
+    const body = (await response.json()) as Schemas["CurrentUserResponse"];
     return { ok: true, value: body.data };
   } catch {
     return { ok: false, failure: { kind: "network" } };

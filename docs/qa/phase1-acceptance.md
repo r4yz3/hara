@@ -1,6 +1,6 @@
 # Phase 1 acceptance tests
 
-Date: 2026-11-12. Each row maps a definition-of-done item (spec 1.3) or human checklist item (spec 15) to the evidence that will prove it. Results are filled in Sprint 8 from real command output saved under `docs/qa/evidence/`. Nothing here has been run yet.
+Updated 2026-11-14. Each row maps a definition-of-done item (spec 1.3) or human checklist item (spec 15) to its evidence. Local backend results come from `docs/qa/evidence/phase1-2026-11-14-check.txt`.
 
 Result key: `not run`, `pass`, `fail`, `blocked`.
 
@@ -9,14 +9,14 @@ Result key: `not run`, `pass`, `fail`, `blocked`.
 | # | Criterion | Evidence | Result |
 |---|---|---|---|
 | 1 | `setup`, `up`, `migrate`, `seed-demo`, `check` work through Make and PowerShell | Clean-clone transcript on this workstation | not run |
-| 2 | API boots with isolated databases; fresh migrate and rollback verified | `migrate:fresh`, `migrate:rollback`, re-migrate output | not run |
-| 3 | Register, login, logout, current user | Feature tests B-02 | not run |
-| 4 | Admin creates and disables a city, creates and disables a polygon zone; no assumed coordinates or timezone | Feature tests C-02, C-04, C-05; Playwright 3–5; grep for hardcoded coordinates | not run |
-| 5 | Serviceability returns inside/outside correctly and `NO_ACTIVE_ZONE` when nothing is configured | ServiceabilityQueryTest, ServiceabilityContractTest | not run |
-| 6 | Cross-tenant access denied for guessed or edited IDs | CrossTenantIsolationTest, route coverage test | not run |
+| 2 | API boots with isolated databases; fresh migrate and rollback verified | Healthy Compose stack and MigrationRollbackTest in the isolated test database | pass locally |
+| 3 | Register, login, logout, current user | Feature tests B-02 | pass locally |
+| 4 | Admin creates and disables a city, creates and disables a polygon zone; no assumed coordinates or timezone | Feature tests C-02, C-04, C-05 and local live Chromium run with synthetic GeoJSON | City and zone lifecycle verified locally; map drawing and repository-wide hardcoded-coordinate review remain open |
+| 5 | Serviceability returns inside/outside correctly and `NO_ACTIVE_ZONE` when nothing is configured | ServiceabilityTest | pass locally |
+| 6 | Cross-tenant access denied for guessed or edited IDs | CrossTenantIsolationTest, route coverage test | pass for implemented city-scoped endpoints; merchant endpoints are pending |
 | 7 | Four shells work at narrow and wide viewports; placeholders disabled and labelled | Playwright 8; Flutter widget tests; screenshots | not run |
-| 8 | CI runs lint, types, tests, schema validation, OpenAPI diff, security scans | Link to a green run | not run |
-| 9 | README, ADRs, threat model, test evidence exist | File list | ADRs and threat model written; rest not run |
+| 8 | CI runs lint, types, tests, schema validation, OpenAPI diff, security scans | Link to a green run | not run in this verification |
+| 9 | README, ADRs, threat model, test evidence exist | `README.md`, `docs/architecture/decisions/`, `docs/security/threat-model.md`, `docs/qa/evidence/` | pass for artifact presence |
 
 ## Geometry cases (must all pass)
 
@@ -58,17 +58,21 @@ Fixtures use the spec's synthetic coordinates or generated shapes. No real servi
 
 ## Browser scenarios (spec 10.2)
 
-Scenarios 1–10 run in Playwright against the running stack at 375×812, 768×1024 and 1440×900, with axe checks. Each result links to its trace or screenshot.
+The default Playwright suite runs in Chromium at 375×812, 768×1024 and 1440×900. It checks horizontal overflow and runs axe for the closed-coverage customer banner and empty restaurant state, outside coverage and retry after a 503, disabled merchant actions, an expired admin session linking back to a local path, and the city status dialog. The dialog case checks keyboard opening, tab order, Escape dismissal and focus restoration. A separate sign-in case verifies external return-path rejection. Browser API calls and the server-rendered coverage banner use synthetic responses in this suite.
+
+All 27 default cases passed locally, including a zone edit conflict that preserves the draft and system settings retry and permission denial at each viewport. See `docs/qa/evidence/phase1-2026-11-14-admin-settings.txt`.
+
+The opt-in desktop run covers live admin sign-in, city creation and activation, invalid GeoJSON rejection, normalized shape persistence, zone edit and activation, exclusion add and remove, customer serviceability and denial of admin access to a signed-in customer. Cleanup pauses and archives the synthetic records. Map drawing remains open. See `docs/qa/evidence/phase1-2026-11-14-zone-exclusions.txt`.
 
 ## Phase boundary checks
 
 | Check | Method | Result |
 |---|---|---|
-| No route registered for ordering, payments, dispatch, tracking, payouts | Route list compared with the Phase 1 list in the OpenAPI document | not run |
+| No route registered for ordering, payments, dispatch, tracking, payouts | RouteInventoryTest and OpenApiDocumentTest | pass locally |
 | No invented restaurants, ETAs, KPIs or balances in any shell | Manual review of screenshots plus a text search of the apps | not run |
 | No hardcoded city, coordinate or map centre outside test fixtures and the gated demo seeder | Repository search | not run |
 | Rider app requests no location permission | Android manifest review and Flutter test | not run |
-| Production config refuses seeders, debug and MFA-less privileged login | Config tests | not run |
+| Production config refuses seeders, debug and MFA-less privileged login | SchemaTest, ProductionGuardTest and SessionLoginTest | pass locally |
 
 ## Stop conditions
 

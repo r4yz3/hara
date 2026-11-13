@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Auth;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\TestWith;
 
 class SessionLoginTest extends AuthTestCase
 {
@@ -129,20 +131,47 @@ class SessionLoginTest extends AuthTestCase
         $this->login('merchant', 'cook@example.com')->assertStatus(401);
     }
 
-    public function test_admin_sign_in_is_refused_in_production_until_two_step_verification_exists(): void
+    #[TestWith(['production'])]
+    #[TestWith(['staging'])]
+    public function test_admin_sign_in_is_refused_outside_development_until_two_step_verification_exists(string $environment): void
     {
         $staff = $this->user('staff@example.com');
         $this->grantRole($staff, 'platform_owner');
 
-        $this->app->detectEnvironment(fn () => 'production');
+        $this->app['env'] = $environment;
 
         try {
+            $token = $this->via('admin')->getJson('/api/v1/auth/csrf')->assertOk()->json('data.csrf_token');
+            $this->withSession(['_token' => $token])->withHeader('X-CSRF-TOKEN', $token);
             $this->login('admin', 'staff@example.com')
                 ->assertStatus(403)
-                ->assertJsonPath('error.code', 'FORBIDDEN');
+                ->assertJsonPath('error.message', 'Staff sign-in is unavailable until two-step verification is enabled.');
             $this->assertGuest();
         } finally {
-            $this->app->detectEnvironment(fn () => 'testing');
+            $this->app['env'] = 'testing';
+        }
+    }
+
+    #[TestWith(['production'])]
+    #[TestWith(['staging'])]
+    public function test_an_existing_admin_session_is_ended_when_the_gate_applies(string $environment): void
+    {
+        $staff = $this->user('staff@example.com');
+        $this->grantRole($staff, 'platform_owner');
+        $this->login('admin', 'staff@example.com')->assertOk();
+
+        $this->app['env'] = $environment;
+
+        try {
+            $this->withSession([
+                'surface' => 'admin',
+                'password_hash_web' => Auth::guard('web')->hashPasswordForCookie($staff->getAuthPassword()),
+            ]);
+            Auth::guard('web')->setUser($staff);
+            $this->via('admin')->getJson('/api/v1/admin/cities')->assertUnauthorized();
+            $this->assertGuest();
+        } finally {
+            $this->app['env'] = 'testing';
         }
     }
 

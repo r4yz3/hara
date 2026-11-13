@@ -5,9 +5,16 @@
 ## Read first
 - `FOOD_DELIVERY_PLATFORM_MASTER_PLAN.md` — product scope, domain model, phases 0–7.
 - `FOOD_DELIVERY_PHASE1_IMPLEMENTATION.md` — the current phase. Sections 1.2 (out of scope), 1.3 (definition of done) and 12 (sprints) decide what to build next.
+- `docs/PHASE1_STATUS.md` and `docs/backlog.md` — start with the latest verification and pick the next open, unblocked Phase 1 item. Use `docs/qa/phase1-acceptance.md` for the acceptance gate.
+
+## Continue a Phase 1 slice
+- Inspect the working tree and the files for that slice. Read the closest `AGENTS.md` for app-specific conventions.
+- Load the matching repository skill from the table in section 18 of the Phase 1 spec. Read the relevant ADR before changing a settled design.
+- Run focused checks first, then the relevant project checks. Record the commands, results, evidence and rollback in the status and backlog so the next session can resume from a verified checkpoint.
+- When asked to continue Phase 1, work through successive unblocked items without waiting for a separate confirmation after each item. Stop for a decision only when it is required for the remaining work, and continue other independent items where possible.
 
 ## Current state
-Sprint 1 documents await human review. Sprint 2 skeletons exist and pass `.\infra\scripts\dev.ps1 check` with the backend running in the Docker stack against PostGIS and Redis. Sprint 3 migrations are in and tested (migration inventory in `docs/PHASE1_STATUS.md`); Sprint 4 is mostly done: roles and permissions (`backend/config/rbac.php`, `AccessChecker`, `RoleGrantService`, `AuditLogger`), browser sign-in with one session cookie per web app, registration, password recovery, and bearer-token sign-in for the rider app are built and tested; the TOTP second step for staff is not built, so the admin app stays closed in production. Sprint 5 APIs (cities, zones, exclusions, serviceability, audit log, system status) are built. CI workflows have never run (no remote repository). Front-end work follows `docs/ux/design-direction.md` (set by the product owner's reference images); the merchant portal overview and rider home are first screens; the customer app has a home banner driven by the API and a working delivery-area check at `/location`; the admin console also has working cities and zones screens (`apps/admin-web/app/cities`), with zone shapes entered as GeoJSON because no map provider is chosen. `docs/PHASE1_STATUS.md` is the detailed record, `docs/backlog.md` the work list, and `docs/architecture/decisions/` holds the ADRs. Update this section when a sprint gate passes.
+Sprint 1 documents await human review. Sprint 2 skeletons exist and pass `.\infra\scripts\dev.ps1 check` with the backend running in the Docker stack against PostGIS and Redis. Sprint 3 migrations are in and tested (migration inventory in `docs/PHASE1_STATUS.md`); Sprint 4 is mostly done: roles and permissions (`backend/config/rbac.php`, `AccessChecker`, `RoleGrantService`, `AuditLogger`), browser sign-in with one session cookie per web app, registration, password recovery, and bearer-token sign-in for the rider app are built and tested; the TOTP second step for staff is not built, so the admin surface accepts sessions only under local and testing. Sprint 5 APIs (cities, zones, exclusions, serviceability, audit log, system status) are built. Hosted CI results are unverified. Front-end work follows `docs/ux/design-direction.md` (set by the product owner's reference images); the merchant portal overview and rider home are first screens; the customer app has a home banner driven by the API and a working delivery-area check at `/location`; the admin console also has working cities and zones screens (`apps/admin-web/app/cities`), with zone shapes entered as GeoJSON because no map provider is chosen. `docs/PHASE1_STATUS.md` is the detailed record, `docs/backlog.md` the work list, and `docs/architecture/decisions/` holds the ADRs. Update this section when a sprint gate passes.
 
 ## Fixed constraints
 - Launch city is unselected. Never hardcode a city, coordinates or a map centre.
@@ -16,7 +23,7 @@ Sprint 1 documents await human review. Sprint 2 skeletons exist and pass `.\infr
 - Money is integer centavos; IDs are ULIDs; storage is UTC.
 
 ## Skills
-Project skills live in `.claude/skills/` (pinned in `skills-lock.json`). Load the matching one before working in its area; the map is section 18 of the Phase 1 specification. The specification overrides a skill when they disagree.
+Project skills live in `.claude/skills/` (pinned in `skills-lock.json`). Codex discovers the local copies under `.agents/skills/`. When updating a project skill, keep its full directory in sync, including references, and review the lockfile change. The specification overrides a skill when they disagree.
 
 ## Environment
 Windows 11, PowerShell primary. Docker Desktop is installed; start it before `dev.ps1 up`. A native PostgreSQL already uses port 5432 on this machine, so the local `.env` publishes the project's database on 54329. Provide PowerShell equivalents in `infra/scripts/*.ps1` for every Makefile target.

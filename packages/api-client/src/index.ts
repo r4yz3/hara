@@ -1,5 +1,4 @@
-// Types only. The request helpers still live in @food-delivery/session;
-// moving them onto these types is tracked in docs/backlog.md (C-11).
+// Generated API contract types. Browser session requests live in @food-delivery/session.
 import type { components, operations, paths } from "./schema";
 
 export type { components, operations, paths };

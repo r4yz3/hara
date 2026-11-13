@@ -1,0 +1,18 @@
+> playwright test "--workers=2"
+Running 15 tests using 2 workers
+  ok  2 [tablet] › tests\browser\phase1.spec.ts:16:1 › customer home shows the empty restaurant state (5.0s)
+  ok  1 [phone] › tests\browser\phase1.spec.ts:16:1 › customer home shows the empty restaurant state (5.1s)
+  ok  3 [tablet] › tests\browser\phase1.spec.ts:33:1 › customer can retry a delivery check after an API error (1.6s)
+  ok  4 [phone] › tests\browser\phase1.spec.ts:33:1 › customer can retry a delivery check after an API error (1.6s)
+  ok  5 [tablet] › tests\browser\phase1.spec.ts:64:1 › merchant overview keeps unavailable actions disabled (4.1s)
+  ok  6 [phone] › tests\browser\phase1.spec.ts:64:1 › merchant overview keeps unavailable actions disabled (4.0s)
+  ok  8 [phone] › tests\browser\phase1.spec.ts:72:1 › an expired admin session offers sign-in with a local return path (7.6s)
+  ok  7 [tablet] › tests\browser\phase1.spec.ts:72:1 › an expired admin session offers sign-in with a local return path (7.6s)
+  ok  9 [phone] › tests\browser\phase1.spec.ts:87:1 › sign-in ignores an external return URL (2.5s)
+  ok 10 [tablet] › tests\browser\phase1.spec.ts:87:1 › sign-in ignores an external return URL (2.6s)
+  ok 11 [desktop] › tests\browser\phase1.spec.ts:16:1 › customer home shows the empty restaurant state (1.4s)
+  ok 12 [desktop] › tests\browser\phase1.spec.ts:33:1 › customer can retry a delivery check after an API error (1.4s)
+  ok 13 [desktop] › tests\browser\phase1.spec.ts:64:1 › merchant overview keeps unavailable actions disabled (1.4s)
+  ok 14 [desktop] › tests\browser\phase1.spec.ts:72:1 › an expired admin session offers sign-in with a local return path (1.5s)
+  ok 15 [desktop] › tests\browser\phase1.spec.ts:87:1 › sign-in ignores an external return URL (869ms)
+  15 passed (41.2s)

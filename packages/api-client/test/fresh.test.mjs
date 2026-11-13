@@ -8,6 +8,18 @@ test("generated types match the OpenAPI document", async () => {
   assert.equal(committed, await render(), "Run: pnpm --filter @food-delivery/api-client generate");
 });
 
+test("an invalid response description fails OpenAPI generation", async () => {
+  await assert.rejects(render({
+    openapi: "3.1.0",
+    info: { title: "Synthetic contract", version: "1" },
+    paths: {
+      "/test": {
+        get: { operationId: "test", responses: { 200: { description: false } } },
+      },
+    },
+  }), /Expected type `string`/i);
+});
+
 test("every documented operation is typed", async () => {
   const yaml = await readFile(new URL("../../../backend/openapi/openapi.yaml", import.meta.url), "utf8");
   const types = await readFile(new URL("../src/schema.d.ts", import.meta.url), "utf8");

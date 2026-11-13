@@ -2,6 +2,7 @@
 // writes nothing and exits 1 if the committed file differs.
 import { readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import { createConfig } from "@redocly/openapi-core";
 import openapiTS, { astToString } from "openapi-typescript";
 
 const source = new URL("../../backend/openapi/openapi.yaml", import.meta.url);
@@ -11,8 +12,15 @@ const header =
   "// GENERATED from backend/openapi/openapi.yaml. Do not edit.\n" +
   "// Regenerate: pnpm --filter @food-delivery/api-client generate\n\n";
 
-export async function render() {
-  const ast = await openapiTS(source);
+export async function render(document = source) {
+  const redocly = await createConfig({
+    rules: {
+      struct: "error",
+      "no-unresolved-refs": "error",
+      "operation-operationId-unique": "error",
+    },
+  });
+  const ast = await openapiTS(document, { redocly });
   return (header + astToString(ast)).replace(/\r\n/g, "\n");
 }
 
