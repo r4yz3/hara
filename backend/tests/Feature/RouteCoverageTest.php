@@ -35,6 +35,8 @@ class RouteCoverageTest extends TestCase
         'auth.csrf',
         'auth.register',
         'auth.login',
+        'auth.password.forgot',
+        'auth.password.reset',
     ];
 
     /** @return list<RoutingRoute> */

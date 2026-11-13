@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Application\Commands\PasswordRecovery;
 use App\Application\Commands\RegisterCustomer;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\ResolveSurface;
@@ -20,6 +21,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -95,6 +98,33 @@ class AuthController extends Controller
         Log::info('auth.login', ['user_id' => $user->id, 'surface' => $surface]);
 
         return ApiResponse::data($request, (new CurrentUserResource($user, $surface))->toArray());
+    }
+
+    public function forgotPassword(Request $request, PasswordRecovery $recovery): JsonResponse
+    {
+        $surface = $this->surfaceOrFail($request);
+        $input = $request->validate(['email' => ['required', 'string', 'max:255']]);
+
+        $recovery->request($input['email'], (string) config("surfaces.origins.{$surface}"));
+
+        // Same answer whether or not the address belongs to an account.
+        return ApiResponse::data($request, ['status' => 'reset_requested'], 202);
+    }
+
+    public function resetPassword(Request $request, PasswordRecovery $recovery): JsonResponse
+    {
+        $this->surfaceOrFail($request);
+        $input = $request->validate([
+            'token' => ['required', 'string', 'max:200'],
+            'password' => ['required', 'string', Password::min(10), 'max:1024'],
+        ]);
+
+        if (! $recovery->reset($input['token'], $input['password'])) {
+            // One message for unknown, used and expired links.
+            throw ValidationException::withMessages(['token' => ['This reset link is not valid or has expired. Request a new one.']]);
+        }
+
+        return ApiResponse::data($request, ['status' => 'password_reset']);
     }
 
     public function logout(Request $request): Response

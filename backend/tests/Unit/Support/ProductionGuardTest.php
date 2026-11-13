@@ -17,7 +17,7 @@ class ProductionGuardTest extends TestCase
     {
         return [
             'app.debug' => false,
-            'app.key' => 'base64:'.base64_encode(str_repeat('k', 32)),
+            'app.key_is_set' => true,
             'app.url' => 'https://api.example.test',
             'session.secure' => true,
             'session.http_only' => true,
@@ -30,8 +30,8 @@ class ProductionGuardTest extends TestCase
                 'admin' => 'https://admin.example.test',
             ],
             'hashing.driver' => 'argon2id',
-            'demo.password' => null,
-            'database.connections.pgsql.password' => 'a-long-generated-secret-value',
+            'demo.password_is_set' => false,
+            'database.password_is_real' => true,
         ];
     }
 
@@ -57,7 +57,9 @@ class ProductionGuardTest extends TestCase
 
         return [
             'debug on' => [['app.debug' => true], 'APP_DEBUG'],
-            'no app key' => [['app.key' => ''], 'APP_KEY'],
+            'debug unset' => [['app.debug' => null], 'APP_DEBUG'],
+            'debug as a string' => [['app.debug' => 'false'], 'APP_DEBUG'],
+            'no app key' => [['app.key_is_set' => false], 'APP_KEY'],
             'api over http' => [['app.url' => 'http://api.example.test'], 'APP_URL'],
             'cookie not secure' => [['session.secure' => false], 'SESSION_SECURE_COOKIE'],
             'cookie secure unset' => [['session.secure' => null], 'SESSION_SECURE_COOKIE'],
@@ -65,15 +67,23 @@ class ProductionGuardTest extends TestCase
             'cross-site cookie' => [['session.same_site' => 'none'], 'SameSite'],
             'wildcard cors' => [['cors.allowed_origins' => ['*']], 'CORS'],
             'cors pattern' => [['cors.allowed_origins_patterns' => ['#.*#']], 'CORS'],
+            'cors patterns unset' => [['cors.allowed_origins_patterns' => null], 'CORS'],
             'cors over http' => [['cors.allowed_origins' => ['http://app.example.test']], 'CORS'],
+            'cors unset' => [['cors.allowed_origins' => null], 'CORS'],
             'app origin over http' => [['surfaces.origins' => ['customer' => 'http://app.example.test'] + $origins], 'app origin'],
             'app origin on localhost' => [['surfaces.origins' => ['admin' => 'https://localhost:3002'] + $origins], 'app origin'],
+            'app origins unset' => [['surfaces.origins' => null], 'app origin'],
             'two apps on one origin' => [['surfaces.origins' => ['merchant' => $origins['customer']] + $origins], 'distinct'],
             'weak hashing' => [['hashing.driver' => 'bcrypt'], 'HASH_DRIVER'],
-            'demo accounts enabled' => [['demo.password' => 'something'], 'DEMO_PASSWORD'],
-            'placeholder database password' => [['database.connections.pgsql.password' => 'change_me_local_only'], 'DB_PASSWORD'],
-            'empty database password' => [['database.connections.pgsql.password' => ''], 'DB_PASSWORD'],
+            'demo accounts enabled' => [['demo.password_is_set' => true], 'DEMO_PASSWORD'],
+            'placeholder database password' => [['database.password_is_real' => false], 'DB_PASSWORD'],
         ];
+    }
+
+    public function test_an_empty_set_of_facts_fails_every_rule(): void
+    {
+        // Nothing is assumed safe by being absent.
+        $this->assertCount(11, ProductionGuard::violations([]));
     }
 
     public function test_every_problem_is_listed_at_once(): void
@@ -83,16 +93,30 @@ class ProductionGuardTest extends TestCase
         $this->assertCount(2, $violations);
     }
 
-    public function test_messages_never_contain_secret_values(): void
+    /** @param list<string> $argv */
+    #[DataProvider('processes')]
+    public function test_the_guard_applies_everywhere_except_development_and_repair_commands(string $environment, bool $console, array $argv, bool $expected): void
     {
-        $violations = ProductionGuard::violations(array_merge(self::safe(), [
-            'demo.password' => 'super-secret-demo-value',
-            'database.connections.pgsql.password' => 'change_me_local_only',
-            'app.debug' => true,
-        ]));
+        $this->assertSame($expected, ProductionGuard::applies($environment, $console, $argv));
+    }
 
-        $text = implode(' ', $violations);
-        $this->assertStringNotContainsString('super-secret-demo-value', $text);
-        $this->assertStringNotContainsString('change_me_local_only', $text);
+    /** @return array<string, array{string, bool, list<string>, bool}> */
+    public static function processes(): array
+    {
+        return [
+            'local web' => ['local', false, [], false],
+            'test suite' => ['testing', true, ['artisan', 'test'], false],
+            'production web' => ['production', false, [], true],
+            'staging web' => ['staging', false, [], true],
+            'mistyped environment' => ['prodution', false, [], true],
+            'production queue worker' => ['production', true, ['artisan', 'queue:work'], true],
+            'production scheduler' => ['production', true, ['artisan', 'schedule:run'], true],
+            'production tinker' => ['production', true, ['artisan', 'tinker'], true],
+            'production seeder' => ['production', true, ['artisan', 'db:seed'], true],
+            'production key generation' => ['production', true, ['artisan', 'key:generate'], false],
+            'production migrate' => ['production', true, ['artisan', 'migrate'], false],
+            'image build discovery' => ['production', true, ['artisan', 'package:discover'], false],
+            'bare artisan' => ['production', true, ['artisan'], false],
+        ];
     }
 }

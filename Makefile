@@ -31,13 +31,17 @@ backup:
 	mkdir -p infra/backups
 	$(COMPOSE) cp infra/scripts/db-backup.sh postgres:/tmp/db-backup.sh
 	$(COMPOSE) exec -T postgres sh /tmp/db-backup.sh
-	$(COMPOSE) cp postgres:/tmp/backup.dump infra/backups/food_delivery-$$(date -u +%Y%m%d-%H%M%S).dump
+	f=infra/backups/food_delivery-$$(date -u +%Y%m%d-%H%M%S).dump; \
+	$(COMPOSE) cp postgres:/tmp/backup.dump $$f && \
+	$(COMPOSE) exec -T postgres rm -f /tmp/backup.dump /tmp/db-backup.sh && \
+	sha256sum $$f | cut -d' ' -f1 > $$f.sha256
 
 # Restores the newest backup into a scratch database, verifies it, removes the scratch database.
 restore-drill:
-	$(COMPOSE) cp "$$(ls infra/backups/*.dump | sort | tail -n 1)" postgres:/tmp/backup.dump
-	$(COMPOSE) cp infra/scripts/db-restore-drill.sh postgres:/tmp/db-restore-drill.sh
-	$(COMPOSE) exec -T postgres sh /tmp/db-restore-drill.sh
+	f="$$(ls infra/backups/*.dump | sort | tail -n 1)"; test -f "$$f.sha256" && \
+	$(COMPOSE) cp "$$f" postgres:/tmp/backup.dump && \
+	$(COMPOSE) cp infra/scripts/db-restore-drill.sh postgres:/tmp/db-restore-drill.sh && \
+	$(COMPOSE) exec -T -e EXPECTED_SHA256="$$(cat "$$f.sha256")" postgres sh /tmp/db-restore-drill.sh
 
 logs:
 	$(COMPOSE) logs -f --tail 200

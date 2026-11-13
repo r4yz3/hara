@@ -29,6 +29,8 @@ Route::get('/auth/csrf', [AuthController::class, 'csrf'])->middleware('throttle:
 Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:10,1')->name('auth.register');
 // Per-account limiting happens in the controller; this caps one address overall.
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:30,1')->name('auth.login');
+Route::post('/auth/password/forgot', [AuthController::class, 'forgotPassword'])->middleware('throttle:10,1')->name('auth.password.forgot');
+Route::post('/auth/password/reset', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1')->name('auth.password.reset');
 
 Route::middleware(EnsureSurfaceSession::class)->group(function (): void {
     Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');

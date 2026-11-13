@@ -5,6 +5,24 @@ Last updated: 2026-11-13, Sprint 4 in progress (roles, permissions, audit and si
 ## Summary
 Sprint 1 documents await human review. The Docker stack now starts healthy and the backend checks run inside it against PostGIS and Redis. The Sprint 2 gate ("clean clone boot smoke with logs") is **still not met**: the boot was done in the working tree, not from a clean clone, and CI has never run. The product owner supplied front-end reference images; the customer home screen is built in that direction.
 
+## Sprint 4, fourth slice: password recovery; security fixes to the guard and backups (2026-11-13)
+Evidence: `docs/qa/evidence/sprint4-recovery-check.txt` (`dev.ps1 check`, exit 0; 352 backend tests), `sprint4-password-recovery-browser.txt`, and the re-run `restore-drill.txt`.
+
+Password recovery (B-03):
+- `POST /api/v1/auth/password/forgot` always answers 202 with the same body. For an active account it emails a link to the app that asked. The token is 256 random bits; only its SHA-256 is stored. One live link per account, valid 60 minutes, usable once; at most three emails per address in 15 minutes, counted for unknown addresses too.
+- `POST /api/v1/auth/password/reset` gives one 422 message for an unknown, used or expired link and for a suspended account. Success writes an audit row and rotates the remember token.
+- The token travels in the URL fragment (`/reset-password#token=...`), which browsers do not send to servers, and the page removes it from the address bar after reading it.
+- Each web app has `/forgot-password` and `/reset-password`, and the sign-in page links to the first.
+- Run end to end with a real email captured by Mailpit. That run found a bug: in development the page read the token twice and reported a missing link the second time. Fixed.
+- Not done: existing sessions are not ended when a password is reset (sessions live in Redis and are not indexed by user); the email is plain text with no brand; mail is sent during the request, not queued; no real mail provider is configured or tested.
+
+Security fixes from a review of commit `9525611`:
+- The production guard no longer handles secret values at all: `read()` reduces the app key, demo password and database password to yes/no facts, so none can appear in an argument, exception or stack trace. It also switches debug off before failing.
+- It is now deny-by-default: it applies to every environment except `local` and `testing` (so staging, or a mistyped name, is guarded) and to console processes such as queue workers, except a short list of build and repair commands. Checked for real: production and staging servers with debug on answered a plain 500 with no debug page and no secret; a production queue worker was refused; `migrate:status` was allowed.
+- Every rule fails closed on a missing value (`APP_DEBUG` must be explicitly false).
+- Backups: the dump is created with owner-only permissions and the copies inside the container are deleted after use. The backup task records a SHA-256 beside the file and the drill refuses to restore anything that does not match it (checked by tampering with the recorded value).
+- Review suggestions not adopted, with reasons: backup files are still not encrypted (no key management exists yet; stated in `docs/operations/backups.md`); the drill still runs as the database's own superuser inside the same local server, not as a restricted role in a separate container (acceptable for a local drill of a self-made backup, not for a real environment).
+
 ## Sprint 7 items done early: backup drill and production guard (2026-11-13)
 Evidence: `docs/qa/evidence/restore-drill.txt` and `docs/qa/evidence/sprint7-ops-check.txt` (`dev.ps1 check`, exit 0; 321 backend tests).
 

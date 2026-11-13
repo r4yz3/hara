@@ -13,6 +13,10 @@ The Make targets have not been run (`make` is not installed on the authoring wor
 
 `infra/backups/` is ignored by git. A backup contains personal data (accounts, addresses, the audit log). Handle it like the database: do not commit it, share it, or keep copies you do not need.
 
+The backup task writes the file's SHA-256 beside it. The drill refuses to restore a backup with no recorded checksum or one that does not match, because `pg_restore` executes whatever the archive contains. The dump is created with owner-only permissions, and the copies inside the database container are deleted after the backup and after the drill.
+
+Still true: the drill connects as the database's own superuser and creates its scratch database in the same server as the source. A drill in a real environment should restore into separate infrastructure with a restricted role.
+
 ## What the drill proves
 
 The drill never writes to the source database. It passes only if all of these hold:

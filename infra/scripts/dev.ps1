@@ -72,7 +72,10 @@ try {
             Invoke-Step 'copy script in' { docker @Compose cp (Join-Path $Root 'infra\scripts\db-backup.sh') postgres:/tmp/db-backup.sh }
             Invoke-Step 'dump database' { docker @Compose exec -T postgres sh /tmp/db-backup.sh }
             Invoke-Step 'copy backup out' { docker @Compose cp postgres:/tmp/backup.dump $file }
-            Write-Host "Backup written to $file"
+            Invoke-Step 'remove copy in container' { docker @Compose exec -T postgres rm -f /tmp/backup.dump /tmp/db-backup.sh }
+            # Recorded now, checked by restore-drill before anything is restored.
+            (Get-FileHash -Algorithm SHA256 $file).Hash.ToLower() | Set-Content -Encoding ascii "$file.sha256"
+            Write-Host "Backup written to $file (checksum beside it). It is not encrypted: keep it on this machine."
         }
         'restore-drill' {
             Assert-Docker
@@ -81,9 +84,13 @@ try {
                 Sort-Object Name | Select-Object -Last 1
             if (-not $latest) { throw 'No backup found in infra\backups. Run the backup task first.' }
             Write-Host "Using $($latest.Name)"
+            $sidecar = "$($latest.FullName).sha256"
+            if (-not (Test-Path $sidecar)) { throw "No recorded checksum for $($latest.Name). Only backups made by the backup task are restored." }
+            $expected = (Get-Content $sidecar -TotalCount 1).Trim()
+            if ($expected -notmatch '^[0-9a-f]{64}$') { throw 'The recorded checksum is not a SHA-256 value.' }
             Invoke-Step 'copy backup in' { docker @Compose cp $latest.FullName postgres:/tmp/backup.dump }
             Invoke-Step 'copy script in' { docker @Compose cp (Join-Path $Root 'infra\scripts\db-restore-drill.sh') postgres:/tmp/db-restore-drill.sh }
-            Invoke-Step 'restore and verify' { docker @Compose exec -T postgres sh /tmp/db-restore-drill.sh }
+            Invoke-Step 'restore and verify' { docker @Compose exec -T -e "EXPECTED_SHA256=$expected" postgres sh /tmp/db-restore-drill.sh }
         }
         'logs' {
             Assert-Docker

@@ -6,59 +6,126 @@ use Illuminate\Contracts\Config\Repository;
 use RuntimeException;
 
 /**
- * Refuses to run in production with settings that are fine on a laptop and
- * dangerous in front of customers (backlog E-06, spec 4.3 and 11.2).
+ * Refuses to run outside local development with settings that are fine on a
+ * laptop and dangerous in front of customers (backlog E-06, spec 4.3, 11.2).
+ *
+ * Secrets never leave read(): it reduces each secret setting to a yes/no
+ * fact, so no secret value is ever held in an argument, an exception message
+ * or a stack frame.
  *
  * It checks configuration only. It cannot see the proxy, TLS termination,
  * firewall or backups, and it is not a substitute for the deployment review.
  */
 final class ProductionGuard
 {
+    /** Environments where development settings are expected. Everything else is guarded. */
+    public const DEVELOPMENT_ENVIRONMENTS = ['local', 'testing'];
+
+    /**
+     * Console commands an operator needs in order to build the image or
+     * repair a broken environment. Every other command (queue workers,
+     * schedulers, tinker, seeders, ...) is guarded like a web request.
+     */
+    public const REPAIR_COMMANDS = [
+        'key:generate', 'migrate', 'migrate:status', 'config:clear', 'config:cache', 'cache:clear',
+        'route:clear', 'view:clear', 'optimize', 'optimize:clear', 'package:discover', 'vendor:publish',
+        'storage:link', 'about', 'list', 'help', 'env',
+    ];
+
     private const PLACEHOLDER_SECRETS = ['', 'change_me_local_only', 'password', 'secret', 'postgres'];
 
     /**
-     * @param  array<string, mixed>  $config  flat "dotted.key" => value
-     * @return list<string> one sentence per problem; never includes a secret value
+     * Whether the guard applies to this process.
+     *
+     * @param  list<string>  $argv
      */
-    public static function violations(array $config): array
+    public static function applies(string $environment, bool $runningInConsole, array $argv): bool
+    {
+        if (in_array($environment, self::DEVELOPMENT_ENVIRONMENTS, true)) {
+            return false;
+        }
+
+        if (! $runningInConsole) {
+            return true;
+        }
+
+        // `php artisan` with no command only lists commands.
+        return ! in_array($argv[1] ?? 'list', self::REPAIR_COMMANDS, true);
+    }
+
+    /**
+     * The facts the rules need. Secret settings become booleans here.
+     *
+     * @return array<string, mixed>
+     */
+    public static function read(Repository $config): array
+    {
+        $key = $config->get('app.key');
+        $demo = $config->get('demo.password');
+        $databasePassword = $config->get('database.connections.pgsql.password');
+
+        return [
+            'app.debug' => $config->get('app.debug'),
+            'app.key_is_set' => is_string($key) && strlen($key) >= 32,
+            'app.url' => $config->get('app.url'),
+            'session.secure' => $config->get('session.secure'),
+            'session.http_only' => $config->get('session.http_only'),
+            'session.same_site' => $config->get('session.same_site'),
+            'cors.allowed_origins' => $config->get('cors.allowed_origins'),
+            'cors.allowed_origins_patterns' => $config->get('cors.allowed_origins_patterns'),
+            'surfaces.origins' => $config->get('surfaces.origins'),
+            'hashing.driver' => $config->get('hashing.driver'),
+            'demo.password_is_set' => is_string($demo) && $demo !== '',
+            'database.password_is_real' => is_string($databasePassword)
+                && ! in_array(strtolower($databasePassword), self::PLACEHOLDER_SECRETS, true),
+        ];
+    }
+
+    /**
+     * Every rule fails closed: a missing or wrongly typed fact is a violation.
+     *
+     * @param  array<string, mixed>  $facts  the output of read()
+     * @return list<string> one sentence per problem
+     */
+    public static function violations(array $facts): array
     {
         $problems = [];
 
-        if (($config['app.debug'] ?? false) !== false) {
-            $problems[] = 'APP_DEBUG must be false.';
+        if (($facts['app.debug'] ?? null) !== false) {
+            $problems[] = 'APP_DEBUG must be explicitly false.';
         }
 
-        if (! is_string($config['app.key'] ?? null) || strlen($config['app.key']) < 32) {
+        if (($facts['app.key_is_set'] ?? null) !== true) {
             $problems[] = 'APP_KEY must be set.';
         }
 
-        if (! self::isHttps($config['app.url'] ?? null)) {
+        if (! self::isHttps($facts['app.url'] ?? null)) {
             $problems[] = 'APP_URL must be an https URL.';
         }
 
-        if (($config['session.secure'] ?? null) !== true) {
+        if (($facts['session.secure'] ?? null) !== true) {
             $problems[] = 'SESSION_SECURE_COOKIE must be true so session cookies travel over HTTPS only.';
         }
 
-        if (($config['session.http_only'] ?? null) !== true) {
+        if (($facts['session.http_only'] ?? null) !== true) {
             $problems[] = 'Session cookies must be HttpOnly.';
         }
 
-        if (! in_array($config['session.same_site'] ?? null, ['lax', 'strict'], true)) {
+        if (! in_array($facts['session.same_site'] ?? null, ['lax', 'strict'], true)) {
             $problems[] = 'Session cookie SameSite must be lax or strict.';
         }
 
-        $corsOrigins = (array) ($config['cors.allowed_origins'] ?? []);
-        $corsBad = $corsOrigins === []
-            || ($config['cors.allowed_origins_patterns'] ?? []) !== []
+        $corsOrigins = $facts['cors.allowed_origins'] ?? null;
+        $corsBad = ! is_array($corsOrigins)
+            || $corsOrigins === []
+            || ($facts['cors.allowed_origins_patterns'] ?? null) !== []
             || array_filter($corsOrigins, fn (mixed $origin): bool => $origin === '*' || ! self::isHttps($origin)) !== [];
         if ($corsBad) {
             $problems[] = 'CORS must list explicit https origins only: no wildcard, no patterns.';
         }
 
-        /** @var array<string, mixed> $surfaces */
-        $surfaces = (array) ($config['surfaces.origins'] ?? []);
-        $badSurface = count($surfaces) !== 3 || array_filter(
+        $surfaces = $facts['surfaces.origins'] ?? null;
+        $badSurface = ! is_array($surfaces) || count($surfaces) !== 3 || array_filter(
             $surfaces,
             fn (mixed $origin): bool => ! self::isHttps($origin) || in_array(parse_url((string) $origin, PHP_URL_HOST), ['localhost', '127.0.0.1', '::1'], true),
         ) !== [];
@@ -68,16 +135,15 @@ final class ProductionGuard
             $problems[] = 'The three app origins must be distinct, or their sessions cannot be kept apart.';
         }
 
-        if (! in_array($config['hashing.driver'] ?? null, ['argon2id', 'argon'], true)) {
+        if (! in_array($facts['hashing.driver'] ?? null, ['argon2id', 'argon'], true)) {
             $problems[] = 'HASH_DRIVER must be argon2id.';
         }
 
-        if (($config['demo.password'] ?? null) !== null && $config['demo.password'] !== '') {
+        if (($facts['demo.password_is_set'] ?? null) !== false) {
             $problems[] = 'DEMO_PASSWORD must be unset: demo accounts do not belong in production.';
         }
 
-        $dbPassword = $config['database.connections.pgsql.password'] ?? '';
-        if (! is_string($dbPassword) || in_array(strtolower($dbPassword), self::PLACEHOLDER_SECRETS, true)) {
+        if (($facts['database.password_is_real'] ?? null) !== true) {
             $problems[] = 'DB_PASSWORD must be a real secret, not empty or a placeholder.';
         }
 
@@ -85,39 +151,19 @@ final class ProductionGuard
     }
 
     /**
-     * @param  array<string, mixed>  $config
+     * Reads the configuration itself, so no caller ever passes settings in.
      */
-    public static function assertSafe(array $config): void
+    public static function assertSafe(Repository $config): void
     {
-        $problems = self::violations($config);
+        $problems = self::violations(self::read($config));
 
         if ($problems !== []) {
-            throw new RuntimeException("Refusing to start in production with unsafe settings:\n- ".implode("\n- ", $problems));
+            // Whatever renders this failure must not show a debug page.
+            $config->set('app.debug', false);
+
+            throw new RuntimeException("Refusing to start with unsafe settings:\n- ".implode("\n- ", $problems));
         }
     }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public static function read(Repository $config): array
-    {
-        $values = [];
-
-        foreach (self::KEYS as $key) {
-            $values[$key] = $config->get($key);
-        }
-
-        return $values;
-    }
-
-    /** The settings this guard reads. */
-    public const KEYS = [
-        'app.debug', 'app.key', 'app.url',
-        'session.secure', 'session.http_only', 'session.same_site',
-        'cors.allowed_origins', 'cors.allowed_origins_patterns',
-        'surfaces.origins', 'hashing.driver', 'demo.password',
-        'database.connections.pgsql.password',
-    ];
 
     private static function isHttps(mixed $url): bool
     {

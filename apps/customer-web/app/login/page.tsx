@@ -17,7 +17,9 @@ export default function LoginPage() {
         <SignInForm actionClassName="bg-cta text-on-cta" />
 
         <p className="text-sm text-text-secondary">Creating an account is not open yet.</p>
-        <p className="text-sm text-text-secondary">Forgotten passwords cannot be reset yet.</p>
+        <Link href="/forgot-password" className="min-h-11 content-center text-sm font-medium text-brand-600 underline underline-offset-4">
+          Forgotten your password?
+        </Link>
         <Link href="/" className="min-h-11 content-center text-sm font-medium text-brand-600 underline underline-offset-4">
           Back to the start page
         </Link>

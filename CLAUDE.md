@@ -40,3 +40,5 @@ Windows 11, PowerShell primary. Docker Desktop is installed; start it before `de
 - A new public route must be added to the list in `backend/tests/Feature/RouteCoverageTest.php` on purpose; everything else must sit behind the session guard.
 - `.\infra\scripts\dev.ps1 backup` and `restore-drill` back up the development database to the git-ignored `infra/backups/` and verify a restore into a scratch database. Backup files hold personal data: never commit or share them.
 - With `APP_ENV=production` the API refuses to serve unless `App\Support\ProductionGuard` is satisfied; a new production-critical setting should get a rule and a test there.
+- A reset or sign-in token must never be put in a query string; use the request body or, for emailed links, the URL fragment.
+- `ProductionGuard` applies to every environment except `local` and `testing`, and to console commands except its repair list. It must never hold a secret value: reduce secrets to booleans in `read()`.

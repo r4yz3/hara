@@ -38,14 +38,31 @@ cleanup() {
     case "$DRILL" in
         restore_drill_*) dropdb --username "$POSTGRES_USER" --if-exists "$DRILL" ;;
     esac
+    # The copy of the backup inside the container is not left behind.
+    rm -f "$DUMP"
 }
 trap cleanup EXIT
 
 [ -s "$DUMP" ] || { echo "No backup at $DUMP. Run the backup task first."; exit 2; }
 
+# pg_restore runs whatever SQL the archive contains, so the archive must be
+# the one the backup task produced. The task runner passes the checksum it
+# recorded at backup time; a missing or different checksum stops the drill
+# before anything is restored.
+ACTUAL_SHA256=$(sha256sum "$DUMP" | cut -d' ' -f1)
+if [ -z "${EXPECTED_SHA256:-}" ]; then
+    echo "REFUSED  no recorded checksum was supplied for this backup."
+    exit 3
+fi
+if [ "$ACTUAL_SHA256" != "$EXPECTED_SHA256" ]; then
+    echo "REFUSED  the backup does not match the checksum recorded when it was made."
+    exit 3
+fi
+echo "PASS  0. backup matches its recorded checksum"
+
 echo "source database:  $SRC"
 echo "scratch database: $DRILL"
-echo "backup sha256:    $(sha256sum "$DUMP" | cut -d' ' -f1)"
+echo "backup sha256:    $ACTUAL_SHA256"
 START=$(date +%s)
 
 createdb --username "$POSTGRES_USER" "$DRILL"

@@ -17,7 +17,9 @@ export default function LoginPage() {
         <SignInForm actionClassName="bg-brand-600 text-on-brand" />
 
         <p className="text-sm text-text-secondary">Two-step verification is not built yet, so staff sign-in is switched off in production.</p>
-        <p className="text-sm text-text-secondary">Forgotten passwords cannot be reset yet.</p>
+        <Link href="/forgot-password" className="min-h-11 content-center text-sm font-medium text-brand-600 underline underline-offset-4">
+          Forgotten your password?
+        </Link>
         <Link href="/" className="min-h-11 content-center text-sm font-medium text-brand-600 underline underline-offset-4">
           Back to the start page
         </Link>

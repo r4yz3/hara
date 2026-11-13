@@ -161,6 +161,88 @@ paths:
         "403": { $ref: "#/components/responses/Error" }
         "422": { $ref: "#/components/responses/Error" }
         "429": { $ref: "#/components/responses/Error" }
+  /api/v1/auth/password/forgot:
+    post:
+      tags: [Auth]
+      summary: Ask for a password reset link
+      description: |
+        Always answers 202 with the same body, whether or not the address
+        belongs to an account. If it does, and the account is active, an
+        email is sent with a link that works once and expires after 60
+        minutes; a newer request cancels an older link. At most three emails
+        are sent per address in 15 minutes.
+      operationId: authPasswordForgot
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, maxLength: 255 }
+      responses:
+        "202":
+          description: Request received.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    required: [status]
+                    properties:
+                      status: { type: string, const: reset_requested }
+                  meta: { $ref: "#/components/schemas/Meta" }
+        "403": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/v1/auth/password/reset:
+    post:
+      tags: [Auth]
+      summary: Set a new password with a reset link's token
+      description: |
+        An unknown, used or expired token gives one 422 with the same
+        message. On success the token is consumed; the user is not signed in.
+      operationId: authPasswordReset
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, password]
+              properties:
+                token: { type: string, maxLength: 200 }
+                password: { type: string, minLength: 10, maxLength: 1024, format: password }
+      responses:
+        "200":
+          description: Password changed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    required: [status]
+                    properties:
+                      status: { type: string, const: password_reset }
+                  meta: { $ref: "#/components/schemas/Meta" }
+        "403": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
   /api/v1/auth/logout:
     post:
       tags: [Auth]

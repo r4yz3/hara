@@ -14,12 +14,16 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // In production the application refuses to serve requests with unsafe
-        // settings (debug on, insecure cookies, wildcard CORS, placeholder
-        // secrets, ...). Console commands are exempt so an operator can still
-        // run key:generate or migrate while fixing the environment.
-        if ($this->app->environment('production') && ! $this->app->runningInConsole()) {
-            ProductionGuard::assertSafe(ProductionGuard::read(config()));
+        // Deny by default: anything that is not local development or the
+        // test suite must pass the guard, whatever the environment is called
+        // (production, staging, a typo). Web requests, queue workers and
+        // every console command are covered, except the short list of build
+        // and repair commands in ProductionGuard::REPAIR_COMMANDS.
+        /** @var list<string> $argv */
+        $argv = array_values(array_map('strval', (array) ($_SERVER['argv'] ?? [])));
+
+        if (ProductionGuard::applies($this->app->environment(), $this->app->runningInConsole(), $argv)) {
+            ProductionGuard::assertSafe(config());
         }
     }
 }
