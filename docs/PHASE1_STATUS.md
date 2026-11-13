@@ -5,6 +5,13 @@ Last updated: 2026-11-13, Sprint 4 in progress (roles, permissions, audit and si
 ## Summary
 Sprint 1 documents await human review. The Docker stack now starts healthy and the backend checks run inside it against PostGIS and Redis. The Sprint 2 gate ("clean clone boot smoke with logs") is **still not met**: the boot was done in the working tree, not from a clean clone, and CI has never run. The product owner supplied front-end reference images; the customer home screen is built in that direction.
 
+## Workstation scripts verified (A-10, 2026-11-13)
+Evidence: `docs/qa/evidence/a10-dev-tasks-check.txt` (each task) and `a10-full-check.txt` (`dev.ps1 check`, exit 0; 387 backend tests).
+
+- Bug found and fixed: with output piped or redirected inside PowerShell (`.\infra\scripts\dev.ps1 up 2>&1 | Tee-Object log.txt`, or a CI runner), Windows PowerShell 5.1 turns each stderr line of a native command into an error record, and `$ErrorActionPreference = 'Stop'` made the first Docker progress line abort `up` mid-build with exit 1. `Invoke-Step` now judges a step only by the program's exit code and prints stderr lines as plain text. A failing step still fails, with and without redirection.
+- Run for real with output piped: `setup`, `migrate`, `seed-demo`, `backup`, `restore-drill` (all checks PASS), `down`, `up` (all four containers healthy), `logs` (streamed, stopped by hand) and `check`. The demo rows survived `down` and `up`. `setup` changed no tracked file.
+- Not done: the Makefile is unverified because `make` is not installed on this workstation; nothing in it changed.
+
 ## Sprint 5 follow-up: geometry fuzz tests (C-03, 2026-11-13)
 Evidence: `docs/qa/evidence/sprint5-geometry-fuzz-check.txt` (`dev.ps1 check`, exit 0; 387 backend tests).
 

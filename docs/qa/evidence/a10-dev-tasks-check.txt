@@ -1,0 +1,90 @@
+﻿# A-10: every dev.ps1 task run on this workstation, 2026-11-13T13:41:30Z
+# Each task is run as: .\infra\scripts\dev.ps1 <task> 2>&1 (output piped, the case that used to abort).
+
+## setup
+Resolving dependencies...
+Downloading packages...
+  clock 1.1.2 (1.1.3 available)
+  matcher 0.12.19 (0.12.20 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.17.0 (1.19.0 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  test_api 0.7.10 (0.7.15 available)
+  vector_math 2.2.0 (2.4.4 available)
+Got dependencies!
+7 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+result: exit 0
+
+## migrate
+
+   INFO  Nothing to migrate.  
+
+result: exit 0
+
+## seed-demo
+
+   INFO  Seeding database.  
+
+  Database\Seeders\DevelopmentSeeder ................................. RUNNING  
+  Database\Seeders\RbacSeeder ........................................ RUNNING  
+  Database\Seeders\RbacSeeder ..................................... 76 ms DONE  
+
+  Database\Seeders\DevelopmentSeeder .............................. 85 ms DONE  
+
+result: exit 0
+
+## backup
+database: food_delivery
+bytes: 84355
+sha256: e97c8dbec0a4bc3c655d491a298618698a0682a3c431ccc120c18b0db8ec6e2c
+result: exit 0
+
+## restore-drill
+        users: 2 rows
+PASS  2. migration ledger identical
+PASS  3a. zone shapes byte-identical
+PASS  3b. exclusion shapes byte-identical
+PASS  3c. no invalid shape after restore
+PASS  4. spatial indexes present
+PASS  5a. audit triggers present
+PASS  5b. audit log refuses UPDATE
+PASS  5c. audit log refuses DELETE
+PASS  6. serviceability lookup gives the same zone
+
+RESTORE DRILL PASSED. Scratch database restore_drill_20261113134410 is removed on exit.
+result: exit 0
+
+## down
+result: exit 0
+
+## up
+#17 exporting layers done
+#17 exporting manifest sha256:2211bda4985d3fae4dcfb59158b975fe785f8b9a1be3cab808d70022f79727aa done
+#17 exporting config sha256:f868cdc8c72b28ddc672aa27b90f50047b343e7758cf634425b22b6a07e5e4cf done
+#17 exporting attestation manifest sha256:ec7d70f2255aaf556f8b16b2fbf8d8fa1602552edb6814d4d37d55c8b4faa623
+#17 exporting attestation manifest sha256:ec7d70f2255aaf556f8b16b2fbf8d8fa1602552edb6814d4d37d55c8b4faa623 0.0s done
+#17 exporting manifest list sha256:51271fa6a0c6b5d9307bd3267b4f325490bc7d9cb0e098345378e6c547d55f63 0.0s done
+#17 naming to docker.io/library/food-delivery-api:latest done
+#17 unpacking to docker.io/library/food-delivery-api:latest 0.0s done
+#17 DONE 0.2s
+
+#18 resolving provenance for metadata file
+#18 DONE 0.0s
+result: exit 0
+
+## logs
+Started with output piped; it streamed container logs (api "Server running on [http://0.0.0.0:8000]", mailpit smtpd start) and was stopped after six lines, since it follows until Ctrl+C.
+result: works
+
+## data kept across down and up
+select count(*) from cities -> 2 after down then up (the demo seed rows), so down kept the volume.
+
+## failure path of the changed Invoke-Step
+A step running `cmd /c "echo to-stderr 1>&2 & exit 3"` throws "FAILED: probe (exit 3)" with and without redirection; a step that prints to stderr and exits 0 passes.
+
+## before the fix
+`.\infra\scripts\dev.ps1 up 2>&1 | Select-Object -Last 2` aborted on the first Docker progress line (NativeCommandError " Image food-delivery-api Building") and exited 1 while the build was still running.
+
+## Makefile
+Not run: make is not installed on this workstation.

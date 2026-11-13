@@ -23,8 +23,21 @@ function Assert-Docker {
 
 function Invoke-Step([string]$Name, [scriptblock]$Body) {
     Write-Host "==> $Name"
-    & $Body
-    if ($LASTEXITCODE -ne 0) { throw "FAILED: $Name (exit $LASTEXITCODE)" }
+    # Judge a step by its exit code only. Windows PowerShell 5.1 turns every
+    # stderr line of a native command into an error record once output is
+    # redirected (`2>&1 | Tee-Object`, CI), and with 'Stop' the first progress
+    # line Docker prints would abort a step that is still succeeding.
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        & $Body 2>&1 | ForEach-Object {
+            if ($_ -is [System.Management.Automation.ErrorRecord]) { Write-Host $_.Exception.Message } else { $_ }
+        }
+        $code = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previous
+    }
+    if ($code -ne 0) { throw "FAILED: $Name (exit $code)" }
 }
 
 Push-Location $Root

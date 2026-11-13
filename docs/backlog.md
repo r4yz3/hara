@@ -27,7 +27,7 @@ Status key: `todo`, `blocked`, `done`.
 | A-07 | Health routes | `/health/live` minimal; `/health/ready` internal only | A-04 | done (5 tests) |
 | A-08 | Three Next.js app skeletons | `pnpm build` and `pnpm typecheck` pass | A-03 | done |
 | A-09 | Flutter rider skeleton | `flutter analyze` and `flutter test` pass | — | done (4 tests) |
-| A-10 | Makefile plus PowerShell scripts | `setup`, `up`, `down`, `migrate`, `seed-demo`, `check`, `logs` each have a `.ps1` equivalent that works on this workstation | A-05 | partial: `dev.ps1 check` verified; `up`, `down`, `migrate`, `logs` and the Makefile unverified; `seed-demo` waits for D-05 |
+| A-10 | Makefile plus PowerShell scripts | `setup`, `up`, `down`, `migrate`, `seed-demo`, `check`, `logs` each have a `.ps1` equivalent that works on this workstation | A-05 | done for PowerShell: all nine `dev.ps1` tasks run on this workstation with output piped (`docs/qa/evidence/a10-dev-tasks-check.txt`); fixed a bug where piped output made `up` abort on Docker's first progress line. The Makefile is still unverified: `make` is not installed here |
 | A-11 | CI workflows: backend, web, flutter, security | All run on a clean clone; actions pinned by SHA; least-privilege tokens | A-04, A-08, A-09 | written, never run (no remote repository) |
 | A-12 | Install Laravel Boost as a dev dependency | Boost MCP server connects | A-04 | done: installed as a dev dependency; server answers an MCP initialize request; root `.mcp.json` added; browser-log route disabled |
 
