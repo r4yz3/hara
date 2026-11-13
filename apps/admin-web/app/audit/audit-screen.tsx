@@ -67,6 +67,7 @@ export function AuditScreen() {
 
   function onFilter(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (state.phase === "loading") return;
     const data = new FormData(event.currentTarget);
     setMoreProblem(null);
     setState({ phase: "loading" });
@@ -127,7 +128,11 @@ export function AuditScreen() {
                 For example city, delivery_zone or user.
               </p>
             </div>
-            <button type="submit" className={`${primaryButton} sm:mb-7`}>
+            <button
+              type="submit"
+              aria-disabled={state.phase === "loading"}
+              className={`${primaryButton} sm:mb-7 aria-disabled:opacity-70`}
+            >
               Apply
             </button>
           </form>
@@ -147,7 +152,7 @@ export function AuditScreen() {
 
         {state.phase === "loading" ? (
           <Panel>
-            <p aria-busy="true" className="text-text-secondary">
+            <p role="status" aria-busy="true" className="text-text-secondary">
               Loading entries…
             </p>
           </Panel>

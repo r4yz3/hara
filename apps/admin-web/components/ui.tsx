@@ -69,6 +69,22 @@ export function LoadProblem({ failure, returnTo, onRetry }: { failure: ApiFailur
   );
 }
 
+/**
+ * Moves focus to the first field the server rejected (spec 8.7, validation).
+ * `order` lists API field names with the selector of their input, in the
+ * order they appear on screen; a nested name such as `geometry.0` counts
+ * for its parent.
+ */
+export function focusFirstInvalid(
+  order: [field: string, selector: string][],
+  fields: Record<string, string[]>,
+  root: ParentNode = document,
+) {
+  const names = Object.keys(fields);
+  const hit = order.find(([field]) => names.some((name) => name === field || name.startsWith(`${field}.`)));
+  if (hit) root.querySelector<HTMLElement>(hit[1])?.focus();
+}
+
 export function FieldError({ id, messages }: { id: string; messages?: string[] }) {
   if (!messages || messages.length === 0) return null;
 

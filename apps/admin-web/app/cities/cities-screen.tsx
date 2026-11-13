@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import type { City } from "@food-delivery/api-client";
 import { apiGet, apiSend, describeFailure, type ApiFailure } from "@food-delivery/session";
 
-import { FieldError, LoadProblem, Notice, Panel, StatusPill, fieldClass, primaryButton } from "@/components/ui";
+import { FieldError, LoadProblem, Notice, Panel, StatusPill, fieldClass, focusFirstInvalid, primaryButton } from "@/components/ui";
 
 type Loaded = { phase: "loading" } | { phase: "failed"; failure: ApiFailure } | { phase: "ready"; cities: City[]; more: boolean };
 
@@ -60,7 +60,7 @@ export function CitiesScreen() {
   if (state.phase === "loading") {
     return (
       <Panel>
-        <p aria-busy="true" className="text-text-secondary">
+        <p role="status" aria-busy="true" className="text-text-secondary">
           Loading cities…
         </p>
       </Panel>
@@ -165,7 +165,13 @@ function CreateCity({ currency, onCreated }: { currency: string | null; onCreate
       return;
     }
 
-    if (result.failure.kind === "validation") setFields(result.failure.fields);
+    if (result.failure.kind === "validation") {
+      setFields(result.failure.fields);
+      focusFirstInvalid(
+        [["name", "#city-name"], ["slug", "#city-slug"], ["country_code", "#city-country"], ["timezone", "#city-timezone"]],
+        result.failure.fields,
+      );
+    }
     setMessage({ tone: "problem", text: describeFailure(result.failure) });
   }
 
@@ -189,6 +195,7 @@ function CreateCity({ currency, onCreated }: { currency: string | null; onCreate
               }}
               maxLength={160}
               required
+              aria-invalid={fields.name ? true : undefined}
               aria-describedby="city-name-error"
               className={fieldClass}
             />
@@ -208,6 +215,7 @@ function CreateCity({ currency, onCreated }: { currency: string | null; onCreate
               }}
               maxLength={160}
               required
+              aria-invalid={fields.slug ? true : undefined}
               aria-describedby="city-slug-hint city-slug-error"
               className={`${fieldClass} font-mono`}
             />
@@ -227,6 +235,7 @@ function CreateCity({ currency, onCreated }: { currency: string | null; onCreate
               maxLength={2}
               required
               autoCapitalize="characters"
+              aria-invalid={fields.country_code ? true : undefined}
               aria-describedby="city-country-hint city-country-error"
               className={`${fieldClass} font-mono uppercase`}
             />
@@ -245,6 +254,7 @@ function CreateCity({ currency, onCreated }: { currency: string | null; onCreate
               name="timezone"
               required
               defaultValue=""
+              aria-invalid={fields.timezone ? true : undefined}
               aria-describedby="city-timezone-error"
               className={fieldClass}
             >

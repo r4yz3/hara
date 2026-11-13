@@ -74,6 +74,8 @@ export function LocationCheck() {
 
     if (result.failure.kind === "validation") {
       setErrors({ latitude: result.failure.fields.latitude?.join(" "), longitude: result.failure.fields.longitude?.join(" ") });
+      // The server rejected a value: put focus on the first one it named.
+      (result.failure.fields.latitude ? latitudeRef : result.failure.fields.longitude ? longitudeRef : null)?.current?.focus();
     }
     setOutcome({ kind: "problem", text: describeFailure(result.failure) });
   }

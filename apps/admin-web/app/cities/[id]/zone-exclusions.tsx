@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import type { Exclusion } from "@food-delivery/api-client";
 import { apiGet, apiSend, describeFailure, type ApiFailure } from "@food-delivery/session";
-import { Notice, dangerButton, fieldClass, primaryButton, quietButton } from "@/components/ui";
+import { Notice, dangerButton, fieldClass, focusFirstInvalid, primaryButton, quietButton } from "@/components/ui";
 
 type ExclusionPage = { data: Exclusion[]; meta: { next_cursor: string | null } };
 
@@ -29,7 +29,14 @@ export function ZoneExclusions({ zoneId, archived }: { zoneId: string; archived:
     setBusy(false);
   }
 
-  function showFailure(failure: ApiFailure) {
+  function showFailure(failure: ApiFailure, form?: HTMLFormElement) {
+    if (form && failure.kind === "validation") {
+      focusFirstInvalid(
+        [["reason", '[name="reason"]'], ["active_from", '[name="active_from"]'], ["active_until", '[name="active_until"]'], ["geometry", '[name="geometry"]']],
+        failure.fields,
+        form,
+      );
+    }
     setProblem(failure.kind === "validation"
       ? Object.values(failure.fields).flat().join(" ") || describeFailure(failure)
       : describeFailure(failure));
@@ -46,6 +53,7 @@ export function ZoneExclusions({ zoneId, archived }: { zoneId: string; archived:
       geometry = JSON.parse(String(data.get("geometry")));
     } catch {
       setProblem("Enter a valid GeoJSON Polygon or MultiPolygon.");
+      form.querySelector<HTMLElement>('[name="geometry"]')?.focus();
       return;
     }
     setBusy(true);
@@ -60,7 +68,7 @@ export function ZoneExclusions({ zoneId, archived }: { zoneId: string; archived:
       active_from: timestamp("active_from"),
       active_until: timestamp("active_until"),
     });
-    if (!result.ok) return showFailure(result.failure);
+    if (!result.ok) return showFailure(result.failure, form);
     form.reset();
     await load();
   }

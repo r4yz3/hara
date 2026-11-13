@@ -15,7 +15,7 @@ export default function CityPage() {
       <Suspense
         fallback={
           <Panel>
-            <p aria-busy="true" className="text-text-secondary">
+            <p role="status" aria-busy="true" className="text-text-secondary">
               Loading city…
             </p>
           </Panel>

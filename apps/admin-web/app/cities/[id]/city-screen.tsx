@@ -7,11 +7,25 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import type { City, Zone } from "@food-delivery/api-client";
 import { apiGet, apiSend, describeFailure, type ApiFailure, type ApiResult } from "@food-delivery/session";
 
-import { FieldError, LoadProblem, Notice, Panel, StatusPill, dangerButton, fieldClass, primaryButton, quietButton } from "@/components/ui";
+import { FieldError, LoadProblem, Notice, Panel, StatusPill, dangerButton, fieldClass, focusFirstInvalid, primaryButton, quietButton } from "@/components/ui";
 import { ZoneExclusions } from "./zone-exclusions";
 
 type Envelope<T> = { data: T };
-type Message = { tone: "ok" | "problem"; text: string } | null;
+type Message = { tone: "ok" | "problem"; text: string; stale?: boolean } | null;
+
+/** A change notice. After a 409 it also offers to load the latest version (spec 8.7, conflict). */
+function Outcome({ message, onReload }: { message: NonNullable<Message>; onReload: () => Promise<void> }) {
+  return (
+    <>
+      <Notice tone={message.tone}>{message.text}</Notice>
+      {message.stale ? (
+        <button type="button" onClick={() => void onReload()} className={`${quietButton} self-start`}>
+          Reload latest
+        </button>
+      ) : null}
+    </>
+  );
+}
 
 // The same edges the API enforces (CityStatus / zone status in the backend).
 const NEXT: Record<string, { to: string; label: string; danger?: boolean }[]> = {
@@ -68,7 +82,7 @@ export function CityScreen() {
   if (state.phase === "loading") {
     return (
       <Panel>
-        <p aria-busy="true" className="text-text-secondary">
+        <p role="status" aria-busy="true" className="text-text-secondary">
           Loading city…
         </p>
       </Panel>
@@ -156,8 +170,11 @@ function CityDetails({ city, onChanged }: { city: City; onChanged: () => Promise
       return;
     }
 
-    if (result.failure.kind === "validation") setFields(result.failure.fields);
-    setMessage({ tone: "problem", text: describeFailure(result.failure) });
+    if (result.failure.kind === "validation") {
+      setFields(result.failure.fields);
+      focusFirstInvalid([["name", "#edit-name"], ["timezone", "#edit-timezone"]], result.failure.fields);
+    }
+    setMessage({ tone: "problem", text: describeFailure(result.failure), stale: result.failure.kind === "conflict" });
   }
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -203,6 +220,7 @@ function CityDetails({ city, onChanged }: { city: City; onChanged: () => Promise
               defaultValue={city.name}
               maxLength={160}
               disabled={archived}
+              aria-invalid={fields.name ? true : undefined}
               aria-describedby="edit-name-error"
               className={fieldClass}
             />
@@ -217,6 +235,7 @@ function CityDetails({ city, onChanged }: { city: City; onChanged: () => Promise
               name="timezone"
               defaultValue={city.timezone}
               disabled={archived}
+              aria-invalid={fields.timezone ? true : undefined}
               aria-describedby="edit-timezone-error"
               className={`${fieldClass} font-mono`}
             />
@@ -253,7 +272,7 @@ function CityDetails({ city, onChanged }: { city: City; onChanged: () => Promise
           )}
         </div>
 
-        {message && !confirming ? <Notice tone={message.tone}>{message.text}</Notice> : null}
+        {message && !confirming ? <Outcome message={message} onReload={onChanged} /> : null}
       </Panel>
       <dialog
         ref={confirmation}
@@ -273,7 +292,7 @@ function CityDetails({ city, onChanged }: { city: City; onChanged: () => Promise
                   ? "Customers can be served here once a zone is active."
                   : "This stops service in every zone of this city."}
             </p>
-            {message?.tone === "problem" ? <Notice tone="problem">{message.text}</Notice> : null}
+            {message?.tone === "problem" ? <Outcome message={message} onReload={onChanged} /> : null}
             <div className="flex flex-wrap gap-2">
               <button type="button" disabled={busy} onClick={() => confirmation.current?.close()} className={quietButton}>
                 Cancel
@@ -338,8 +357,8 @@ function ZoneRow({ zone, cityActive, onChanged }: { zone: Zone; cityActive: bool
         result.failure.kind === "validation"
           ? Object.values(result.failure.fields).flat().join(" ") || describeFailure(result.failure)
           : describeFailure(result.failure),
+      stale: result.failure.kind === "conflict",
     });
-    if (result.failure.kind === "conflict") await onChanged();
   }
 
   const steps = NEXT[zone.status] ?? [];
@@ -433,7 +452,7 @@ function ZoneRow({ zone, cityActive, onChanged }: { zone: Zone; cityActive: bool
         </div>
       )}
 
-      {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
+      {message ? <Outcome message={message} onReload={onChanged} /> : null}
       <ZoneExclusions zoneId={zone.id} archived={zone.status === "archived"} />
     </Panel>
   );
@@ -447,12 +466,14 @@ function EditZone({ zone, onCancel, onSaved }: { zone: Zone; onCancel: () => voi
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy || conflicted) return;
-    const data = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const data = new FormData(form);
     let geometry: unknown;
     try {
       geometry = JSON.parse(String(data.get("geometry")));
     } catch {
       setFailure({ kind: "validation", fields: { geometry: ["Enter a valid GeoJSON Polygon or MultiPolygon."] } });
+      form.querySelector<HTMLElement>('[name="geometry"]')?.focus();
       return;
     }
 
@@ -469,6 +490,13 @@ function EditZone({ zone, onCancel, onSaved }: { zone: Zone; onCancel: () => voi
     } else {
       setBusy(false);
       setFailure(result.failure);
+      if (result.failure.kind === "validation") {
+        focusFirstInvalid(
+          [["name", '[name="name"]'], ["priority", '[name="priority"]'], ["geometry", '[name="geometry"]']],
+          result.failure.fields,
+          form,
+        );
+      }
     }
   }
 
@@ -526,6 +554,7 @@ function CreateZone({ cityId, onCreated }: { cityId: string; onCreated: () => Pr
       geometry = JSON.parse(String(data.get("geometry") ?? ""));
     } catch {
       setFields({ geometry: ["This is not valid JSON. Paste a GeoJSON Polygon or MultiPolygon."] });
+      focusFirstInvalid([["geometry", "#zone-geometry"]], { geometry: [] }, form);
       return;
     }
 
@@ -545,7 +574,14 @@ function CreateZone({ cityId, onCreated }: { cityId: string; onCreated: () => Pr
       return;
     }
 
-    if (result.failure.kind === "validation") setFields(result.failure.fields);
+    if (result.failure.kind === "validation") {
+      setFields(result.failure.fields);
+      focusFirstInvalid(
+        [["name", "#zone-name"], ["slug", "#zone-slug"], ["priority", "#zone-priority"], ["geometry", "#zone-geometry"]],
+        result.failure.fields,
+        form,
+      );
+    }
     setMessage({ tone: "problem", text: describeFailure(result.failure) });
   }
 
@@ -568,7 +604,7 @@ function CreateZone({ cityId, onCreated }: { cityId: string; onCreated: () => Pr
             <label htmlFor="zone-name" className="text-sm font-medium">
               Name
             </label>
-            <input id="zone-name" name="name" maxLength={160} required aria-describedby="zone-name-error" className={fieldClass} />
+            <input id="zone-name" name="name" maxLength={160} required aria-invalid={fields.name ? true : undefined} aria-describedby="zone-name-error" className={fieldClass} />
             <FieldError id="zone-name-error" messages={fields.name} />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -580,6 +616,7 @@ function CreateZone({ cityId, onCreated }: { cityId: string; onCreated: () => Pr
               name="slug"
               maxLength={160}
               required
+              aria-invalid={fields.slug ? true : undefined}
               aria-describedby="zone-slug-error"
               className={`${fieldClass} font-mono`}
             />
@@ -596,6 +633,7 @@ function CreateZone({ cityId, onCreated }: { cityId: string; onCreated: () => Pr
               min={-1000}
               max={1000}
               defaultValue={0}
+              aria-invalid={fields.priority ? true : undefined}
               aria-describedby="zone-priority-hint zone-priority-error"
               className={fieldClass}
             />
@@ -614,6 +652,7 @@ function CreateZone({ cityId, onCreated }: { cityId: string; onCreated: () => Pr
               rows={7}
               required
               spellCheck={false}
+              aria-invalid={geometryErrors.length > 0 ? true : undefined}
               aria-describedby="zone-geometry-hint zone-geometry-error"
               className={`${fieldClass} py-2 font-mono text-sm`}
             />

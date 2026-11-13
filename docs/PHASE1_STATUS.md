@@ -2,6 +2,21 @@
 
 Last updated: 2026-11-14. Phase 1 has working browser authentication, rider token endpoints, and city, zone and serviceability APIs. Sprint 8 acceptance remains open.
 
+## November 14 UI state matrix (U-03)
+
+- Built by a Sonnet subagent and reviewed before commit. `docs/qa/ui-state-matrix.md` maps 9 views against the 9 states in spec 8.7: 48 covered by a named test, 28 not applicable with a reason, 5 gaps.
+- `tests/browser/state-matrix.spec.ts` adds 33 tests at phone, tablet and desktop size, forcing 403, 409, 422, 500, slow and offline responses. The agent's final run passed 171 browser tests with 3 opt-in skips.
+- Changes users see:
+  - focus moves to the first field the server refused, and that field is marked invalid;
+  - after a 409 on a city or zone change, a "Reload latest" button appears instead of a silent reload;
+  - loading lines on admin screens are announced to screen readers;
+  - the audit Apply button ignores a second press while loading.
+- Gaps:
+  - loading and error states of server-rendered fetches (customer home banner, admin overview API row) cannot be forced from the browser;
+  - offline cached reads with a stale time need a service worker or client cache (a design decision);
+  - success is an inline message, not a toast;
+  - no `error.tsx` or `not-found.tsx` in any app.
+
 ## November 14 staff two-step sign-in (B-09, backend)
 
 - Built by a Sonnet subagent and reviewed before commit: the TOTP code, the session gate and the verify step were read line by line, and pint, phpstan, the full backend suite (453 passed) and the generated-types test were re-run.
