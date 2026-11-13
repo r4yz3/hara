@@ -1,0 +1,20 @@
+HEAD c7e360fd669878056f2d53283a8649b918c556c8
+Hosted CI for HEAD, queried read-only with: gh run list -R r4yz3/hara --limit 10 (and --branch main --limit 12 --json headSha,...). No workflow was rerun.
+Query date: 2026-11-14 (run times are UTC, from 2026-11-13).
+
+Runs for HEAD c7e360f (docs-only commit "docs: Phase 1 position and definition-of-done review (X-02)"):
+- security  push to main  run 43509163864  success  (2m8s, 2026-11-13T21:16:13Z)
+- web, backend, flutter: no run. Their path filters (.github/workflows/*.yml) do not match a docs-only change.
+
+Most recent code commit on main, 102476e "feat(web): error, not-found and server-fetch fallback states (U-03)":
+- web       run 43508637292  success  (push to main)
+- security  run 43508637229  success  (push to main)
+- backend, flutter: no run (path filters do not match apps/*-web changes).
+
+Earlier main runs, for reference:
+- 3b28a72 (customer-web fix): web 43506406187 success, security 43506406239 success
+- 099a3db (last backend run on main): backend 43504504106 success, security 43504504078 success, web success
+
+Not HEAD, shown for completeness: a Dependabot pull request branch dependabot/npm_and_yarn/typescript-7.0.2 has a failing web run (43509043297, 21s, pull_request). Its security run passed. Not investigated here.
+
+Conclusion: HEAD itself has only a passing security run; the code is last verified by hosted CI at 102476e (web and security success). Backend and Flutter hosted results for the Phase 1 position commits are not saved.

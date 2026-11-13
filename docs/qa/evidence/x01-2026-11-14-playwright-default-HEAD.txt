@@ -1,0 +1,840 @@
+HEAD c7e360fd669878056f2d53283a8649b918c556c8
+Command: pnpm exec playwright test (default project set, no live run)
+ANSI codes stripped; lines containing the local user's home path removed.
+[WebServer] ⚠ Slow filesystem detected. The benchmark took 1114ms. If \\?\F:\PROJECTS\hara\apps\customer-web\.next\dev is a network drive, consider moving it to a local folder.
+[WebServer] See more: https://nextjs.org/docs/app/guides/local-development
+
+Running 420 tests using 6 workers
+
+  -    1 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot customer/home
+  -    2 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot customer/login
+  -    3 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot customer/forgot-password
+  -    4 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot customer/reset-password
+  -    5 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot customer/location
+  -    6 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot merchant/home
+  -    7 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot merchant/login
+  -    8 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot merchant/forgot-password
+  -    9 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot merchant/reset-password
+  -   10 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/overview
+  -   11 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/login
+  -   12 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/forgot-password
+  -   13 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/reset-password
+  -   14 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/security
+  -   15 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/cities-empty
+  -   16 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/cities-list
+  -   17 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/city-detail
+  -   18 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/audit
+  -   19 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/access
+  -   20 [phone] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/settings
+[WebServer] ⚠ Slow filesystem detected. The benchmark took 603ms. If \\?\F:\PROJECTS\hara\apps\admin-web\.next\dev is a network drive, consider moving it to a local folder.
+[WebServer] See more: https://nextjs.org/docs/app/guides/local-development
+[WebServer] Route / is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+[WebServer] Route /settings is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+[WebServer] Route /login is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+[WebServer] Route /cities/[id] is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+  ok  26 [phone] › tests\browser\state-matrix.spec.ts:61:3 › customer: the session pill says so when the server cannot be reached (2.6s)
+  ok  21 [phone] › tests\browser\map.spec.ts:34:1 › empty MAP_STYLE_URL: a labelled placeholder, no centre, attribution note, GeoJSON field still works (3.6s)
+[WebServer] Route /test-faults/[kind] is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '940950030'
+[WebServer] }
+[WebServer] Route / is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+  ok  22 [phone] › tests\browser\customer.spec.ts:35:1 › scenario 1: the landing page has no configured city and no invented restaurants (3.9s)
+  ok  23 [phone] › tests\browser\phase1.spec.ts:8:1 › admin settings retry a failed status request and show deployment checks (3.8s)
+[WebServer] Route /location is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+[WebServer] Route / is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+  ok  25 [phone] › tests\browser\staff-mfa.spec.ts:77:3 › staff sign-in code step › a password then a valid code signs in, with no code in the URL (4.2s)
+  ok  27 [phone] › tests\browser\state-matrix.spec.ts:61:3 › merchant: the session pill says so when the server cannot be reached (2.5s)
+  ok  24 [phone] › tests\browser\error-states.spec.ts:28:5 › errors: customer shows a plain message when a page fails on the server, and leaks nothing (5.6s)
+  ok  28 [phone] › tests\browser\map.spec.ts:50:1 › a shape fits the bounds from its own coordinates and nothing else (2.0s)
+  ok  30 [phone] › tests\browser\phase1.spec.ts:33:1 › admin settings show a permission denial without status data (1.7s)
+  ok  31 [phone] › tests\browser\staff-mfa.spec.ts:97:3 › staff sign-in code step › a wrong code shows an inline error and keeps the step (1.6s)
+  ok  29 [phone] › tests\browser\customer.spec.ts:64:1 › scenario 2: a position outside every zone shows the unavailable state (2.1s)
+[WebServer] ⨯ Error: CLIENT-SECRET-DETAIL stack trace
+[WebServer]     at Fault (..\..\packages\ui\src\fault.tsx:9:9)
+[WebServer]    7 |  */
+[WebServer]    8 | export function Fault({ message }: { message: string }): never {
+[WebServer] >  9 |   throw new Error(message);
+[WebServer]      |         ^
+[WebServer]   10 | }
+[WebServer]   11 | {
+[WebServer]   digest: '2038864849'
+[WebServer] }
+  ok  32 [phone] › tests\browser\state-matrix.spec.ts:61:3 › admin: the session pill says so when the server cannot be reached (1.4s)
+  ok  34 [phone] › tests\browser\map.spec.ts:57:1 › editing a zone shows its bounds beside the editor (1.7s)
+  ok  36 [phone] › tests\browser\staff-mfa.spec.ts:109:3 › staff sign-in code step › an expired pending step tells the person to start again, and Start again returns to the password (1.5s)
+  ok  37 [phone] › tests\browser\customer.spec.ts:72:1 › scenario 5 (customer half): a serviceable answer is shown as eligible and no position goes in a URL (1.5s)
+  -   41 [phone] › tests\browser\customer.spec.ts:83:6 › scenario 5 (admin half): activating a city and zone makes the entered point eligible end to end
+  ok  38 [phone] › tests\browser\state-matrix.spec.ts:68:1 › merchant: the session pill shows progress, then the sign-in link (1.5s)
+  ok  33 [phone] › tests\browser\error-states.spec.ts:28:5 › errors: customer shows a plain message when a page fails on the client, and leaks nothing (2.7s)
+  ok  35 [phone] › tests\browser\phase1.spec.ts:49:1 › customer home shows the empty restaurant state (2.9s)
+  ok  39 [phone] › tests\browser\map.spec.ts:66:1 › a style URL without an installed library says so, keeps attribution and leaves GeoJSON usable (1.5s)
+  ok  40 [phone] › tests\browser\staff-mfa.spec.ts:121:3 › staff sign-in code step › a rate limit shows how long to wait (1.5s)
+[WebServer] Route /account is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '940950030'
+[WebServer] }
+  ok  43 [phone] › tests\browser\state-matrix.spec.ts:79:1 › admin overview reports the live API row and invents no figures (2.0s)
+  ok  47 [phone] › tests\browser\staff-mfa.spec.ts:130:3 › staff sign-in code step › an empty or rejected code shows a validation message (1.3s)
+[WebServer] Route /cities is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+  ok  46 [phone] › tests\browser\map.spec.ts:76:1 › the map area has no accessibility violations (2.1s)
+  ok  48 [phone] › tests\browser\state-matrix.spec.ts:90:1 › cities: progress while slow, then the empty instruction (1.4s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '940950030'
+[WebServer] }
+  ok  45 [phone] › tests\browser\phase1.spec.ts:69:1 › customer can retry a delivery check after an API error (3.4s)
+[WebServer] Route /login is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+  ok  44 [phone] › tests\browser\error-states.spec.ts:47:3 › errors: customer "Try again" asks for the page again and the home link leaves the error (4.2s)
+  ok  42 [phone] › tests\browser\customer.spec.ts:89:1 › scenario 7: /account without a session goes to sign-in carrying only a local return path (5.0s)
+  ok  49 [phone] › tests\browser\staff-mfa.spec.ts:141:3 › staff sign-in code step › the button is disabled while a code is being checked, so it cannot be sent twice (2.5s)
+[WebServer] Route /_not-found is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+  ok  50 [phone] › tests\browser\state-matrix.spec.ts:103:1 › cities: a server error offers a retry (2.4s)
+  ok  53 [phone] › tests\browser\customer.spec.ts:96:1 › scenario 7: signing in returns to the local path that was asked for (1.5s)
+  ok  51 [phone] › tests\browser\phase1.spec.ts:100:1 › merchant overview keeps unavailable actions disabled (2.4s)
+  -   58 [phone] › tests\browser\live-coverage.spec.ts:9:1 › a city and its GeoJSON zone control live serviceability
+  ok  52 [phone] › tests\browser\error-states.spec.ts:64:3 › errors: customer says so for an unknown address and leads home (2.8s)
+  ok  54 [phone] › tests\browser\staff-mfa.spec.ts:162:3 › staff sign-in code step › a recovery code can be used instead (2.6s)
+  ok  56 [phone] › tests\browser\customer.spec.ts:107:3 › scenario 7: the return path "https://external.example/" never leaves the site (1.6s)
+  ok  55 [phone] › tests\browser\state-matrix.spec.ts:118:1 › cities: forbidden explains and leads back to the overview (2.5s)
+  ok  59 [phone] › tests\browser\error-states.spec.ts:78:3 › errors: customer treats an unknown test-fault kind as not found, not as a crash (1.3s)
+[WebServer] Route /security is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+  ok  61 [phone] › tests\browser\customer.spec.ts:107:3 › scenario 7: the return path "//external.example/" never leaves the site (1.5s)
+  ok  60 [phone] › tests\browser\staff-mfa.spec.ts:184:3 › staff sign-in code step › a staff session that must enrol is led to the security page (2.0s)
+  ok  57 [phone] › tests\browser\phase1.spec.ts:108:1 › an expired admin session offers sign-in with a local return path (3.1s)
+  ok  66 [phone] › tests\browser\staff-mfa.spec.ts:201:3 › security page › shows that two-step sign-in is on, with no way to turn it off (927ms)
+  ok  65 [phone] › tests\browser\customer.spec.ts:107:3 › scenario 7: the return path "/\\external.example/" never leaves the site (1.5s)
+  ok  68 [phone] › tests\browser\staff-mfa.spec.ts:209:3 › security page › a failed load offers a retry (1.2s)
+  ok  67 [phone] › tests\browser\phase1.spec.ts:123:1 › sign-in ignores an external return URL (2.1s)
+  ok  64 [tablet] › tests\browser\customer.spec.ts:35:1 › scenario 1: the landing page has no configured city and no invented restaurants (2.5s)
+  ok  62 [phone] › tests\browser\state-matrix.spec.ts:131:1 › cities: a rejected create focuses the first invalid field, then succeeds (3.6s)
+[WebServer] Route /test-faults/[kind] is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '918962723'
+[WebServer] }
+  ok  69 [phone] › tests\browser\customer.spec.ts:121:1 › account: shows the signed-in customer's own name and email, and nothing from Phase 2 (2.3s)
+  ok  73 [phone] › tests\browser\state-matrix.spec.ts:165:1 › cities: a slow create blocks a second submit (1.9s)
+  ok  72 [tablet] › tests\browser\customer.spec.ts:64:1 › scenario 2: a position outside every zone shows the unavailable state (2.3s)
+  ok  74 [phone] › tests\browser\customer.spec.ts:135:1 › account: an account with no name or email says so (1.3s)
+  ok  63 [phone] › tests\browser\error-states.spec.ts:28:5 › errors: merchant shows a plain message when a page fails on the server, and leaks nothing (5.8s)
+  ok  71 [phone] › tests\browser\phase1.spec.ts:138:1 › city status confirmation restores keyboard focus on Escape (2.9s)
+  ok  70 [phone] › tests\browser\staff-mfa.spec.ts:222:3 › security page › setup shows the key in groups, rejects a wrong code, then shows recovery codes behind a checkbox (3.0s)
+[WebServer] ⨯ Error: CLIENT-SECRET-DETAIL stack trace
+[WebServer]     at Fault (..\..\packages\ui\src\fault.tsx:9:9)
+[WebServer]    7 |  */
+[WebServer]    8 | export function Fault({ message }: { message: string }): never {
+[WebServer] >  9 |   throw new Error(message);
+[WebServer]      |         ^
+[WebServer]   10 | }
+[WebServer]   11 | {
+[WebServer]   digest: '1255655537'
+[WebServer] }
+  ok  77 [phone] › tests\browser\customer.spec.ts:142:1 › account: shows progress while loading (1.3s)
+  ok  76 [tablet] › tests\browser\customer.spec.ts:72:1 › scenario 5 (customer half): a serviceable answer is shown as eligible and no position goes in a URL (1.4s)
+  -   82 [tablet] › tests\browser\customer.spec.ts:83:6 › scenario 5 (admin half): activating a city and zone makes the entered point eligible end to end
+  ok  75 [phone] › tests\browser\state-matrix.spec.ts:195:1 › cities: working offline keeps the form and reports the lost connection (2.0s)
+  ok  78 [phone] › tests\browser\error-states.spec.ts:28:5 › errors: merchant shows a plain message when a page fails on the client, and leaks nothing (2.3s)
+  ok  84 [phone] › tests\browser\state-matrix.spec.ts:227:1 › city: progress while slow, then the empty zone list (1.3s)
+  ok  83 [tablet] › tests\browser\customer.spec.ts:89:1 › scenario 7: /account without a session goes to sign-in carrying only a local return path (1.6s)
+  ok  80 [phone] › tests\browser\staff-mfa.spec.ts:264:3 › security page › after confirming in a deployed environment the person is sent to sign in again (2.9s)
+  ok  81 [phone] › tests\browser\customer.spec.ts:152:1 › account: a server error offers a retry that recovers (2.5s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '918962723'
+[WebServer] }
+  ok  87 [tablet] › tests\browser\customer.spec.ts:96:1 › scenario 7: signing in returns to the local path that was asked for (1.3s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '918962723'
+[WebServer] }
+  ok  79 [phone] › tests\browser\phase1.spec.ts:160:1 › a stale zone edit keeps the draft available (4.9s)
+  ok  88 [phone] › tests\browser\staff-mfa.spec.ts:281:3 › security page › a 409 when starting reloads the page state (2.0s)
+  ok  89 [phone] › tests\browser\customer.spec.ts:163:1 › account: a lost connection is reported, with a retry (1.5s)
+  ok  85 [phone] › tests\browser\error-states.spec.ts:47:3 › errors: merchant "Try again" asks for the page again and the home link leaves the error (3.0s)
+[WebServer] Route /_not-found is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+  ok  90 [tablet] › tests\browser\customer.spec.ts:107:3 › scenario 7: the return path "https://external.example/" never leaves the site (1.9s)
+  ok  91 [phone] › tests\browser\staff-mfa.spec.ts:297:3 › security page › a 409 when confirming reloads the page state (1.2s)
+  ok  95 [phone] › tests\browser\staff-mfa.spec.ts:315:3 › security page › starting setup cannot be sent twice while it is slow (1.1s)
+  ok  92 [phone] › tests\browser\customer.spec.ts:170:1 › account: a refused account says so and leads back to the home page (2.3s)
+  ok  86 [phone] › tests\browser\state-matrix.spec.ts:236:1 › city: not found and forbidden lead back; a server error retries (4.8s)
+  ok  93 [phone] › tests\browser\error-states.spec.ts:64:3 › errors: merchant says so for an unknown address and leads home (2.4s)
+  ok  94 [tablet] › tests\browser\customer.spec.ts:107:3 › scenario 7: the return path "//external.example/" never leaves the site (1.7s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '940950030'
+[WebServer] }
+  ok  98 [phone] › tests\browser\error-states.spec.ts:78:3 › errors: merchant treats an unknown test-fault kind as not found, not as a crash (1.3s)
+  ok 100 [tablet] › tests\browser\customer.spec.ts:107:3 › scenario 7: the return path "/\\external.example/" never leaves the site (2.0s)
+  ok  97 [phone] › tests\browser\state-matrix.spec.ts:260:1 › city: a stale status change prompts a reload of the latest version (2.3s)
+  ok  96 [phone] › tests\browser\customer.spec.ts:181:1 › account: a slow sign-out disables the button and a second press sends nothing (2.6s)
+  ok 104 [phone] › tests\browser\state-matrix.spec.ts:282:1 › city: a rejected rename focuses the field that was refused (1.8s)
+  ok  99 [tablet] › tests\browser\error-states.spec.ts:28:5 › errors: customer shows a plain message when a page fails on the server, and leaks nothing (3.8s)
+  ok 102 [tablet] › tests\browser\map.spec.ts:34:1 › empty MAP_STYLE_URL: a labelled placeholder, no centre, attribution note, GeoJSON field still works (1.9s)
+[WebServer] ⨯ Error: CLIENT-SECRET-DETAIL stack trace
+[WebServer]     at Fault (..\..\packages\ui\src\fault.tsx:9:9)
+[WebServer]    7 |  */
+[WebServer]    8 | export function Fault({ message }: { message: string }): never {
+[WebServer] >  9 |   throw new Error(message);
+[WebServer]      |         ^
+[WebServer]   10 | }
+[WebServer]   11 | {
+[WebServer]   digest: '2038864849'
+[WebServer] }
+[WebServer] Route /test-faults/[kind] is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '2459998718'
+[WebServer] }
+  ok 103 [tablet] › tests\browser\customer.spec.ts:121:1 › account: shows the signed-in customer's own name and email, and nothing from Phase 2 (2.4s)
+  ok 108 [tablet] › tests\browser\map.spec.ts:50:1 › a shape fits the bounds from its own coordinates and nothing else (1.5s)
+  ok 106 [phone] › tests\browser\state-matrix.spec.ts:296:1 › city: a stale zone change prompts a reload and the new version appears (1.8s)
+  ok 101 [phone] › tests\browser\error-states.spec.ts:28:5 › errors: admin shows a plain message when a page fails on the server, and leaks nothing (5.3s)
+  ok 107 [tablet] › tests\browser\error-states.spec.ts:28:5 › errors: customer shows a plain message when a page fails on the client, and leaks nothing (2.7s)
+[WebServer] ⨯ Error: CLIENT-SECRET-DETAIL stack trace
+[WebServer]     at Fault (..\..\packages\ui\src\fault.tsx:9:9)
+[WebServer]    7 |  */
+[WebServer]    8 | export function Fault({ message }: { message: string }): never {
+[WebServer] >  9 |   throw new Error(message);
+[WebServer]      |         ^
+[WebServer]   10 | }
+[WebServer]   11 | {
+[WebServer]   digest: '2299384529'
+[WebServer] }
+  ok 110 [tablet] › tests\browser\map.spec.ts:57:1 › editing a zone shows its bounds beside the editor (1.6s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '940950030'
+[WebServer] }
+  ok 105 [phone] › tests\browser\customer.spec.ts:201:1 › account: sign out ends the session once and returns to the start page (5.7s)
+  ok 109 [tablet] › tests\browser\customer.spec.ts:135:1 › account: an account with no name or email says so (3.8s)
+  ok 112 [phone] › tests\browser\error-states.spec.ts:28:5 › errors: admin shows a plain message when a page fails on the client, and leaks nothing (2.0s)
+  ok 111 [phone] › tests\browser\state-matrix.spec.ts:315:1 › city: zone creation focuses the first invalid field, and a slow save cannot be repeated (2.8s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '940950030'
+[WebServer] }
+  ok 113 [tablet] › tests\browser\error-states.spec.ts:47:3 › errors: customer "Try again" asks for the page again and the home link leaves the error (2.6s)
+  ok 115 [phone] › tests\browser\customer.spec.ts:215:1 › account: a failed sign-out says so and keeps the account on screen (1.8s)
+  ok 116 [tablet] › tests\browser\customer.spec.ts:142:1 › account: shows progress while loading (1.4s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '2459998718'
+[WebServer] }
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '2459998718'
+[WebServer] }
+  ok 114 [tablet] › tests\browser\map.spec.ts:66:1 › a style URL without an installed library says so, keeps attribution and leaves GeoJSON usable (3.7s)
+  ok 118 [phone] › tests\browser\state-matrix.spec.ts:335:1 › city: a slow zone save shows progress and blocks a second submit (2.4s)
+  ok 120 [phone] › tests\browser\customer.spec.ts:235:3 › scenario 8: home has no horizontal overflow and its main control is in view (1.6s)
+  ok 117 [phone] › tests\browser\error-states.spec.ts:47:3 › errors: admin "Try again" asks for the page again and the home link leaves the error (3.0s)
+[WebServer] Route /_not-found is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+  ok 119 [tablet] › tests\browser\error-states.spec.ts:64:3 › errors: customer says so for an unknown address and leads home (3.0s)
+  ok 124 [phone] › tests\browser\customer.spec.ts:235:3 › scenario 8: login has no horizontal overflow and its main control is in view (982ms)
+  ok 121 [tablet] › tests\browser\customer.spec.ts:152:1 › account: a server error offers a retry that recovers (2.7s)
+  ok 123 [phone] › tests\browser\state-matrix.spec.ts:363:1 › city: an action while offline reports it and can be repeated (2.3s)
+  ok 127 [phone] › tests\browser\customer.spec.ts:235:3 › scenario 8: location has no horizontal overflow and its main control is in view (1.7s)
+  ok 126 [tablet] › tests\browser\error-states.spec.ts:78:3 › errors: customer treats an unknown test-fault kind as not found, not as a crash (1.8s)
+  ok 128 [tablet] › tests\browser\customer.spec.ts:163:1 › account: a lost connection is reported, with a retry (1.7s)
+  ok 122 [tablet] › tests\browser\map.spec.ts:76:1 › the map area has no accessibility violations (3.3s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '918962723'
+[WebServer] }
+  ok 125 [phone] › tests\browser\error-states.spec.ts:64:3 › errors: admin says so for an unknown address and leads home (3.6s)
+  ok 130 [phone] › tests\browser\customer.spec.ts:235:3 › scenario 8: account (signed in) has no horizontal overflow and its main control is in view (1.3s)
+  -  135 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot customer/home
+  -  136 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot customer/login
+  -  137 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot customer/forgot-password
+  -  138 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot customer/reset-password
+  -  139 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot customer/location
+  -  140 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot merchant/home
+  -  141 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot merchant/login
+  -  142 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot merchant/forgot-password
+  -  143 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot merchant/reset-password
+  -  144 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/overview
+  -  145 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/login
+  -  146 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/forgot-password
+  -  147 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/reset-password
+  -  148 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/security
+  -  149 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/cities-empty
+  -  150 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/cities-list
+  -  151 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/city-detail
+  -  152 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/audit
+  -  153 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/access
+  -  154 [tablet] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/settings
+  ok 132 [tablet] › tests\browser\customer.spec.ts:170:1 › account: a refused account says so and leads back to the home page (1.6s)
+  ok 131 [tablet] › tests\browser\error-states.spec.ts:28:5 › errors: merchant shows a plain message when a page fails on the server, and leaks nothing (2.2s)
+  ok 134 [phone] › tests\browser\error-states.spec.ts:78:3 › errors: admin treats an unknown test-fault kind as not found, not as a crash (1.3s)
+  ok 129 [phone] › tests\browser\state-matrix.spec.ts:385:1 › exclusions: a failed load offers Retry, and offline is reported (3.1s)
+[WebServer] ⨯ Error: CLIENT-SECRET-DETAIL stack trace
+[WebServer]     at Fault (..\..\packages\ui\src\fault.tsx:9:9)
+[WebServer]    7 |  */
+[WebServer]    8 | export function Fault({ message }: { message: string }): never {
+[WebServer] >  9 |   throw new Error(message);
+[WebServer]      |         ^
+[WebServer]   10 | }
+[WebServer]   11 | {
+[WebServer]   digest: '1255655537'
+[WebServer] }
+  ok 133 [tablet] › tests\browser\phase1.spec.ts:8:1 › admin settings retry a failed status request and show deployment checks (2.9s)
+  ok 155 [tablet] › tests\browser\customer.spec.ts:181:1 › account: a slow sign-out disables the button and a second press sends nothing (1.4s)
+  ok 157 [phone] › tests\browser\state-matrix.spec.ts:405:1 › exclusions: a refused or malformed shape focuses the shape field; a slow add is not repeated (1.6s)
+  ok 158 [tablet] › tests\browser\phase1.spec.ts:33:1 › admin settings show a permission denial without status data (1.3s)
+  ok 156 [tablet] › tests\browser\error-states.spec.ts:28:5 › errors: merchant shows a plain message when a page fails on the client, and leaks nothing (3.0s)
+[WebServer] Route /audit is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '918962723'
+[WebServer] }
+  ok 159 [tablet] › tests\browser\customer.spec.ts:201:1 › account: sign out ends the session once and returns to the start page (3.2s)
+  ok 160 [phone] › tests\browser\state-matrix.spec.ts:446:1 › audit: progress while slow, then the empty instruction (2.7s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '918962723'
+[WebServer] }
+  ok 161 [tablet] › tests\browser\phase1.spec.ts:49:1 › customer home shows the empty restaurant state (3.1s)
+  ok 164 [tablet] › tests\browser\customer.spec.ts:215:1 › account: a failed sign-out says so and keeps the account on screen (1.3s)
+  ok 162 [tablet] › tests\browser\error-states.spec.ts:47:3 › errors: merchant "Try again" asks for the page again and the home link leaves the error (2.5s)
+  ok 167 [tablet] › tests\browser\customer.spec.ts:235:3 › scenario 8: home has no horizontal overflow and its main control is in view (1.4s)
+  ok 163 [tablet] › tests\browser\staff-mfa.spec.ts:77:3 › staff sign-in code step › a password then a valid code signs in, with no code in the URL (3.1s)
+  ok 168 [tablet] › tests\browser\error-states.spec.ts:64:3 › errors: merchant says so for an unknown address and leads home (2.3s)
+  ok 166 [tablet] › tests\browser\phase1.spec.ts:69:1 › customer can retry a delivery check after an API error (2.6s)
+  ok 170 [tablet] › tests\browser\customer.spec.ts:235:3 › scenario 8: login has no horizontal overflow and its main control is in view (1.3s)
+  ok 169 [tablet] › tests\browser\state-matrix.spec.ts:61:3 › customer: the session pill says so when the server cannot be reached (1.7s)
+  ok 171 [tablet] › tests\browser\staff-mfa.spec.ts:97:3 › staff sign-in code step › a wrong code shows an inline error and keeps the step (1.8s)
+  ok 174 [tablet] › tests\browser\customer.spec.ts:235:3 › scenario 8: location has no horizontal overflow and its main control is in view (1.1s)
+  ok 172 [tablet] › tests\browser\error-states.spec.ts:78:3 › errors: merchant treats an unknown test-fault kind as not found, not as a crash (1.7s)
+  ok 175 [tablet] › tests\browser\state-matrix.spec.ts:61:3 › merchant: the session pill says so when the server cannot be reached (1.6s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '2459998718'
+[WebServer] }
+  ok 165 [phone] › tests\browser\state-matrix.spec.ts:456:1 › audit: a server error retries and forbidden leads back (5.6s)
+  ok 177 [tablet] › tests\browser\customer.spec.ts:235:3 › scenario 8: account (signed in) has no horizontal overflow and its main control is in view (1.1s)
+  ok 173 [tablet] › tests\browser\phase1.spec.ts:100:1 › merchant overview keeps unavailable actions disabled (2.7s)
+  ok 179 [tablet] › tests\browser\state-matrix.spec.ts:61:3 › admin: the session pill says so when the server cannot be reached (1.5s)
+  ok 176 [tablet] › tests\browser\staff-mfa.spec.ts:109:3 › staff sign-in code step › an expired pending step tells the person to start again, and Start again returns to the password (2.6s)
+  ok 180 [phone] › tests\browser\state-matrix.spec.ts:477:1 › audit: loading older entries offline keeps the list and can be repeated (1.6s)
+  ok 178 [tablet] › tests\browser\error-states.spec.ts:28:5 › errors: admin shows a plain message when a page fails on the server, and leaks nothing (2.7s)
+  ok 182 [tablet] › tests\browser\state-matrix.spec.ts:68:1 › merchant: the session pill shows progress, then the sign-in link (1.4s)
+  -  187 [tablet] › tests\browser\live-coverage.spec.ts:9:1 › a city and its GeoJSON zone control live serviceability
+  ok 183 [tablet] › tests\browser\staff-mfa.spec.ts:121:3 › staff sign-in code step › a rate limit shows how long to wait (2.1s)
+  ok 181 [tablet] › tests\browser\phase1.spec.ts:108:1 › an expired admin session offers sign-in with a local return path (3.0s)
+[WebServer] ⨯ Error: CLIENT-SECRET-DETAIL stack trace
+[WebServer]     at Fault (..\..\packages\ui\src\fault.tsx:9:9)
+[WebServer]    7 |  */
+[WebServer]    8 | export function Fault({ message }: { message: string }): never {
+[WebServer] >  9 |   throw new Error(message);
+[WebServer]      |         ^
+[WebServer]   10 | }
+[WebServer]   11 | {
+[WebServer]   digest: '2299384529'
+[WebServer] }
+  ok 184 [phone] › tests\browser\state-matrix.spec.ts:497:1 › audit: a slow filter shows progress and ignores a second Apply (2.6s)
+  ok 189 [tablet] › tests\browser\phase1.spec.ts:123:1 › sign-in ignores an external return URL (2.3s)
+  ok 185 [tablet] › tests\browser\error-states.spec.ts:28:5 › errors: admin shows a plain message when a page fails on the client, and leaks nothing (4.2s)
+  ok 186 [tablet] › tests\browser\state-matrix.spec.ts:79:1 › admin overview reports the live API row and invents no figures (3.8s)
+  ok 188 [tablet] › tests\browser\staff-mfa.spec.ts:130:3 › staff sign-in code step › an empty or rejected code shows a validation message (3.0s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '2459998718'
+[WebServer] }
+  ok 190 [phone] › tests\browser\state-matrix.spec.ts:529:1 › settings: progress while the status is slow (3.1s)
+  ok 191 [desktop] › tests\browser\customer.spec.ts:35:1 › scenario 1: the landing page has no configured city and no invented restaurants (2.2s)
+  ok 194 [tablet] › tests\browser\state-matrix.spec.ts:90:1 › cities: progress while slow, then the empty instruction (1.9s)
+  ok 195 [tablet] › tests\browser\staff-mfa.spec.ts:141:3 › staff sign-in code step › the button is disabled while a code is being checked, so it cannot be sent twice (1.9s)
+  ok 192 [tablet] › tests\browser\phase1.spec.ts:138:1 › city status confirmation restores keyboard focus on Escape (2.7s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '2459998718'
+[WebServer] }
+  ok 197 [desktop] › tests\browser\customer.spec.ts:64:1 › scenario 2: a position outside every zone shows the unavailable state (2.4s)
+  ok 193 [tablet] › tests\browser\error-states.spec.ts:47:3 › errors: admin "Try again" asks for the page again and the home link leaves the error (3.6s)
+  ok 201 [desktop] › tests\browser\customer.spec.ts:72:1 › scenario 5 (customer half): a serviceable answer is shown as eligible and no position goes in a URL (1.4s)
+  -  203 [desktop] › tests\browser\customer.spec.ts:83:6 › scenario 5 (admin half): activating a city and zone makes the entered point eligible end to end
+  ok 198 [tablet] › tests\browser\state-matrix.spec.ts:103:1 › cities: a server error offers a retry (3.3s)
+  ok 199 [tablet] › tests\browser\staff-mfa.spec.ts:162:3 › staff sign-in code step › a recovery code can be used instead (3.6s)
+  ok 204 [desktop] › tests\browser\customer.spec.ts:89:1 › scenario 7: /account without a session goes to sign-in carrying only a local return path (1.2s)
+  ok 196 [phone] › tests\browser\state-matrix.spec.ts:539:1 › settings: forbidden is accessible and leads back; offline refresh reports and recovers (5.1s)
+  ok 202 [tablet] › tests\browser\error-states.spec.ts:64:3 › errors: admin says so for an unknown address and leads home (3.2s)
+  ok 200 [tablet] › tests\browser\phase1.spec.ts:160:1 › a stale zone edit keeps the draft available (4.8s)
+  ok 207 [desktop] › tests\browser\customer.spec.ts:96:1 › scenario 7: signing in returns to the local path that was asked for (1.5s)
+  ok 206 [tablet] › tests\browser\staff-mfa.spec.ts:184:3 › staff sign-in code step › a staff session that must enrol is led to the security page (2.4s)
+  ok 205 [tablet] › tests\browser\state-matrix.spec.ts:118:1 › cities: forbidden explains and leads back to the overview (3.0s)
+  ok 209 [tablet] › tests\browser\error-states.spec.ts:78:3 › errors: admin treats an unknown test-fault kind as not found, not as a crash (1.6s)
+  ok 211 [tablet] › tests\browser\staff-mfa.spec.ts:201:3 › security page › shows that two-step sign-in is on, with no way to turn it off (945ms)
+  ok 210 [desktop] › tests\browser\customer.spec.ts:107:3 › scenario 7: the return path "https://external.example/" never leaves the site (1.7s)
+  ok 208 [phone] › tests\browser\state-matrix.spec.ts:573:1 › location: an empty or malformed position focuses the first invalid field (3.2s)
+  ok 213 [tablet] › tests\browser\staff-mfa.spec.ts:209:3 › security page › a failed load offers a retry (1.4s)
+  ok 215 [phone] › tests\browser\state-matrix.spec.ts:588:1 › location: a refused position from the server focuses the field it names (1.5s)
+  ok 214 [desktop] › tests\browser\customer.spec.ts:107:3 › scenario 7: the return path "//external.example/" never leaves the site (1.8s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '940950030'
+[WebServer] }
+  ok 217 [phone] › tests\browser\state-matrix.spec.ts:599:1 › location: a slow check shows progress and cannot be submitted twice (1.5s)
+  ok 212 [tablet] › tests\browser\state-matrix.spec.ts:131:1 › cities: a rejected create focuses the first invalid field, then succeeds (4.3s)
+  ok 218 [desktop] › tests\browser\map.spec.ts:34:1 › empty MAP_STYLE_URL: a labelled placeholder, no centre, attribution note, GeoJSON field still works (1.5s)
+  ok 216 [tablet] › tests\browser\staff-mfa.spec.ts:222:3 › security page › setup shows the key in groups, rejects a wrong code, then shows recovery codes behind a checkbox (2.6s)
+  ok 219 [desktop] › tests\browser\customer.spec.ts:107:3 › scenario 7: the return path "/\\external.example/" never leaves the site (2.1s)
+  ok 222 [tablet] › tests\browser\state-matrix.spec.ts:165:1 › cities: a slow create blocks a second submit (1.9s)
+  ok 223 [desktop] › tests\browser\map.spec.ts:50:1 › a shape fits the bounds from its own coordinates and nothing else (2.0s)
+  ok 220 [desktop] › tests\browser\error-states.spec.ts:28:5 › errors: customer shows a plain message when a page fails on the server, and leaks nothing (3.6s)
+[WebServer] ⨯ Error: CLIENT-SECRET-DETAIL stack trace
+[WebServer]     at Fault (..\..\packages\ui\src\fault.tsx:9:9)
+[WebServer]    7 |  */
+[WebServer]    8 | export function Fault({ message }: { message: string }): never {
+[WebServer] >  9 |   throw new Error(message);
+[WebServer]      |         ^
+[WebServer]   10 | }
+[WebServer]   11 | {
+[WebServer]   digest: '2038864849'
+[WebServer] }
+  ok 221 [phone] › tests\browser\state-matrix.spec.ts:616:1 › location: offline reports the lost connection, keeps the numbers and recovers (3.1s)
+  ok 224 [tablet] › tests\browser\staff-mfa.spec.ts:264:3 › security page › after confirming in a deployed environment the person is sent to sign in again (2.6s)
+  ok 225 [desktop] › tests\browser\customer.spec.ts:121:1 › account: shows the signed-in customer's own name and email, and nothing from Phase 2 (2.7s)
+  ok 227 [desktop] › tests\browser\map.spec.ts:57:1 › editing a zone shows its bounds beside the editor (1.5s)
+  ok 226 [tablet] › tests\browser\state-matrix.spec.ts:195:1 › cities: working offline keeps the form and reports the lost connection (2.3s)
+  ok 228 [desktop] › tests\browser\error-states.spec.ts:28:5 › errors: customer shows a plain message when a page fails on the client, and leaks nothing (2.2s)
+  ok 230 [tablet] › tests\browser\staff-mfa.spec.ts:281:3 › security page › a 409 when starting reloads the page state (2.1s)
+  ok 232 [desktop] › tests\browser\map.spec.ts:66:1 › a style URL without an installed library says so, keeps attribution and leaves GeoJSON usable (2.0s)
+  ok 233 [tablet] › tests\browser\state-matrix.spec.ts:227:1 › city: progress while slow, then the empty zone list (1.6s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '940950030'
+[WebServer] }
+  ok 229 [phone] › tests\browser\state-matrix.spec.ts:630:1 › exclusions: forbidden is stated in place and the page navigation stays (3.6s)
+  ok 235 [tablet] › tests\browser\staff-mfa.spec.ts:297:3 › security page › a 409 when confirming reloads the page state (1.8s)
+  ok 231 [desktop] › tests\browser\customer.spec.ts:135:1 › account: an account with no name or email says so (3.8s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '940950030'
+[WebServer] }
+  ok 236 [desktop] › tests\browser\map.spec.ts:76:1 › the map area has no accessibility violations (2.6s)
+  ok 234 [desktop] › tests\browser\error-states.spec.ts:47:3 › errors: customer "Try again" asks for the page again and the home link leaves the error (4.1s)
+  ok 238 [phone] › tests\browser\state-matrix.spec.ts:640:1 › exclusions: an added exclusion is listed, and a removal needs confirmation (2.1s)
+  ok 239 [tablet] › tests\browser\staff-mfa.spec.ts:315:3 › security page › starting setup cannot be sent twice while it is slow (2.3s)
+  -  244 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot customer/home
+  -  245 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot customer/login
+  -  246 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot customer/forgot-password
+  -  247 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot customer/reset-password
+  -  248 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot customer/location
+  -  249 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot merchant/home
+  -  250 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot merchant/login
+  -  251 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot merchant/forgot-password
+  -  252 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot merchant/reset-password
+  -  253 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/overview
+  -  254 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/login
+  -  255 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/forgot-password
+  -  256 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/reset-password
+  -  257 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/security
+  -  258 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/cities-empty
+  -  259 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/cities-list
+  -  260 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/city-detail
+  -  261 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/audit
+  -  262 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/access
+  -  263 [desktop] › tests\browser\screenshots.spec.ts:103:3 › screenshot admin/settings
+[WebServer] Route /access is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+  ok 240 [desktop] › tests\browser\customer.spec.ts:142:1 › account: shows progress while loading (2.5s)
+  ok 243 [phone] › tests\browser\state-matrix.spec.ts:691:1 › access: progress while slow, then only the people the API returned (2.8s)
+  ok 241 [desktop] › tests\browser\phase1.spec.ts:8:1 › admin settings retry a failed status request and show deployment checks (3.2s)
+  ok 242 [desktop] › tests\browser\error-states.spec.ts:64:3 › errors: customer says so for an unknown address and leads home (2.9s)
+  ok 237 [tablet] › tests\browser\state-matrix.spec.ts:236:1 › city: not found and forbidden lead back; a server error retries (5.9s)
+  ok 264 [desktop] › tests\browser\customer.spec.ts:152:1 › account: a server error offers a retry that recovers (2.1s)
+  ok 267 [desktop] › tests\browser\error-states.spec.ts:78:3 › errors: customer treats an unknown test-fault kind as not found, not as a crash (963ms)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '918962723'
+[WebServer] }
+  ok 269 [desktop] › tests\browser\customer.spec.ts:163:1 › account: a lost connection is reported, with a retry (1.1s)
+  ok 266 [desktop] › tests\browser\phase1.spec.ts:33:1 › admin settings show a permission denial without status data (1.7s)
+  ok 265 [phone] › tests\browser\state-matrix.spec.ts:708:1 › access: an empty directory says so and invents nobody (2.6s)
+  ok 268 [tablet] › tests\browser\state-matrix.spec.ts:260:1 › city: a stale status change prompts a reload of the latest version (3.0s)
+  ok 270 [desktop] › tests\browser\error-states.spec.ts:28:5 › errors: merchant shows a plain message when a page fails on the server, and leaks nothing (2.3s)
+[WebServer] ⨯ Error: CLIENT-SECRET-DETAIL stack trace
+[WebServer]     at Fault (..\..\packages\ui\src\fault.tsx:9:9)
+[WebServer]    7 |  */
+[WebServer]    8 | export function Fault({ message }: { message: string }): never {
+[WebServer] >  9 |   throw new Error(message);
+[WebServer]      |         ^
+[WebServer]   10 | }
+[WebServer]   11 | {
+[WebServer]   digest: '1255655537'
+[WebServer] }
+  ok 271 [desktop] › tests\browser\customer.spec.ts:170:1 › account: a refused account says so and leads back to the home page (2.3s)
+  ok 272 [desktop] › tests\browser\phase1.spec.ts:49:1 › customer home shows the empty restaurant state (3.0s)
+  ok 275 [tablet] › tests\browser\state-matrix.spec.ts:282:1 › city: a rejected rename focuses the field that was refused (2.0s)
+  ok 276 [desktop] › tests\browser\error-states.spec.ts:28:5 › errors: merchant shows a plain message when a page fails on the client, and leaks nothing (2.3s)
+  ok 277 [desktop] › tests\browser\customer.spec.ts:181:1 › account: a slow sign-out disables the button and a second press sends nothing (2.6s)
+  ok 273 [desktop] › tests\browser\staff-mfa.spec.ts:77:3 › staff sign-in code step › a password then a valid code signs in, with no code in the URL (3.8s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '918962723'
+[WebServer] }
+  ok 279 [tablet] › tests\browser\state-matrix.spec.ts:296:1 › city: a stale zone change prompts a reload and the new version appears (2.3s)
+  ok 278 [desktop] › tests\browser\phase1.spec.ts:69:1 › customer can retry a delivery check after an API error (2.6s)
+  ok 274 [phone] › tests\browser\state-matrix.spec.ts:717:1 › access: a server error retries and forbidden leads back (5.2s)
+  ok 281 [desktop] › tests\browser\customer.spec.ts:201:1 › account: sign out ends the session once and returns to the start page (2.1s)
+  ok 282 [desktop] › tests\browser\staff-mfa.spec.ts:97:3 › staff sign-in code step › a wrong code shows an inline error and keeps the step (1.9s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '918962723'
+[WebServer] }
+  ok 280 [desktop] › tests\browser\error-states.spec.ts:47:3 › errors: merchant "Try again" asks for the page again and the home link leaves the error (3.3s)
+  ok 286 [desktop] › tests\browser\customer.spec.ts:215:1 › account: a failed sign-out says so and keeps the account on screen (1.1s)
+  ok 287 [desktop] › tests\browser\staff-mfa.spec.ts:109:3 › staff sign-in code step › an expired pending step tells the person to start again, and Start again returns to the password (1.7s)
+  ok 284 [desktop] › tests\browser\phase1.spec.ts:100:1 › merchant overview keeps unavailable actions disabled (3.0s)
+  ok 285 [phone] › tests\browser\state-matrix.spec.ts:739:1 › access: a viewer sees masked addresses and no way to change anything (2.8s)
+  ok 283 [tablet] › tests\browser\state-matrix.spec.ts:315:1 › city: zone creation focuses the first invalid field, and a slow save cannot be repeated (3.2s)
+  ok 289 [desktop] › tests\browser\customer.spec.ts:235:3 › scenario 8: home has no horizontal overflow and its main control is in view (1.4s)
+  ok 288 [desktop] › tests\browser\error-states.spec.ts:64:3 › errors: merchant says so for an unknown address and leads home (2.6s)
+  ok 290 [desktop] › tests\browser\staff-mfa.spec.ts:121:3 › staff sign-in code step › a rate limit shows how long to wait (1.4s)
+  ok 294 [desktop] › tests\browser\customer.spec.ts:235:3 › scenario 8: login has no horizontal overflow and its main control is in view (1.1s)
+  ok 292 [phone] › tests\browser\state-matrix.spec.ts:751:1 › access: removing a role needs confirmation, cancel sends nothing, one confirmation sends one request (2.0s)
+  ok 293 [tablet] › tests\browser\state-matrix.spec.ts:335:1 › city: a slow zone save shows progress and blocks a second submit (2.1s)
+  ok 295 [desktop] › tests\browser\error-states.spec.ts:78:3 › errors: merchant treats an unknown test-fault kind as not found, not as a crash (1.6s)
+  ok 297 [desktop] › tests\browser\customer.spec.ts:235:3 › scenario 8: location has no horizontal overflow and its main control is in view (1.2s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '2459998718'
+[WebServer] }
+  ok 291 [desktop] › tests\browser\phase1.spec.ts:108:1 › an expired admin session offers sign-in with a local return path (3.6s)
+  ok 296 [desktop] › tests\browser\staff-mfa.spec.ts:130:3 › staff sign-in code step › an empty or rejected code shows a validation message (2.5s)
+  ok 301 [desktop] › tests\browser\customer.spec.ts:235:3 › scenario 8: account (signed in) has no horizontal overflow and its main control is in view (1.1s)
+  ok 298 [phone] › tests\browser\state-matrix.spec.ts:785:1 › access: a refused or offline removal is reported in the dialog and can be repeated (2.2s)
+  ok 299 [tablet] › tests\browser\state-matrix.spec.ts:363:1 › city: an action while offline reports it and can be repeated (2.0s)
+  ok 303 [desktop] › tests\browser\staff-mfa.spec.ts:141:3 › staff sign-in code step › the button is disabled while a code is being checked, so it cannot be sent twice (1.4s)
+  ok 304 [desktop] › tests\browser\state-matrix.spec.ts:61:3 › customer: the session pill says so when the server cannot be reached (1.6s)
+  ok 300 [desktop] › tests\browser\error-states.spec.ts:28:5 › errors: admin shows a plain message when a page fails on the server, and leaks nothing (3.1s)
+  ok 302 [desktop] › tests\browser\phase1.spec.ts:123:1 › sign-in ignores an external return URL (2.2s)
+[WebServer] ⨯ Error: CLIENT-SECRET-DETAIL stack trace
+[WebServer]     at Fault (..\..\packages\ui\src\fault.tsx:9:9)
+[WebServer]    7 |  */
+[WebServer]    8 | export function Fault({ message }: { message: string }): never {
+[WebServer] >  9 |   throw new Error(message);
+[WebServer]      |         ^
+[WebServer]   10 | }
+[WebServer]   11 | {
+[WebServer]   digest: '2299384529'
+[WebServer] }
+  ok 308 [desktop] › tests\browser\state-matrix.spec.ts:61:3 › merchant: the session pill says so when the server cannot be reached (1.4s)
+  ok 305 [phone] › tests\browser\state-matrix.spec.ts:812:1 › access: the grant form checks its fields, sends the chosen scope, and reports a refusal (3.9s)
+  ok 306 [tablet] › tests\browser\state-matrix.spec.ts:385:1 › exclusions: a failed load offers Retry, and offline is reported (4.0s)
+  ok 309 [desktop] › tests\browser\error-states.spec.ts:28:5 › errors: admin shows a plain message when a page fails on the client, and leaks nothing (2.7s)
+  ok 310 [desktop] › tests\browser\phase1.spec.ts:138:1 › city status confirmation restores keyboard focus on Escape (2.8s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '2459998718'
+[WebServer] }
+  ok 311 [desktop] › tests\browser\state-matrix.spec.ts:61:3 › admin: the session pill says so when the server cannot be reached (2.6s)
+  ok 307 [desktop] › tests\browser\staff-mfa.spec.ts:162:3 › staff sign-in code step › a recovery code can be used instead (4.8s)
+  ok 316 [desktop] › tests\browser\state-matrix.spec.ts:68:1 › merchant: the session pill shows progress, then the sign-in link (1.0s)
+  ok 312 [phone] › tests\browser\state-matrix.spec.ts:849:1 › access: roles that failed to load say so, and Try again recovers (2.7s)
+[WebServer] ⨯ Error: SERVER-SECRET-DETAIL stack trace
+[WebServer]     at TestFault (app\test-faults\[kind]\page.tsx:14:32)
+[WebServer]   12 |   const { kind } = await params;
+[WebServer]   13 |   if (kind === "client") return <Fault message="CLIENT-SECRET-DETAIL stack trace" />;
+[WebServer] > 14 |   if (kind === "server") throw new Error("SERVER-SECRET-DETAIL stack trace");
+[WebServer]      |                                ^
+[WebServer]   15 |   notFound();
+[WebServer]   16 | }
+[WebServer]   17 | {
+[WebServer]   digest: '2459998718'
+[WebServer] }
+  ok 313 [tablet] › tests\browser\state-matrix.spec.ts:405:1 › exclusions: a refused or malformed shape focuses the shape field; a slow add is not repeated (2.8s)
+  ok 314 [desktop] › tests\browser\error-states.spec.ts:47:3 › errors: admin "Try again" asks for the page again and the home link leaves the error (3.6s)
+  ok 317 [desktop] › tests\browser\staff-mfa.spec.ts:184:3 › staff sign-in code step › a staff session that must enrol is led to the security page (3.2s)
+  ok 319 [tablet] › tests\browser\state-matrix.spec.ts:446:1 › audit: progress while slow, then the empty instruction (1.7s)
+  ok 315 [desktop] › tests\browser\phase1.spec.ts:160:1 › a stale zone edit keeps the draft available (5.5s)
+  ok 321 [desktop] › tests\browser\staff-mfa.spec.ts:201:3 › security page › shows that two-step sign-in is on, with no way to turn it off (1.2s)
+  ok 318 [desktop] › tests\browser\state-matrix.spec.ts:79:1 › admin overview reports the live API row and invents no figures (3.4s)
+  -  323 [desktop] › tests\browser\live-coverage.spec.ts:9:1 › a city and its GeoJSON zone control live serviceability
+  ok 320 [desktop] › tests\browser\error-states.spec.ts:64:3 › errors: admin says so for an unknown address and leads home (2.9s)
+  ok 324 [desktop] › tests\browser\staff-mfa.spec.ts:209:3 › security page › a failed load offers a retry (1.3s)
+  ok 325 [desktop] › tests\browser\state-matrix.spec.ts:90:1 › cities: progress while slow, then the empty instruction (1.4s)
+  ok 326 [desktop] › tests\browser\error-states.spec.ts:78:3 › errors: admin treats an unknown test-fault kind as not found, not as a crash (1.3s)
+  ok 322 [tablet] › tests\browser\state-matrix.spec.ts:456:1 › audit: a server error retries and forbidden leads back (4.1s)
+  ok 328 [desktop] › tests\browser\state-matrix.spec.ts:103:1 › cities: a server error offers a retry (2.3s)
+  ok 327 [desktop] › tests\browser\staff-mfa.spec.ts:222:3 › security page › setup shows the key in groups, rejects a wrong code, then shows recovery codes behind a checkbox (2.4s)
+  ok 329 [tablet] › tests\browser\state-matrix.spec.ts:477:1 › audit: loading older entries offline keeps the list and can be repeated (806ms)
+  ok 332 [tablet] › tests\browser\state-matrix.spec.ts:497:1 › audit: a slow filter shows progress and ignores a second Apply (1.1s)
+  ok 331 [desktop] › tests\browser\staff-mfa.spec.ts:264:3 › security page › after confirming in a deployed environment the person is sent to sign in again (1.5s)
+  ok 330 [desktop] › tests\browser\state-matrix.spec.ts:118:1 › cities: forbidden explains and leads back to the overview (2.0s)
+  ok 333 [tablet] › tests\browser\state-matrix.spec.ts:529:1 › settings: progress while the status is slow (841ms)
+  ok 334 [desktop] › tests\browser\staff-mfa.spec.ts:281:3 › security page › a 409 when starting reloads the page state (818ms)
+  ok 337 [desktop] › tests\browser\staff-mfa.spec.ts:297:3 › security page › a 409 when confirming reloads the page state (844ms)
+  ok 338 [desktop] › tests\browser\staff-mfa.spec.ts:315:3 › security page › starting setup cannot be sent twice while it is slow (674ms)
+  ok 336 [tablet] › tests\browser\state-matrix.spec.ts:539:1 › settings: forbidden is accessible and leads back; offline refresh reports and recovers (2.5s)
+  ok 335 [desktop] › tests\browser\state-matrix.spec.ts:131:1 › cities: a rejected create focuses the first invalid field, then succeeds (2.6s)
+  ok 340 [desktop] › tests\browser\state-matrix.spec.ts:165:1 › cities: a slow create blocks a second submit (1.0s)
+  ok 339 [tablet] › tests\browser\state-matrix.spec.ts:573:1 › location: an empty or malformed position focuses the first invalid field (1.4s)
+  ok 342 [tablet] › tests\browser\state-matrix.spec.ts:588:1 › location: a refused position from the server focuses the field it names (598ms)
+  ok 341 [desktop] › tests\browser\state-matrix.spec.ts:195:1 › cities: working offline keeps the form and reports the lost connection (1.0s)
+  ok 343 [tablet] › tests\browser\state-matrix.spec.ts:599:1 › location: a slow check shows progress and cannot be submitted twice (713ms)
+  ok 344 [desktop] › tests\browser\state-matrix.spec.ts:227:1 › city: progress while slow, then the empty zone list (800ms)
+  ok 345 [tablet] › tests\browser\state-matrix.spec.ts:616:1 › location: offline reports the lost connection, keeps the numbers and recovers (1.4s)
+  ok 347 [tablet] › tests\browser\state-matrix.spec.ts:630:1 › exclusions: forbidden is stated in place and the page navigation stays (1.5s)
+  ok 346 [desktop] › tests\browser\state-matrix.spec.ts:236:1 › city: not found and forbidden lead back; a server error retries (2.8s)
+  ok 348 [tablet] › tests\browser\state-matrix.spec.ts:640:1 › exclusions: an added exclusion is listed, and a removal needs confirmation (1.1s)
+  ok 349 [desktop] › tests\browser\state-matrix.spec.ts:260:1 › city: a stale status change prompts a reload of the latest version (1.6s)
+  ok 351 [desktop] › tests\browser\state-matrix.spec.ts:282:1 › city: a rejected rename focuses the field that was refused (842ms)
+  ok 350 [tablet] › tests\browser\state-matrix.spec.ts:691:1 › access: progress while slow, then only the people the API returned (1.5s)
+  ok 352 [desktop] › tests\browser\state-matrix.spec.ts:296:1 › city: a stale zone change prompts a reload and the new version appears (980ms)
+  ok 353 [tablet] › tests\browser\state-matrix.spec.ts:708:1 › access: an empty directory says so and invents nobody (1.3s)
+  ok 354 [desktop] › tests\browser\state-matrix.spec.ts:315:1 › city: zone creation focuses the first invalid field, and a slow save cannot be repeated (1.6s)
+  ok 355 [tablet] › tests\browser\state-matrix.spec.ts:717:1 › access: a server error retries and forbidden leads back (2.0s)
+  ok 356 [desktop] › tests\browser\state-matrix.spec.ts:335:1 › city: a slow zone save shows progress and blocks a second submit (921ms)
+  ok 358 [desktop] › tests\browser\state-matrix.spec.ts:363:1 › city: an action while offline reports it and can be repeated (880ms)
+  ok 357 [tablet] › tests\browser\state-matrix.spec.ts:739:1 › access: a viewer sees masked addresses and no way to change anything (1.4s)
+  ok 360 [tablet] › tests\browser\state-matrix.spec.ts:751:1 › access: removing a role needs confirmation, cancel sends nothing, one confirmation sends one request (807ms)
+  ok 359 [desktop] › tests\browser\state-matrix.spec.ts:385:1 › exclusions: a failed load offers Retry, and offline is reported (1.7s)
+  ok 361 [tablet] › tests\browser\state-matrix.spec.ts:785:1 › access: a refused or offline removal is reported in the dialog and can be repeated (806ms)
+  ok 362 [desktop] › tests\browser\state-matrix.spec.ts:405:1 › exclusions: a refused or malformed shape focuses the shape field; a slow add is not repeated (1.0s)
+  ok 364 [desktop] › tests\browser\state-matrix.spec.ts:446:1 › audit: progress while slow, then the empty instruction (588ms)
+  ok 363 [tablet] › tests\browser\state-matrix.spec.ts:812:1 › access: the grant form checks its fields, sends the chosen scope, and reports a refusal (1.6s)
+  ok 366 [tablet] › tests\browser\state-matrix.spec.ts:849:1 › access: roles that failed to load say so, and Try again recovers (673ms)
+  ok 365 [desktop] › tests\browser\state-matrix.spec.ts:456:1 › audit: a server error retries and forbidden leads back (2.1s)
+  ok 367 [desktop] › tests\browser\state-matrix.spec.ts:477:1 › audit: loading older entries offline keeps the list and can be repeated (736ms)
+  ok 368 [desktop] › tests\browser\state-matrix.spec.ts:497:1 › audit: a slow filter shows progress and ignores a second Apply (727ms)
+  ok 369 [desktop] › tests\browser\state-matrix.spec.ts:529:1 › settings: progress while the status is slow (520ms)
+  ok 370 [desktop] › tests\browser\state-matrix.spec.ts:539:1 › settings: forbidden is accessible and leads back; offline refresh reports and recovers (1.9s)
+  ok 371 [desktop] › tests\browser\state-matrix.spec.ts:573:1 › location: an empty or malformed position focuses the first invalid field (1.1s)
+  ok 372 [desktop] › tests\browser\state-matrix.spec.ts:588:1 › location: a refused position from the server focuses the field it names (556ms)
+  ok 373 [desktop] › tests\browser\state-matrix.spec.ts:599:1 › location: a slow check shows progress and cannot be submitted twice (610ms)
+  ok 374 [desktop] › tests\browser\state-matrix.spec.ts:616:1 › location: offline reports the lost connection, keeps the numbers and recovers (1.2s)
+  ok 375 [desktop] › tests\browser\state-matrix.spec.ts:630:1 › exclusions: forbidden is stated in place and the page navigation stays (1.5s)
+  ok 376 [desktop] › tests\browser\state-matrix.spec.ts:640:1 › exclusions: an added exclusion is listed, and a removal needs confirmation (935ms)
+  ok 377 [desktop] › tests\browser\state-matrix.spec.ts:691:1 › access: progress while slow, then only the people the API returned (1.3s)
+  ok 378 [desktop] › tests\browser\state-matrix.spec.ts:708:1 › access: an empty directory says so and invents nobody (1.1s)
+  ok 379 [desktop] › tests\browser\state-matrix.spec.ts:717:1 › access: a server error retries and forbidden leads back (1.8s)
+  ok 380 [desktop] › tests\browser\state-matrix.spec.ts:739:1 › access: a viewer sees masked addresses and no way to change anything (1.2s)
+  ok 381 [desktop] › tests\browser\state-matrix.spec.ts:751:1 › access: removing a role needs confirmation, cancel sends nothing, one confirmation sends one request (737ms)
+  ok 382 [desktop] › tests\browser\state-matrix.spec.ts:785:1 › access: a refused or offline removal is reported in the dialog and can be repeated (720ms)
+  ok 383 [desktop] › tests\browser\state-matrix.spec.ts:812:1 › access: the grant form checks its fields, sends the chosen scope, and reports a refusal (1.4s)
+  ok 384 [desktop] › tests\browser\state-matrix.spec.ts:849:1 › access: roles that failed to load say so, and Try again recovers (624ms)
+  ok 385 [phone-server-fetch] › tests\browser\server-fetch-states.spec.ts:51:3 › banner: error from the API shows "could not check", never a claim, and the page stands (1.2s)
+  ok 386 [phone-server-fetch] › tests\browser\server-fetch-states.spec.ts:51:3 › banner: garbage from the API shows "could not check", never a claim, and the page stands (1.1s)
+  ok 387 [phone-server-fetch] › tests\browser\server-fetch-states.spec.ts:51:3 › banner: drop from the API shows "could not check", never a claim, and the page stands (1.1s)
+  ok 388 [phone-server-fetch] › tests\browser\server-fetch-states.spec.ts:65:1 › banner: reloading after the API comes back replaces the fallback with the answer (851ms)
+  ok 389 [phone-server-fetch] › tests\browser\server-fetch-states.spec.ts:77:1 › banner: while the API is slow the page shows progress, then the answer (1.4s)
+  ok 390 [phone-server-fetch] › tests\browser\server-fetch-states.spec.ts:91:1 › banner: an API that never answers ends in 'could not check' instead of hanging (3.5s)
+  ok 391 [phone-server-fetch] › tests\browser\server-fetch-states.spec.ts:102:1 › banner: when an area is open it says so and links to the delivery check (1.1s)
+  ok 392 [phone-server-fetch] › tests\browser\server-fetch-states.spec.ts:118:3 › api row: error from the liveness route says "not reachable" with what to do, and the page stands (1.2s)
+  ok 393 [phone-server-fetch] › tests\browser\server-fetch-states.spec.ts:118:3 › api row: drop from the liveness route says "not reachable" with what to do, and the page stands (1.1s)
+  ok 394 [phone-server-fetch] › tests\browser\server-fetch-states.spec.ts:132:1 › api row: a healthy API is reported as reachable (1.1s)
+  ok 395 [phone-server-fetch] › tests\browser\server-fetch-states.spec.ts:142:1 › api row: while the liveness route is slow it shows progress, then the answer (1.9s)
+  ok 396 [phone-server-fetch] › tests\browser\server-fetch-states.spec.ts:153:1 › api row: a liveness route that never answers ends in 'not reachable' (3.3s)
+  ok 397 [tablet-server-fetch] › tests\browser\server-fetch-states.spec.ts:51:3 › banner: error from the API shows "could not check", never a claim, and the page stands (1.2s)
+  ok 398 [tablet-server-fetch] › tests\browser\server-fetch-states.spec.ts:51:3 › banner: garbage from the API shows "could not check", never a claim, and the page stands (1.1s)
+  ok 399 [tablet-server-fetch] › tests\browser\server-fetch-states.spec.ts:51:3 › banner: drop from the API shows "could not check", never a claim, and the page stands (1.1s)
+  ok 400 [tablet-server-fetch] › tests\browser\server-fetch-states.spec.ts:65:1 › banner: reloading after the API comes back replaces the fallback with the answer (806ms)
+  ok 401 [tablet-server-fetch] › tests\browser\server-fetch-states.spec.ts:77:1 › banner: while the API is slow the page shows progress, then the answer (1.4s)
+  ok 402 [tablet-server-fetch] › tests\browser\server-fetch-states.spec.ts:91:1 › banner: an API that never answers ends in 'could not check' instead of hanging (3.5s)
+  ok 403 [tablet-server-fetch] › tests\browser\server-fetch-states.spec.ts:102:1 › banner: when an area is open it says so and links to the delivery check (1.1s)
+  ok 404 [tablet-server-fetch] › tests\browser\server-fetch-states.spec.ts:118:3 › api row: error from the liveness route says "not reachable" with what to do, and the page stands (1.1s)
+  ok 405 [tablet-server-fetch] › tests\browser\server-fetch-states.spec.ts:118:3 › api row: drop from the liveness route says "not reachable" with what to do, and the page stands (1.1s)
+  ok 406 [tablet-server-fetch] › tests\browser\server-fetch-states.spec.ts:132:1 › api row: a healthy API is reported as reachable (1.1s)
+  ok 407 [tablet-server-fetch] › tests\browser\server-fetch-states.spec.ts:142:1 › api row: while the liveness route is slow it shows progress, then the answer (1.5s)
+  ok 408 [tablet-server-fetch] › tests\browser\server-fetch-states.spec.ts:153:1 › api row: a liveness route that never answers ends in 'not reachable' (3.4s)
+  ok 409 [desktop-server-fetch] › tests\browser\server-fetch-states.spec.ts:51:3 › banner: error from the API shows "could not check", never a claim, and the page stands (1.2s)
+  ok 410 [desktop-server-fetch] › tests\browser\server-fetch-states.spec.ts:51:3 › banner: garbage from the API shows "could not check", never a claim, and the page stands (1.2s)
+  ok 411 [desktop-server-fetch] › tests\browser\server-fetch-states.spec.ts:51:3 › banner: drop from the API shows "could not check", never a claim, and the page stands (1.1s)
+  ok 412 [desktop-server-fetch] › tests\browser\server-fetch-states.spec.ts:65:1 › banner: reloading after the API comes back replaces the fallback with the answer (856ms)
+  ok 413 [desktop-server-fetch] › tests\browser\server-fetch-states.spec.ts:77:1 › banner: while the API is slow the page shows progress, then the answer (1.9s)
+  ok 414 [desktop-server-fetch] › tests\browser\server-fetch-states.spec.ts:91:1 › banner: an API that never answers ends in 'could not check' instead of hanging (3.4s)
+  ok 415 [desktop-server-fetch] › tests\browser\server-fetch-states.spec.ts:102:1 › banner: when an area is open it says so and links to the delivery check (1.1s)
+  ok 416 [desktop-server-fetch] › tests\browser\server-fetch-states.spec.ts:118:3 › api row: error from the liveness route says "not reachable" with what to do, and the page stands (1.1s)
+  ok 417 [desktop-server-fetch] › tests\browser\server-fetch-states.spec.ts:118:3 › api row: drop from the liveness route says "not reachable" with what to do, and the page stands (1.2s)
+  ok 418 [desktop-server-fetch] › tests\browser\server-fetch-states.spec.ts:132:1 › api row: a healthy API is reported as reachable (1.1s)
+  ok 419 [desktop-server-fetch] › tests\browser\server-fetch-states.spec.ts:142:1 › api row: while the liveness route is slow it shows progress, then the answer (1.9s)
+  ok 420 [desktop-server-fetch] › tests\browser\server-fetch-states.spec.ts:153:1 › api row: a liveness route that never answers ends in 'not reachable' (3.4s)
+
+  66 skipped
+  354 passed (3.8m)
+EXIT=0

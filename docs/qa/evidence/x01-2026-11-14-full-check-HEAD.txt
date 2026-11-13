@@ -1,0 +1,886 @@
+HEAD c7e360fd669878056f2d53283a8649b918c556c8
+Command: powershell.exe -NoProfile -File infra/scripts/dev.ps1 check (exit code 0, 'All checks passed.')
+Lines containing the local user's home path removed; ANSI codes stripped.
+==> web lint
+
+> food-delivery@ lint F:\PROJECTS\hara
+> pnpm -r --if-present lint
+
+Scope: 9 of 10 workspace projects
+apps/admin-web lint$ eslint
+apps/customer-web lint$ eslint
+apps/merchant-web lint$ eslint
+apps/merchant-web lint: Done
+apps/customer-web lint: Done
+apps/admin-web lint: Done
+==> web typecheck
+
+> food-delivery@ typecheck F:\PROJECTS\hara
+> pnpm -r --if-present typecheck
+
+Scope: 9 of 10 workspace projects
+packages/api-client typecheck$ tsc --noEmit
+packages/api-client typecheck: Done
+apps/admin-web typecheck$ next typegen && tsc --noEmit
+apps/customer-web typecheck$ next typegen && tsc --noEmit
+apps/merchant-web typecheck$ next typegen && tsc --noEmit
+apps/merchant-web typecheck: Generating route types...
+apps/admin-web typecheck: Generating route types...
+apps/customer-web typecheck: Generating route types...
+apps/merchant-web typecheck: ✓ Types generated successfully
+apps/customer-web typecheck: ✓ Types generated successfully
+apps/admin-web typecheck: ✓ Types generated successfully
+apps/merchant-web typecheck: Done
+apps/customer-web typecheck: Done
+apps/admin-web typecheck: Done
+==> web tests
+
+> food-delivery@ test F:\PROJECTS\hara
+> pnpm -r --if-present test
+
+Scope: 9 of 10 workspace projects
+packages/config test$ node --test
+packages/design-tokens test$ node --test
+packages/api-client test$ node --test
+packages/ui test$ node --test
+packages/config test: ✔ applies to every path (0.9261ms)
+packages/design-tokens test: ✔ contrast ratio matches the WCAG reference values (1.2388ms)
+packages/design-tokens test: ✔ rejects colours that are not #rrggbb (0.3299ms)
+packages/design-tokens test: ✔ light and dark define the same tokens (0.7623ms)
+packages/design-tokens test: ✔ every approved pair meets its threshold in both themes (0.5795ms)
+packages/design-tokens test: ✔ restricted tokens really do fail, so the restriction is not stale (0.169ms)
+packages/config test: ✔ forbids framing, sniffing and plugins (0.3675ms)
+packages/config test: ✔ location is off unless asked for, and then only for the app itself (0.1764ms)
+packages/config test: ✔ never allows unsafe script sources (0.1877ms)
+packages/config test: ✔ nonces are fresh, base64 and at least 128 bits (3.2585ms)
+packages/config test: ✔ production policy: nonce plus strict-dynamic, no unsafe sources, API-only connections (0.2916ms)
+packages/config test: ✔ development alone may use unsafe-eval and inline styles (0.1968ms)
+packages/config test: ✔ a nonce is required and the API origin comes from the environment (0.3177ms)
+packages/design-tokens test: ✔ tokens.css is up to date with tokens.mjs (0.6693ms)
+packages/design-tokens test: ✔ contrast report is up to date with tokens.mjs (1.3481ms)
+packages/design-tokens test: ✔ the rider app's Dart tokens are up to date with tokens.mjs (0.576ms)
+packages/config test: ℹ tests 8
+packages/config test: ℹ suites 0
+packages/config test: ℹ pass 8
+packages/config test: ℹ fail 0
+packages/config test: ℹ cancelled 0
+packages/config test: ℹ skipped 0
+packages/config test: ℹ todo 0
+packages/config test: ℹ duration_ms 120.5193
+packages/design-tokens test: ℹ tests 8
+packages/design-tokens test: ℹ suites 0
+packages/design-tokens test: ℹ pass 8
+packages/design-tokens test: ℹ fail 0
+packages/design-tokens test: ℹ cancelled 0
+packages/design-tokens test: ℹ skipped 0
+packages/design-tokens test: ℹ todo 0
+packages/design-tokens test: ℹ duration_ms 123.141
+packages/design-tokens test: Done
+packages/config test: Done
+packages/ui test: ✔ an empty or missing style URL gives the placeholder (0.9248ms)
+packages/ui test: ✔ only an https style URL turns the map on (0.1858ms)
+packages/ui test: ✔ there is no default centre: no shape means no bounds and no centre field (0.2065ms)
+packages/ui test: ✔ bounds come only from the supplied shape (0.9077ms)
+packages/ui test: ✔ the sources hold no centre, zoom or coordinate literals (0.7864ms)
+packages/ui test: ✔ the view always renders an attribution element (0.2671ms)
+packages/ui test: ℹ tests 6
+packages/ui test: ℹ suites 0
+packages/ui test: ℹ pass 6
+packages/ui test: ℹ fail 0
+packages/ui test: ℹ cancelled 0
+packages/ui test: ℹ skipped 0
+packages/ui test: ℹ todo 0
+packages/ui test: ℹ duration_ms 148.023
+packages/ui test: Done
+packages/api-client test:  ✘  Expected type `string` but got `boolean`. at #/paths/~1test/get/responses/200/description
+packages/api-client test: ✔ generated types match the OpenAPI document (109.3025ms)
+packages/api-client test: ✔ an invalid response description fails OpenAPI generation (2.2018ms)
+packages/api-client test: ✔ every documented operation is typed (2.3038ms)
+packages/api-client test: ℹ tests 3
+packages/api-client test: ℹ suites 0
+packages/api-client test: ℹ pass 3
+packages/api-client test: ℹ fail 0
+packages/api-client test: ℹ cancelled 0
+packages/api-client test: ℹ skipped 0
+packages/api-client test: ℹ todo 0
+packages/api-client test: ℹ duration_ms 804.0787
+packages/api-client test: Done
+==> web build
+
+> food-delivery@ build F:\PROJECTS\hara
+> pnpm -r --if-present build
+
+Scope: 9 of 10 workspace projects
+packages/design-tokens build$ node src/build.mjs
+packages/design-tokens build: Wrote tokens.css, the contrast report and the rider app's tokens.g.dart
+packages/design-tokens build: Done
+apps/admin-web build$ next build
+apps/customer-web build$ next build
+apps/merchant-web build$ next build
+apps/merchant-web build: ▲ Next.js 16.4.6 (Turbopack)
+apps/admin-web build: ▲ Next.js 16.4.6 (Turbopack)
+apps/customer-web build: ▲ Next.js 16.4.6 (Turbopack)
+apps/merchant-web build: ✓ Running next.config.ts took 44ms
+apps/customer-web build: ✓ Running next.config.ts took 41ms
+apps/admin-web build: ✓ Running next.config.ts took 44ms
+apps/merchant-web build: - Cache Components enabled
+apps/merchant-web build: - Partial Prefetching enabled
+apps/merchant-web build:   Creating an optimized production build ...
+apps/customer-web build: - Cache Components enabled
+apps/customer-web build: - Partial Prefetching enabled
+apps/customer-web build:   Creating an optimized production build ...
+apps/admin-web build: - Cache Components enabled
+apps/admin-web build: - Partial Prefetching enabled
+apps/admin-web build:   Creating an optimized production build ...
+apps/merchant-web build: ✓ Compiled successfully in 909ms
+apps/merchant-web build:   Running TypeScript ...
+apps/customer-web build: ✓ Compiled successfully in 1294ms
+apps/customer-web build:   Running TypeScript ...
+apps/admin-web build: ✓ Compiled successfully in 1356ms
+apps/admin-web build:   Running TypeScript ...
+apps/merchant-web build:   Finished TypeScript in 2.3s ...
+apps/merchant-web build:   Collecting page data using 9 workers ...
+apps/customer-web build:   Finished TypeScript in 1988ms ...
+apps/customer-web build:   Collecting page data using 11 workers ...
+apps/admin-web build:   Finished TypeScript in 2.9s ...
+apps/admin-web build:   Collecting page data using 11 workers ...
+apps/merchant-web build:   Generating static pages using 9 workers (0/8) ...
+apps/customer-web build:   Generating static pages using 11 workers (0/10) ...
+apps/admin-web build:   Generating static pages using 11 workers (0/14) ...
+apps/admin-web build:   Generating static pages using 11 workers (3/14) 
+apps/admin-web build:   Generating static pages using 11 workers (6/14) 
+apps/admin-web build:   Generating static pages using 11 workers (10/14) 
+apps/admin-web build: ✓ Generating static pages using 11 workers (14/14) in 811ms
+apps/admin-web build:   Finalizing page optimization ...
+apps/admin-web build: Route (app)
+apps/admin-web build: ┌ ◐ /
+apps/admin-web build: ├ ○ /_not-found
+apps/admin-web build: ├ ○ /access
+apps/admin-web build: ├ ○ /audit
+apps/admin-web build: ├ ○ /cities
+apps/admin-web build: ├   /cities/[id]
+apps/admin-web build: │ └ ◐ /cities/[id]
+apps/admin-web build: ├ ○ /forgot-password
+apps/admin-web build: ├ ○ /login
+apps/admin-web build: ├ ○ /reset-password
+apps/admin-web build: ├ ○ /security
+apps/admin-web build: ├ ○ /settings
+apps/admin-web build: └   /test-faults/[kind]
+apps/admin-web build:   └ ◐ /test-faults/[kind]
+apps/admin-web build: ○  (Static)             prerendered as static content
+apps/admin-web build: ◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content
+apps/customer-web build:   Generating static pages using 11 workers (2/10) 
+apps/customer-web build:   Generating static pages using 11 workers (4/10) 
+apps/customer-web build:   Generating static pages using 11 workers (7/10) 
+apps/merchant-web build:   Generating static pages using 9 workers (2/8) 
+apps/merchant-web build:   Generating static pages using 9 workers (4/8) 
+apps/merchant-web build:   Generating static pages using 9 workers (6/8) 
+apps/merchant-web build: ✓ Generating static pages using 9 workers (8/8) in 1514ms
+apps/merchant-web build:   Finalizing page optimization ...
+apps/merchant-web build: Route (app)
+apps/merchant-web build: ┌ ○ /
+apps/merchant-web build: ├ ○ /_not-found
+apps/merchant-web build: ├ ○ /forgot-password
+apps/merchant-web build: ├ ○ /login
+apps/merchant-web build: ├ ○ /reset-password
+apps/merchant-web build: └   /test-faults/[kind]
+apps/merchant-web build:   └ ◐ /test-faults/[kind]
+apps/merchant-web build: ○  (Static)             prerendered as static content
+apps/merchant-web build: ◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content
+apps/customer-web build: ✓ Generating static pages using 11 workers (10/10) in 1580ms
+apps/customer-web build:   Finalizing page optimization ...
+apps/customer-web build: Route (app)
+apps/customer-web build: ┌ ◐ /
+apps/customer-web build: ├ ○ /_not-found
+apps/customer-web build: ├ ○ /account
+apps/customer-web build: ├ ○ /forgot-password
+apps/customer-web build: ├ ○ /location
+apps/customer-web build: ├ ○ /login
+apps/customer-web build: ├ ○ /reset-password
+apps/customer-web build: └   /test-faults/[kind]
+apps/customer-web build:   └ ◐ /test-faults/[kind]
+apps/customer-web build: ○  (Static)             prerendered as static content
+apps/customer-web build: ◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content
+apps/admin-web build: Done
+apps/merchant-web build: Done
+apps/customer-web build: Done
+==> backend format
+
+  ............................................................................
+  ......................................................................
+
+  ──────────────────────────────────────────────────────────────────── Laravel  
+    PASS   ......................................................... 146 files  
+
+==> backend static analysis
+Note: Using configuration file /var/www/backend/phpstan.neon.
+
+ [OK] No errors                                                                 
+
+==> backend tests
+
+   PASS  Tests\Unit\ArchitectureTest
+  ✓ expected domain modules exist                                        0.01s  
+  ✓ domain code does not import http layer                               0.06s  
+  ✓ modules reference each other only through contracts                  0.05s  
+
+   PASS  Tests\Unit\Domain\Geo\CoordinateBoundsTest
+  ✓ accepts values inside and on the bounds with data set "origin"       0.01s  
+  ✓ accepts values inside and on the bounds with data set "asymmetric"
+  ✓ accepts values inside and on the bounds with data set "north pole, date line"
+  ✓ accepts values inside and on the bounds with data set "south pole, antimeridian"
+  ✓ accepts values inside and on the bounds with data set "fractional"
+  ✓ rejects out of range and non finite values with data set "latitude just above"
+  ✓ rejects out of range and non finite values with data set "latitude just below"
+  ✓ rejects out of range and non finite values with data set "longitude just above"
+  ✓ rejects out of range and non finite values with data set "longitude just below"
+  ✓ rejects out of range and non finite values with data set "swapped asymmetric pair"
+  ✓ rejects out of range and non finite values with data set "latitude na n"
+  ✓ rejects out of range and non finite values with data set "longitude na n"
+  ✓ rejects out of range and non finite values with data set "latitude infinite"
+  ✓ rejects out of range and non finite values with data set "longitude negative infinite"
+  ✓ geojson position is longitude then latitude
+  ✓ reads a geojson position as longitude then latitude
+  ✓ geojson position ignores altitude
+  ✓ integer json numbers are accepted in positions
+  ✓ rejects malformed geojson positions with data set "empty"
+  ✓ rejects malformed geojson positions with data set "one value"
+  ✓ rejects malformed geojson positions with data set "four values"
+  ✓ rejects malformed geojson positions with data set "numeric strings"
+  ✓ rejects malformed geojson positions with data set "null"
+  ✓ rejects malformed geojson positions with data set "boolean"
+  ✓ rejects malformed geojson positions with data set "nested"
+  ✓ rejects malformed geojson positions with data set "keyed"
+  ✓ rejects malformed geojson positions with data set "swapped asymmetric pair"
+
+   PASS  Tests\Unit\Domain\Geo\ZoneGeometryFuzzTest
+  ✓ random and mutated input never escapes as an unexpected error        0.08s  
+
+   PASS  Tests\Unit\Domain\Geo\ZoneGeometryValidatorTest
+  ✓ accepts a multipolygon and returns it unchanged
+  ✓ wraps a polygon into a multipolygon
+  ✓ drops altitude and casts integers
+  ✓ keeps holes and multiple polygons
+  ✓ ignores unknown members such as bbox
+  ✓ rejects invalid input with a reason with data set "no type"
+  ✓ rejects invalid input with a reason with data set "point"
+  ✓ rejects invalid input with a reason with data set "feature wrapper"
+  ✓ rejects invalid input with a reason with data set "geometry collection"
+  ✓ rejects invalid input with a reason with data set "type is not a string"
+  ✓ rejects invalid input with a reason with data set "lower-case type"
+  ✓ rejects invalid input with a reason with data set "missing coordinates"
+  ✓ rejects invalid input with a reason with data set "coordinates not a list"
+  ✓ rejects invalid input with a reason with data set "keyed coordinates"
+  ✓ rejects invalid input with a reason with data set "empty multipolygon"
+  ✓ rejects invalid input with a reason with data set "polygon without rings"
+  ✓ rejects invalid input with a reason with data set "multipolygon with empty polygon"
+  ✓ rejects invalid input with a reason with data set "polygon depth given as multipolygon"
+  ✓ rejects invalid input with a reason with data set "multipolygon depth given as polygon"
+  ✓ rejects invalid input with a reason with data set "ring is not a list"
+  ✓ rejects invalid input with a reason with data set "ring too short"
+  ✓ rejects invalid input with a reason with data set "ring not closed"
+  ✓ rejects invalid input with a reason with data set "ring collapsed to a line"
+  ✓ rejects invalid input with a reason with data set "string coordinates"
+  ✓ rejects invalid input with a reason with data set "latitude out of range"
+  ✓ rejects invalid input with a reason with data set "axes swapped"
+  ✓ rejects more vertices than the cap
+  ✓ accepts exactly the vertex cap
+  ✓ rejects an extent wider than the cap
+  ✓ extent is measured across all polygons
+  ✓ accepts an extent within the cap
+  ✓ limits must be positive
+
+   PASS  Tests\Unit\Domain\Identity\TotpTest
+  ✓ it matches the rfc 6238 sha1 vectors with data set " t=59"           0.02s  
+  ✓ it matches the rfc 6238 sha1 vectors with data set " t=1111111109"
+  ✓ it matches the rfc 6238 sha1 vectors with data set " t=1111111111"
+  ✓ it matches the rfc 6238 sha1 vectors with data set " t=1234567890"
+  ✓ it matches the rfc 6238 sha1 vectors with data set " t=2000000000"
+  ✓ it matches the rfc 6238 sha1 vectors with data set " t=20000000000"
+  ✓ the current previous and next step are accepted
+  ✓ two steps either way are refused
+  ✓ a step at or before the last used one is refused
+  ✓ malformed input is refused
+  ✓ a generated secret is 20 random bytes in base32
+  ✓ the provisioning uri carries issuer and label
+
+   PASS  Tests\Unit\Support\Money\CurrencyAmountTest
+  ✓ holds minor units and currency                                       0.01s  
+  ✓ currency is normalized to upper case
+  ✓ rejects invalid currency codes with data set "empty"
+  ✓ rejects invalid currency codes with data set "too short"
+  ✓ rejects invalid currency codes with data set "too long"
+  ✓ rejects invalid currency codes with data set "symbol"
+  ✓ rejects invalid currency codes with data set "digits"
+  ✓ rejects invalid currency codes with data set "padded"
+  ✓ adds and subtracts exactly
+  ✓ amounts that break floats stay exact
+  ✓ is immutable
+  ✓ signed amounts are allowed
+  ✓ multiplies by whole quantity
+  ✓ refuses to combine different currencies
+  ✓ refuses to compare different currencies
+  ✓ equals is false across currencies
+  ✓ compares within a currency
+  ✓ addition overflow throws instead of becoming a float
+  ✓ subtraction overflow throws
+  ✓ multiplication overflow throws
+  ✓ negating the minimum integer throws
+  ✓ parses decimal strings without floats with data set "whole"
+  ✓ parses decimal strings without floats with data set "two decimals"
+  ✓ parses decimal strings without floats with data set "one decimal"
+  ✓ parses decimal strings without floats with data set "float-hostile"
+  ✓ parses decimal strings without floats with data set "another float-hostile"
+  ✓ parses decimal strings without floats with data set "negative"
+  ✓ parses decimal strings without floats with data set "zero"
+  ✓ parses decimal strings without floats with data set "large"
+  ✓ rejects malformed decimal strings with data set "empty"
+  ✓ rejects malformed decimal strings with data set "three decimals"
+  ✓ rejects malformed decimal strings with data set "thousands separator"
+  ✓ rejects malformed decimal strings with data set "currency symbol"
+  ✓ rejects malformed decimal strings with data set "exponent"
+  ✓ rejects malformed decimal strings with data set "trailing dot"
+  ✓ rejects malformed decimal strings with data set "leading dot"
+  ✓ rejects malformed decimal strings with data set "spaces"
+  ✓ rejects malformed decimal strings with data set "plus sign"
+  ✓ rejects malformed decimal strings with data set "words"
+  ✓ rejects malformed decimal strings with data set "out of range"
+  ✓ serializes to amount and currency only
+
+   PASS  Tests\Unit\Support\ProductionGuardTest
+  ✓ a safe configuration has no violations                               0.02s  
+  ✓ specific proxy addresses and ranges are accepted
+  ✓ each unsafe setting is reported with data set "debug on"
+  ✓ each unsafe setting is reported with data set "every proxy trusted"
+  ✓ each unsafe setting is reported with data set "every proxy trusted, alternate form"
+  ✓ each unsafe setting is reported with data set "proxy list missing"
+  ✓ each unsafe setting is reported with data set "proxy is a host name"
+  ✓ each unsafe setting is reported with data set "proxy range too wide"
+  ✓ each unsafe setting is reported with data set "proxy range too wide, ipv6"
+  ✓ each unsafe setting is reported with data set "proxy mask invalid"
+  ✓ each unsafe setting is reported with data set "debug unset"
+  ✓ each unsafe setting is reported with data set "debug as a string"
+  ✓ each unsafe setting is reported with data set "no app key"
+  ✓ each unsafe setting is reported with data set "api over http"
+  ✓ each unsafe setting is reported with data set "cookie not secure"
+  ✓ each unsafe setting is reported with data set "cookie secure unset"
+  ✓ each unsafe setting is reported with data set "cookie readable by script"
+  ✓ each unsafe setting is reported with data set "cross-site cookie"
+  ✓ each unsafe setting is reported with data set "wildcard cors"
+  ✓ each unsafe setting is reported with data set "cors pattern"
+  ✓ each unsafe setting is reported with data set "cors patterns unset"
+  ✓ each unsafe setting is reported with data set "cors over http"
+  ✓ each unsafe setting is reported with data set "cors unset"
+  ✓ each unsafe setting is reported with data set "app origin over http"
+  ✓ each unsafe setting is reported with data set "app origin on localhost"
+  ✓ each unsafe setting is reported with data set "app origins unset"
+  ✓ each unsafe setting is reported with data set "two apps on one origin"
+  ✓ each unsafe setting is reported with data set "weak hashing"
+  ✓ each unsafe setting is reported with data set "demo accounts enabled"
+  ✓ each unsafe setting is reported with data set "placeholder database password"
+  ✓ an empty set of facts fails every rule
+  ✓ every problem is listed at once
+  ✓ the guard applies everywhere except development and repair commands with data set "local web"
+  ✓ the guard applies everywhere except development and repair commands with data set "test suite"
+  ✓ the guard applies everywhere except development and repair commands with data set "production web"
+  ✓ the guard applies everywhere except development and repair commands with data set "staging web"
+  ✓ the guard applies everywhere except development and repair commands with data set "mistyped environment"
+  ✓ the guard applies everywhere except development and repair commands with data set "production queue worker"
+  ✓ the guard applies everywhere except development and repair commands with data set "production scheduler"
+  ✓ the guard applies everywhere except development and repair commands with data set "production tinker"
+  ✓ the guard applies everywhere except development and repair commands with data set "production seeder"
+  ✓ the guard applies everywhere except development and repair commands with data set "production key generation"
+  ✓ the guard applies everywhere except development and repair commands with data set "production migrate"
+  ✓ the guard applies everywhere except development and repair commands with data set "image build discovery"
+  ✓ the guard applies everywhere except development and repair commands with data set "bare artisan"
+
+   PASS  Tests\Feature\Admin\AuditLogAndStatusTest
+  ✓ both routes need a session and the admin app                         1.10s  
+  ✓ staff without the permission are refused                             0.21s  
+  ✓ owner reads entries newest first with safe fields only               0.19s  
+  ✓ sensitive values are redacted even if stored raw                     0.19s  
+  ✓ filters and paging                                                   0.25s  
+  ✓ a city scoped admin sees only their city                             0.21s  
+  ✓ system status reports health and counts without secrets              0.21s  
+
+   PASS  Tests\Feature\Admin\CrossTenantIsolationTest
+  ✓ every parameterised admin route is in the attempt list               0.18s  
+  ✓ staff of one city cannot see or change another city with data set "… 0.38s  
+  ✓ staff of one city cannot see or change another city with data set "… 0.31s  
+  ✓ staff of one city cannot see or change another city with data set "… 0.31s  
+  ✓ staff of one city cannot see or change another city with data set "… 0.31s  
+  ✓ staff of one city cannot see or change another city with data set "… 0.50s  
+  ✓ lists never include the other city with data set "city manager"      0.22s  
+  ✓ lists never include the other city with data set "city-scoped platf… 0.22s  
+  ✓ lists never include the other city with data set "dispatcher"        0.23s  
+  ✓ lists never include the other city with data set "city-scoped suppo… 0.24s  
+  ✓ lists never include the other city with data set "city-scoped finan… 0.22s  
+  ✓ a grant for one city is not widened by request input                 0.24s  
+  ✓ a revoked grant stops working at once                                0.23s  
+  ✓ losing one city keeps the other                                      0.23s  
+
+   PASS  Tests\Feature\Admin\StaffAccessTest
+  ✓ every route needs a session and the admin app                        0.21s  
+  ✓ roles without users read get 403 on the lists and 404 on a named pe… 0.22s  
+  ✓ roles without users read get 403 on the lists and 404 on a named pe… 0.22s  
+  ✓ support can read but never assign                                    0.23s  
+  ✓ the list holds staff only and shows their grants                     0.21s  
+  ✓ a city manager sees only people and grants in their own city         0.20s  
+  ✓ support sees masked addresses                                        0.20s  
+  ✓ the list pages by cursor                                             0.23s  
+  ✓ can revoke tells the screen what would be allowed                    0.21s  
+  ✓ roles on offer follow what the caller may hand out                   0.19s  
+  ✓ a city manager is offered only the dispatcher role for their city    0.20s  
+  ✓ a platform admin grants a city manager role and it is audited        0.21s  
+  ✓ a city manager grants a dispatcher in their own city only            0.22s  
+  ✓ a city manager cannot climb with data set "another city manager"     0.20s  
+  ✓ a city manager cannot climb with data set "platform admin"           0.20s  
+  ✓ a city manager cannot climb with data set "platform owner"           0.30s  
+  ✓ a city manager cannot climb with data set "finance"                  0.21s  
+  ✓ a city manager cannot climb with data set "support"                  0.21s  
+  ✓ a city manager cannot climb with data set "a merchant role"          0.21s  
+  ✓ a city manager cannot climb with data set "rider"                    0.21s  
+  ✓ a city manager cannot climb with data set "customer"                 0.20s  
+  ✓ even a platform owner cannot grant these roles with data set "platf… 0.20s  
+  ✓ even a platform owner cannot grant these roles with data set "merch… 0.21s  
+  ✓ even a platform owner cannot grant these roles with data set "rider… 0.20s  
+  ✓ even a platform owner cannot grant these roles with data set "custo… 0.20s  
+  ✓ a platform admin cannot make another platform admin                  0.21s  
+  ✓ nobody changes their own roles                                       0.21s  
+  ✓ a city manager cannot revoke or add to their own grants              0.20s  
+  ✓ a person outside the callers view does not exist for them            0.24s  
+  ✓ input is validated                                                   0.26s  
+  ✓ the same role twice is a conflict and a suspended person is refused  0.24s  
+  ✓ a city manager revokes a dispatcher and it is audited                0.23s  
+  ✓ revoking the last staff role leaves the person without staff grants  0.22s  
+  ✓ revoking is refused where granting would be                          0.23s  
+  ✓ the platform owner role cannot be revoked by a platform admin        0.24s  
+  ✓ the platform owner role cannot be revoked even by another owner      0.21s  
+  ✓ a grant must belong to the person in the path                        0.20s  
+  ✓ a role can be granted again after it was revoked                     0.22s  
+
+   PASS  Tests\Feature\ApiErrorEnvelopeTest
+  ✓ unknown api route returns the error envelope                         0.11s  
+  ✓ every api response carries a request id header matching the body     0.09s  
+  ✓ a well formed incoming request id is kept and a hostile one is repl… 0.09s  
+  ✓ wrong method is reported without internals                           0.09s  
+  ✓ unexpected errors reveal nothing even with debug on                  0.09s  
+
+   PASS  Tests\Feature\Auth\PasswordRecoveryTest
+  ✓ a password reset invalidates an existing browser session             0.35s  
+  ✓ known and unknown addresses get the same answer                      0.18s  
+  ✓ the email goes to the account and links to the app that asked        0.18s  
+  ✓ only a hash of the token is stored                                   0.18s  
+  ✓ a valid token sets a new password once                               0.23s  
+  ✓ an expired token is refused                                          0.21s  
+  ✓ a wrong token is refused with the same message as an expired one     0.19s  
+  ✓ a weak new password is refused and the link stays usable             0.19s  
+  ✓ a newer request cancels the older link                               0.18s  
+  ✓ a suspended account gets no email                                    0.18s  
+  ✓ repeated requests for one address stop sending mail but answer the…  0.20s  
+  ✓ recovery needs a known app origin and valid input                    0.20s  
+  ✓ resetting does not reactivate a suspended account                    0.18s  
+
+   PASS  Tests\Feature\Auth\RegisterCustomerTest
+  ✓ registration is closed unless the feature flag is on                 0.19s  
+  ✓ registration creates a customer and nothing more                     0.18s  
+  ✓ role scope and status in the request are ignored                     0.18s  
+  ✓ an existing email gets the same answer and changes nothing           0.20s  
+  ✓ weak or malformed input is a validation error                        0.18s  
+  ✓ registration is only offered on the customer surface                 0.19s  
+
+   PASS  Tests\Feature\Auth\RiderTokenTest
+  ✓ an approved rider receives a scoped short lived token                0.22s  
+  ✓ every refusal looks the same                                         0.23s  
+  ✓ the token opens the riders own profile and nothing secret            0.20s  
+  ✓ requests without a valid token are refused                           0.19s  
+  ✓ a token stops working after an hour                                  0.20s  
+  ✓ refresh replaces the token and the old one dies                      0.20s  
+  ✓ refresh stops thirty days after sign in                              0.29s  
+  ✓ a refreshed token never outlives the thirty days                     0.24s  
+  ✓ sign out revokes the token and the device                            0.21s  
+  ✓ a rider token does not work on browser or admin routes               0.21s  
+  ✓ a browser session does not work on rider routes                      0.22s  
+  ✓ suspension cuts off an existing token on the next request            0.24s  
+  ✓ a password reset revokes every token and device                      0.24s  
+  ✓ a revoked device cuts off its token                                  0.21s  
+  ✓ repeated failures are rate limited                                   0.24s  
+  ✓ device details are validated                                         0.21s  
+
+   PASS  Tests\Feature\Auth\SessionAndMeTest
+  ✓ me requires a session                                                0.18s  
+  ✓ me returns the user with grants and no secret fields                 0.21s  
+  ✓ revoked grants do not appear in me                                   0.21s  
+  ✓ logout ends the session                                              0.20s  
+  ✓ logout without a session is refused                                  0.17s  
+  ✓ a customer session is not valid on the admin surface                 0.19s  
+  ✓ a suspended user loses their session on the next request             0.20s  
+  ✓ staff lose the admin surface when their last staff grant is revoked  0.20s  
+  ✓ csrf endpoint issues a token only to known origins                   0.17s  
+
+   PASS  Tests\Feature\Auth\SessionLoginTest
+  ✓ valid credentials sign the user in on the customer surface           0.20s  
+  ✓ response never contains secrets                                      0.20s  
+  ✓ email is matched without regard to case or spaces                    0.18s  
+  ✓ wrong password unknown account and suspended account look identical  0.19s  
+  ✓ login requires a known app origin                                    0.18s  
+  ✓ missing fields are a validation error                                0.17s  
+  ✓ a customer cannot sign in to the admin or merchant surface           0.21s  
+  ✓ staff sign in to the admin surface with its own cookie               0.18s  
+  ✓ a revoked staff grant no longer opens the admin surface              0.18s  
+  ✓ merchant surface needs an active staff membership                    0.19s  
+  ✓ deployed admin sign in without a second factor is enrolment only wi… 0.20s  
+  ✓ deployed admin sign in without a second factor is enrolment only wi… 0.19s  
+  ✓ an existing admin session is ended when the gate applies with data…  0.18s  
+  ✓ an existing admin session is ended when the gate applies with data…  0.19s  
+  ✓ repeated failures are rate limited per account                       0.22s  
+
+   PASS  Tests\Feature\Auth\StaffMfaRecoveryTest
+  ✓ reset clears the factor and codes and audits the reason              0.26s  
+  ✓ a reset user can enrol again and old codes are dead                  0.28s  
+  ✓ a reset user must enrol again when deployed                          0.27s  
+  ✓ the targets old session fails on its next request locally            0.25s  
+  ✓ the targets old session fails on its next request when deployed      0.25s  
+  ✓ an old session does not come back when the user enrols again         0.26s  
+  ✓ reset removes the targets stored sessions when sessions live in the… 0.19s  
+  ✓ a user cannot reset their own factor                                 0.21s  
+  ✓ staff without the permission get 403 and nothing changes             0.22s  
+  ✓ the permission is held by the platform owner alone                   0.16s  
+  ✓ city scoped staff get 403 even if their role were granted the permi… 0.22s  
+  ✓ only a platform owner may reset a platform owner                     0.24s  
+  ✓ a platform owner may reset another platform owner                    0.22s  
+  ✓ unknown malformed and non staff targets answer 404                   0.23s  
+  ✓ a user whose staff grant was revoked is not staff                    0.22s  
+  ✓ a missing or empty reason is a 422 with data set #0                  0.22s  
+  ✓ a missing or empty reason is a 422 with data set #1                  0.21s  
+  ✓ a missing or empty reason is a 422 with data set #2                  0.21s  
+  ✓ a missing or empty reason is a 422 with data set #3                  0.21s  
+  ✓ the reason is capped at 255 characters                               0.23s  
+  ✓ reset needs a session and the admin surface                          0.21s  
+  ✓ no secret or code reaches a reset response or audit row              0.22s  
+  ✓ regenerating returns ten new codes and kills the old ones            0.28s  
+  ✓ regenerating is audited without codes                                0.21s  
+  ✓ a wrong code changes nothing and is a 422 like confirm               0.22s  
+  ✓ the code that signed in cannot be replayed to regenerate             0.23s  
+  ✓ regeneration failures are rate limited                               0.25s  
+  ✓ regeneration is for the admin surface only                           0.19s  
+  ✓ regeneration needs a session                                         0.16s  
+  ✓ regeneration without a confirmed factor is a 409                     0.19s  
+  ✓ a deployed enrolment only session cannot regenerate                  0.18s  
+
+   PASS  Tests\Feature\Auth\StaffMfaTest
+  ✓ login with a confirmed factor asks for the second step and signs no… 0.21s  
+  ✓ a wrong password still gives the generic answer for mfa staff        0.18s  
+  ✓ the correct code completes sign in                                   0.20s  
+  ✓ sign in regenerates the session id                                   0.20s  
+  ✓ a wrong code gets the same 401 as a wrong password and is audited    0.19s  
+  ✓ a malformed code is a failure not a hint                             0.19s  
+  ✓ the same code cannot be used twice in one step                       0.24s  
+  ✓ clock drift of one step is accepted with data set #0                 0.21s  
+  ✓ clock drift of one step is accepted with data set #1                 0.20s  
+  ✓ clock drift of one step is accepted with data set #2                 0.20s  
+  ✓ clock drift of two steps is refused with data set #0                 0.20s  
+  ✓ clock drift of two steps is refused with data set #1                 0.20s  
+  ✓ a recovery code works once and is audited                            0.25s  
+  ✓ failed verifications are rate limited per account and address        0.27s  
+  ✓ the pending marker expires after five minutes                        0.41s  
+  ✓ verify without a pending sign in is refused                          0.19s  
+  ✓ a pending marker is not a session on the other surfaces              0.19s  
+  ✓ customer and merchant sign in are unchanged even with a factor on f… 0.19s  
+  ✓ a session whose factor appeared later must sign in again             0.21s  
+  ✓ enrolment flow end to end                                            0.24s  
+  ✓ confirming with nothing started is refused and a wrong code is rate… 0.23s  
+  ✓ only the admin surface can enrol                                     0.19s  
+  ✓ enrolment routes need a session                                      0.17s  
+  ✓ a deployed staff session without a factor can only enrol with data…  0.26s  
+  ✓ a deployed staff session without a factor can only enrol with data…  0.25s  
+  ✓ an enrolment only session can sign out                               0.18s  
+  ✓ deployed staff with a factor get a normal session after the second…  0.21s  
+  ✓ a deployed session with no second step marker is ended               0.18s  
+  ✓ secrets and codes never reach audit rows or other responses          0.24s  
+
+   PASS  Tests\Feature\Geo\AdminCityTest
+  ✓ admin routes need a session                                          0.18s  
+  ✓ a customer session cannot reach admin routes                         0.19s  
+  ✓ owner creates a draft city and it is audited                         0.19s  
+  ✓ status and id in a create request are ignored                        0.19s  
+  ✓ invalid city input is rejected field by field                        0.20s  
+  ✓ a slug can be used once                                              0.20s  
+  ✓ a city manager sees only their city and cannot create or edit        0.23s  
+  ✓ staff without city permissions get nothing                           0.19s  
+  ✓ ids are matched in any letter case and malformed ids are not found   0.20s  
+  ✓ owner edits safe fields only                                         0.19s  
+  ✓ status moves only along allowed transitions                          0.29s  
+  ✓ an archived city cannot be edited                                    0.19s  
+  ✓ list is paged sorted and filterable                                  0.23s  
+
+   PASS  Tests\Feature\Geo\AdminExclusionTest
+  ✓ exclusion routes need a session                                      0.19s  
+  ✓ an exclusion is created takes effect and is audited                  0.23s  
+  ✓ a time window is stored in utc and respected                         0.23s  
+  ✓ invalid input is rejected                                            0.24s  
+  ✓ an exclusion must touch its zone                                     0.22s  
+  ✓ an archived zone takes no exclusions                                 0.21s  
+  ✓ list and delete                                                      0.26s  
+  ✓ deleting the last exclusion restores service                         0.23s  
+  ✓ permission and city scope are enforced                               0.33s  
+
+   PASS  Tests\Feature\Geo\AdminZoneStatusTest
+  ✓ activation needs explicit confirmation                               0.21s  
+  ✓ a draft zone in an active city activates and becomes serviceable     0.26s  
+  ✓ a zone cannot activate unless its city is active                     0.23s  
+  ✓ pause needs a reason and records it                                  0.24s  
+  ✓ status moves only along allowed transitions                          0.31s  
+  ✓ a stale version is a conflict                                        0.23s  
+  ✓ permission and city scope are enforced                               0.25s  
+  ✓ status routes need a session                                         0.19s  
+
+   PASS  Tests\Feature\Geo\AdminZoneTest
+  ✓ zone routes need a session                                           0.18s  
+  ✓ owner creates a draft zone with version one and it is audited        0.20s  
+  ✓ structurally invalid geometry is rejected                            0.24s  
+  ✓ self intersecting geometry is rejected by postgis                    0.20s  
+  ✓ other fields are validated and slug is unique per city               0.24s  
+  ✓ an archived city takes no new zones                                  0.19s  
+  ✓ city scope is enforced                                               0.28s  
+  ✓ read only staff cannot write zones                                   0.24s  
+  ✓ update bumps the version and is audited                              0.22s  
+  ✓ a stale version is a conflict and changes nothing                    0.23s  
+  ✓ update needs a version and valid geometry                            0.23s  
+  ✓ an archived zone cannot be edited                                    0.22s  
+  ✓ list is paged and omits geometry                                     0.23s  
+  ✓ malformed ids are not found                                          0.19s  
+
+   PASS  Tests\Feature\Geo\PublicConfigTest
+  ✓ defaults show nothing open and everything off                        0.11s  
+  ✓ service is open only with an active zone in an active city           0.13s  
+  ✓ flags and map style follow configuration                             0.11s  
+  ✓ a map style that is not an https url is withheld                     0.13s  
+  ✓ it exposes no secret or internal setting                             0.11s  
+
+   PASS  Tests\Feature\Geo\ServiceabilityTest
+  ✓ nothing configured is not serviceable and invents no location        0.13s  
+  ✓ point inside an active zone of an active city is serviceable         0.13s  
+  ✓ boundary points count as inside                                      0.13s  
+  ✓ point outside every zone is not serviceable                          0.13s  
+  ✓ swapped axes do not match                                            0.13s  
+  ✓ draft paused and archived zones or cities are not serviceable        0.14s  
+  ✓ an active exclusion removes its area including its boundary          0.14s  
+  ✓ exclusions outside their time window do not apply                    0.13s  
+  ✓ overlapping zones resolve by priority then id                        0.13s  
+  ✓ a point excluded from the top zone falls through to the next         0.13s  
+  ✓ invalid coordinates are rejected before any query                    0.13s  
+  ✓ a position is never accepted in the url                              0.13s  
+  ✓ decimal strings and json numbers are both accepted                   0.14s  
+  ✓ response never exposes geometry or internal fields                   0.13s  
+  ✓ public cities lists only active cities with public fields            0.12s  
+  ✓ serviceability is rate limited                                       0.35s  
+
+   PASS  Tests\Feature\HealthTest
+  ✓ live returns minimal body                                            0.10s  
+  ✓ health routes run outside the session middleware                     0.08s  
+  ✓ live does not touch the session store                                0.09s  
+  ✓ ready is hidden from public addresses                                0.10s  
+  ✓ ready reports only dependency state to internal callers              0.10s  
+  ✓ framework default health route is not registered                     0.11s  
+  ✓ no later phase api routes exist                                      0.10s  
+
+   PASS  Tests\Feature\ProductionConfigTest
+  ✓ a fully safe configuration is accepted                               0.08s  
+  ✓ the facts never contain a secret value                               0.08s  
+  ✓ real settings drive each secret fact                                 0.08s  
+  ✓ unsafe settings are refused without leaking secrets or leaving debu… 0.08s  
+  ✓ the guard does not apply to the test suite itself                    0.08s  
+
+   PASS  Tests\Feature\RouteCoverageTest
+  ✓ every route has a name                                               0.10s  
+  ✓ the public list names only real routes                               0.09s  
+  ✓ every route is public on purpose or behind the session guard         0.09s  
+  ✓ every admin route is behind the admin surface guard and nothing els… 0.09s  
+  ✓ the guards run in the right order on admin routes                    0.09s  
+  ✓ public api routes are rate limited                                   0.09s  
+  ✓ readiness stays internal                                             0.09s  
+  ✓ every guarded route really refuses an anonymous request              0.17s  
+
+   PASS  Tests\Feature\RouteInventoryTest
+  ✓ only expected routes are registered                                  0.10s  
+
+   PASS  Tests\Feature\Security\BrowserBoundaryTest
+  ✓ every kind of response carries the security headers                  0.18s  
+  ✓ api responses are never stored by a cache                            0.20s  
+  ✓ hsts is sent only over https                                         0.18s  
+  ✓ each listed origin is allowed with credentials                       0.15s  
+  ✓ the apps can read the request id and the retry wait                  0.18s  
+  ✓ lookalike and unlisted origins get no cross origin access            0.19s  
+  ✓ a wildcard is never returned                                         0.17s  
+  ✓ preflight does not allow unlisted request headers                    0.15s  
+  ✓ session cookie is http only lax and named per app with data set "cu… 0.18s  
+  ✓ session cookie is http only lax and named per app with data set "ad… 0.18s  
+  ✓ cookies are secure when https is configured                          0.18s  
+  ✓ sign out expires the session cookie                                  0.20s  
+
+   PASS  Tests\Feature\Security\TrustedProxyTest
+  ✓ nothing forwarded is believed by default                             0.09s  
+  ✓ the configured proxy is believed for scheme port and client          0.09s  
+  ✓ the forwarded host is never believed                                 0.08s  
+  ✓ a client that is not the proxy cannot fake its address or https      0.09s  
+  ✓ a range can be trusted                                               0.08s  
+  ✓ hsts is sent behind the trusted proxy                                0.08s  
+  ✓ hsts is not sent when someone else claims https                      0.09s  
+  ✓ the setting is read from the environment as a list                   0.08s  
+
+   PASS  Tests\Feature\StructuredLogTest
+  ✓ every request logs http request with its id and route template       0.18s  
+  ✓ no log record carries the position that was checked                  0.18s  
+  ✓ the route template hides ids from the path                           0.20s  
+  ✓ a permission refusal logs rbac denied                                0.19s  
+  ✓ a city change logs city updated after commit                         0.19s  
+  ✓ an audit entry rolled back is never logged                           0.16s  
+  ✓ activating a zone logs zone activated                                0.21s  
+  ✓ a rejected shape logs zone validation failed without coordinates     0.19s  
+  ✓ the structured channel writes json and redacts positions and secret… 0.16s  
+
+   PASS  Tests\Integration\AccessCheckerTest
+  ✓ a user without grants is denied everything                           0.25s  
+  ✓ customer and rider roles carry no permissions                        0.22s  
+  ✓ global grant covers every city                                       0.17s  
+  ✓ city grant covers its own city only                                  0.19s  
+  ✓ scope does not add permissions the role lacks                        0.18s  
+  ✓ only the owner may change feature flags                              0.18s  
+  ✓ revoked grant stops working immediately                              0.16s  
+  ✓ suspended user is denied even with a live grant                      0.16s  
+  ✓ city grant reaches branches in that city only                        0.18s  
+  ✓ city reach lists cities for query filtering                          0.18s  
+  ✓ scope rejects malformed values                                       0.15s  
+
+   PASS  Tests\Integration\AuditAndCatalogueTest
+  ✓ sensitive values are redacted at any depth                           0.16s  
+  ✓ recorded entries are redacted and never hold the raw ip              0.16s  
+  ✓ catalogue is seeded exactly and reseeding changes nothing            0.20s  
+  ✓ catalogue matches the accepted matrix                                0.21s  
+  ✓ reseeding removes a permission that left the catalogue               0.20s  
+
+   PASS  Tests\Integration\ConcurrentRoleGrantTest
+  ✓ a replacement grant waits for revocation and leaves one active gran… 1.26s  
+
+   PASS  Tests\Integration\ConcurrentZoneUpdateTest
+  ✓ a waiting editor cannot overwrite the committed edit                 1.06s  
+
+   PASS  Tests\Integration\MigrationRollbackTest
+  ✓ fresh rollback and remigrate                                         1.03s  
+
+   PASS  Tests\Integration\RoleGrantServiceTest
+  ✓ owner grants a role and it is audited in the same step               0.63s  
+  ✓ nobody can grant themselves a role                                   0.17s  
+  ✓ a customer cannot grant anything                                     0.17s  
+  ✓ platform owner is never grantable even by an owner                   0.17s  
+  ✓ onboarding roles are not grantable through this service              0.17s  
+  ✓ an admin cannot grant a role at or above their own                   0.18s  
+  ✓ a city manager can grant dispatcher in their city and nothing else   0.19s  
+  ✓ a city scoped admin cannot reach outside that city                   0.19s  
+  ✓ a role cannot be granted at a scope it does not support              0.16s  
+  ✓ a grant needs a scope that exists                                    0.16s  
+  ✓ unknown roles and inactive targets are refused                       0.17s  
+  ✓ the same grant cannot be made twice                                  0.18s  
+  ✓ revoking removes access and is audited                               0.19s  
+  ✓ only someone who could grant a role can revoke it                    0.19s  
+  ✓ a revoked grantor can no longer grant                                0.17s  
+
+   PASS  Tests\Integration\SchemaTest
+  ✓ postgis is available                                                 0.11s  
+  ✓ expected tables exist                                                0.10s  
+  ✓ no later phase tables exist                                          0.10s  
+  ✓ geometry columns have gist indexes                                   0.15s  
+  ✓ ulids are stored in one case                                         0.10s  
+  ✓ city starts as draft and rejects unknown status                      0.10s  
+  ✓ city slug is unique                                                  0.10s  
+  ✓ zone round trips as a multipolygon in lon lat order                  0.11s  
+  ✓ boundary point is covered and outside point is not                   0.11s  
+  ✓ self intersecting zone is rejected by the database                   0.11s  
+  ✓ zone slug is unique within a city only                               0.11s  
+  ✓ city with zones cannot be deleted                                    0.11s  
+  ✓ exclusion window must end after it starts                            0.11s  
+  ✓ global grant has no scope id and scoped grant needs one              0.10s  
+  ✓ a live grant cannot be duplicated but can be regranted after revoca… 0.10s  
+  ✓ audit log is append only                                             0.10s  
+  ✓ user email must be lower case and status known                       0.10s  
+  ✓ status and roles are not mass assignable                             0.09s  
+  ✓ only one default address per user                                    0.11s  
+  ✓ development seeder creates labelled demo data once                   0.23s  
+  ✓ development seeder creates demo accounts only when a password is co… 0.27s  
+  ✓ development seeder refuses to run in production                      0.10s  
+
+   PASS  Tests\Integration\ServiceabilityPlanTest
+  ✓ spatial indexes exist                                                0.16s  
+  ✓ serviceability uses the spatial index at scale                       0.25s  
+
+   PASS  Tests\Integration\ZoneGeometryPostgisFuzzTest
+  ✓ the api agrees with postgis on every random shape                    2.00s  
+
+   PASS  Tests\Contract\OpenApiDocumentTest
+  ✓ document is openapi 3 1                                              0.12s  
+  ✓ documented operations equal registered routes                        0.11s  
+  ✓ every operation has an id and documents its errors                   0.11s  
+  ✓ error codes in the document match the renderer                       0.12s  
+  ✓ live error and health bodies use only documented fields              0.13s  
+
+  Tests:    523 passed (34445 assertions)
+  Duration: 74.79s
+
+==> flutter analyze
+Analyzing rider-flutter...                                      
+No issues found! (ran in 2.0s)
+==> flutter test
+00:00 +0: loading F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart
+00:00 +0: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: an empty base URL is not configured and calls nothing
+00:00 +1: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: signIn posts the documented body without an Origin header
+00:00 +2: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: signIn 401 is unauthorized
+00:00 +3: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: signIn 422 carries the field messages
+00:00 +4: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: signIn 422 without a readable body has no fields
+00:00 +5: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: signIn 429 is rate limited
+00:00 +6: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: signIn other statuses are unexpected
+00:00 +7: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: signIn a 201 with the wrong shape is unexpected
+00:00 +8: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: signIn a socket error is offline
+00:00 +9: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: signIn a timeout is offline
+00:00 +10: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: signIn any other error is unexpected
+00:00 +11: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: me sends the bearer token and reads the profile
+00:00 +12: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: me 401 is unauthorized
+00:00 +13: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: signOut sends DELETE with the bearer token; 204 is ok
+00:00 +14: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: signOut 401 is reported, not thrown
+00:00 +15: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: a token does not appear in its string form
+00:00 +16: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: over a real socket the default dart:io sender works
+00:00 +17: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: over a real socket a closed port is offline
+00:00 +17 ~1: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: over a real socket a closed port is offline
+00:00 +17 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: over a real socket a closed port is offline
+00:01 +18 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: over a real socket a closed port is offline
+00:01 +19 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: over a real socket a closed port is offline
+00:01 +20 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: over a real socket a closed port is offline
+00:01 +21 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: over a real socket a closed port is offline
+00:01 +22 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: over a real socket a closed port is offline
+00:01 +23 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: over a real socket a closed port is offline
+00:01 +24 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: over a real socket a closed port is offline
+00:01 +25 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: over a real socket a closed port is offline
+00:02 +26 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: over a real socket a closed port is offline
+00:02 +27 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/core/rider_api_test.dart: over a real socket a closed port is offline
+00:02 +28 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart: shows no invented money, distance or offer
+00:02 +29 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart: shows no invented money, distance or offer
+00:02 +30 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/sign_in_test.dart: an unexpected status says so without detail
+00:02 +31 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart: fits a narrow phone without overflow
+00:02 +32 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/sign_in_test.dart: a rider whose profile cannot be read is not signed in
+00:02 +33 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/sign_in_test.dart: a rider whose profile cannot be read is not signed in
+00:02 +34 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/sign_in_test.dart: an empty API address says so and does not claim success
+00:02 +35 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/sign_in_test.dart: the button is disabled while submitting
+00:02 +36 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/sign_in_test.dart: the button is enabled again after a failure
+00:02 +37 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/sign_in_test.dart: the password is hidden until the rider asks
+00:02 +38 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/sign_in_test.dart: sign out calls the API and returns to sign-in
+00:03 +39 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/sign_in_test.dart: sign out returns to sign-in even if the call fails
+00:03 +40 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/sign_in_test.dart: sign out returns to sign-in even if the call throws
+00:03 +41 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/sign_in_test.dart: fits 320 px wide without overflow (dark)
+00:03 +42 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/sign_in_test.dart: fits 320 px wide without overflow (light)
+00:03 +43 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/sign_in_test.dart: home after sign-in fits 320 px wide
+00:03 +44 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/sign_in_test.dart: fields and buttons have accessible labels
+00:03 +45 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/sign_in_test.dart: sign out is a labelled button
+00:03 +46 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/sign_in_test.dart: an error message is announced as a live region
+00:03 +47 ~2: All tests passed!
+All checks passed.
+EXIT=0

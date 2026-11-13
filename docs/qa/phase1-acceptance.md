@@ -11,7 +11,7 @@ Result key: `not run`, `pass`, `fail`, `blocked`.
 | 1 | `setup`, `up`, `migrate`, `seed-demo`, `check` work through Make and PowerShell | `docs/qa/evidence/x01-2026-11-14-clean-clone.txt` | partial: `setup` passes in a fresh clone; `up`, `migrate`, `seed-demo`, `check` not run there (would reuse the running stack); Makefile not run (`make` missing) |
 | 2 | API boots with isolated databases; fresh migrate and rollback verified | Healthy Compose stack and MigrationRollbackTest in the isolated test database | pass locally |
 | 3 | Register, login, logout, current user | Feature tests B-02 | pass locally |
-| 4 | Admin creates and disables a city, creates and disables a polygon zone; no assumed coordinates or timezone | Feature tests C-02, C-04, C-05 and local live Chromium run with synthetic GeoJSON | City and zone lifecycle verified locally; map drawing and repository-wide hardcoded-coordinate review remain open |
+| 4 | Admin creates and disables a city, creates and disables a polygon zone; no assumed coordinates or timezone | Feature tests C-02, C-04, C-05 and local live Chromium run with synthetic GeoJSON | City and zone lifecycle verified locally; map drawing remains open. The repository-wide hardcoded-coordinate review was done by text search (`docs/qa/evidence/x01-2026-11-14-text-searches.txt`) |
 | 5 | Serviceability returns inside/outside correctly and `NO_ACTIVE_ZONE` when nothing is configured | ServiceabilityTest | pass locally |
 | 6 | Cross-tenant access denied for guessed or edited IDs | CrossTenantIsolationTest, route coverage test | pass for implemented city-scoped endpoints; merchant endpoints are pending |
 | 7 | Four shells work at narrow and wide viewports; placeholders disabled and labelled | `docs/qa/evidence/x01-2026-11-14-playwright-default.txt`; Flutter widget tests (47 pass, 2 skipped, in the clean clone) | pass locally for Chromium at 375, 768 and 1440 wide; the rider app has never run on a device |
@@ -60,7 +60,7 @@ Fixtures use the spec's synthetic coordinates or generated shapes. No real servi
 
 The default Playwright suite runs in Chromium at 375×812, 768×1024 and 1440×900. It checks horizontal overflow and runs axe for the closed-coverage customer banner and empty restaurant state, outside coverage and retry after a 503, disabled merchant actions, an expired admin session linking back to a local path, and the city status dialog. The dialog case checks keyboard opening, tab order, Escape dismissal and focus restoration. A separate sign-in case verifies external return-path rejection. Browser API calls and the server-rendered coverage banner use synthetic responses in this suite.
 
-All 27 default cases passed locally, including a zone edit conflict that preserves the draft and system settings retry and permission denial at each viewport. See `docs/qa/evidence/phase1-2026-11-14-admin-settings.txt`.
+The default run at HEAD `c7e360f` passed 354 cases and skipped 66 opt-in cases (`docs/qa/evidence/x01-2026-11-14-playwright-default-HEAD.txt`). This replaces the earlier "27 default cases" count. The zone edit conflict that preserves the draft, the system settings retry and permission denial at each viewport are recorded in `docs/qa/evidence/phase1-2026-11-14-admin-settings.txt`.
 
 The opt-in desktop run covers live admin sign-in, city creation and activation, invalid GeoJSON rejection, normalized shape persistence, zone edit and activation, exclusion add and remove, customer serviceability and denial of admin access to a signed-in customer. Cleanup pauses and archives the synthetic records. Map drawing remains open. See `docs/qa/evidence/phase1-2026-11-14-zone-exclusions.txt`.
 
@@ -71,7 +71,7 @@ The opt-in desktop run covers live admin sign-in, city creation and activation, 
 | No route registered for ordering, payments, dispatch, tracking, payouts | RouteInventoryTest and OpenApiDocumentTest | pass locally |
 | No invented restaurants, ETAs, KPIs or balances in any shell | Manual review of screenshots plus a text search of the apps | text search pass (searches 7 to 9: no restaurant names, amounts or ETAs; every hit is a comment, a generic message or a test guard); screenshot review not done. Evidence `docs/qa/evidence/x01-2026-11-14-text-searches.txt` |
 | No hardcoded city, coordinate or map centre outside test fixtures and the gated demo seeder | Repository search | pass: searches 1 to 5 and 10 found no city name, coordinate or centre outside the gated demo seeder (synthetic polygon, `ZZ` country) and tests; the only place name is the `Asia/Manila` default display timezone for screens with no city (ADR-004). Evidence `docs/qa/evidence/x01-2026-11-14-text-searches.txt` |
-| Rider app requests no location permission | Android manifest review and Flutter test | not run |
+| Rider app requests no location permission | Android manifest review and Flutter test | partial: a grep of `apps/rider-flutter/android/app/src/main/AndroidManifest.xml` and `apps/rider-flutter/pubspec.yaml` found no permission entries (re-run at HEAD `c7e360f`; the saved result is the X-01 note in `docs/PHASE1_STATUS.md`, no grep output file). Not a full manifest review, and no Flutter test covers it |
 | Production config refuses seeders, debug and MFA-less privileged login | SchemaTest, ProductionGuardTest and SessionLoginTest | pass locally |
 
 ## Stop conditions

@@ -22,7 +22,7 @@ How to read it: "evidence" names a file under `docs/qa/evidence/` or a test. Whe
 | City, zone, exclusion, status-transition, serviceability, public config, audit log and system status APIs (C-02, C-04 to C-10) | `sprint5-cities-check.txt`, `sprint5-zones-check.txt`, `sprint5-zone-status-check.txt`, `sprint5-exclusions-check.txt`, `sprint5-config-plan-check.txt`, `sprint5-oversight-check.txt` |
 | Zone geometry validator and seeded fuzz tests (C-03) | `sprint5-geometry-fuzz-check.txt` |
 | Cross-tenant suite for city scope (C-12) | `sprint5-cross-tenant-check.txt` |
-| Staff access API and `/access` screen (users part of U-05) | Screenshots `screens/admin/access-*.png`; the backend check (523 tests) is recorded as text only, no saved output; the newest saved backend run is `phase1-2026-11-14-mfa-check.txt` (485 tests) |
+| Staff access API and `/access` screen (users part of U-05) | Screenshots `screens/admin/access-*.png`; backend check at HEAD `c7e360f`: 523 tests passed (`x01-2026-11-14-full-check-HEAD.txt`) |
 | Admin cities, zones, exclusions, status dialogs, settings and audit screens (U-05 except map drawing) | `sprint6-admin-cities-browser.txt`, `phase1-2026-11-14-zone-edit.txt`, `phase1-2026-11-14-zone-exclusions.txt`, `phase1-2026-11-14-city-dialog.txt`, `phase1-2026-11-14-admin-settings.txt`, `phase1-2026-11-14-live-coverage.txt` |
 | Customer home banner and `/location` delivery-area check by POST (ADR-013) | `sprint6-customer-location-browser.txt`, `phase1-2026-11-14-closed-coverage.txt` |
 | Structured logs, request ids, named events (E-01 except the gaps below) | `sprint7-structured-logs-check.txt` |
@@ -31,7 +31,7 @@ How to read it: "evidence" names a file under `docs/qa/evidence/` or a test. Whe
 | Container scan job, run locally (E-04) | `sprint7-container-scan-check.txt` |
 | Production images, deploy and rollback rehearsal on a production-like local stack (E-05, not a real host) | `e05-rollback-rehearsal.txt`, `e05-full-check.txt`, `sprint7-trusted-proxy-check.txt` |
 | Generated API types checked for drift (C-11, types only) | `sprint5-api-types-check.txt` |
-| Browser suites: default Chromium run at 375, 768 and 1440 with axe, and one live run | `x01-2026-11-14-playwright-default.txt` (267 passed, 66 opt-in skipped), `x01-2026-11-14-playwright-live.txt` (1 passed). Later runs (354 passed and 66 skipped after the error screens; 63 passed in `customer.spec.ts`) are recorded as text in the sections below, no saved output |
+| Browser suites: default Chromium run at 375, 768 and 1440 with axe, and one live run | `x01-2026-11-14-playwright-default.txt` (267 passed, 66 opt-in skipped), `x01-2026-11-14-playwright-live.txt` (1 passed). Default run at HEAD `c7e360f`: 354 passed, 66 skipped (`x01-2026-11-14-playwright-default-HEAD.txt`); 63 passed in `customer.spec.ts` is recorded as text only |
 | Screenshots of every built screen at 360/375, 768, 1440 (U-09; API mocked) | `docs/qa/evidence/screens/`, rider images `rider-home-390-*.png` |
 | Hosted CI green for web, backend and security on `099a3db` | `x01-2026-11-14-hosted-ci.txt`. The current head is `102476e`; no hosted result for the later commits is saved (unverified) |
 | Hardcoded-city, coordinate, map-centre and invented-data text searches | `x01-2026-11-14-text-searches.txt` (no problem found) |
@@ -105,12 +105,12 @@ Other gate conditions (spec 15 and section 12): "MFA for admin production access
 
 ## Inconsistencies found among the documents (2026-11-14)
 
-- `docs/qa/phase1-acceptance.md` still says "All 27 default cases passed", rider location permission "not run" and the DoD 4 hardcoded-coordinate review "open"; the X-01 section and its text searches supersede these.
+- `docs/qa/phase1-acceptance.md` still says "All 27 default cases passed", rider location permission "not run" and the DoD 4 hardcoded-coordinate review "open"; the X-01 section and its text searches supersede these. **Resolved (2026-11-14):** the acceptance rows now cite the default run at HEAD `c7e360f` (354 passed, 66 skipped; `docs/qa/evidence/x01-2026-11-14-playwright-default-HEAD.txt`), the text searches (`docs/qa/evidence/x01-2026-11-14-text-searches.txt`), and a re-run manifest grep (no permission entries, no saved output; the rider row is "partial").
 - `docs/backlog.md` U-02 says "done for web" but repeats U-01's text, and Storybook and a toast are absent.
 - Sections below give three different U-03 matrix totals (48/28/5, then 64/30/5, now 69/30/0); the matrix file is authoritative.
 - The "Sprint 4, second slice" section says the admin app refuses all sign-in in production because TOTP is unbuilt; TOTP was built later.
-- The trailing "Blocked on a human", "Rollback" and "Next steps" sections predate Docker and are stale; this section replaces them.
-- The latest saved backend output is 485 tests; the 523 figure in the roles-and-access section has no saved output.
+- The trailing "Blocked on a human", "Rollback" and "Next steps" sections predate Docker and are stale; this section replaces them. **Resolved (2026-11-14):** each of those three sections now carries a superseded note.
+- The latest saved backend output is 485 tests; the 523 figure in the roles-and-access section has no saved output. **Resolved (2026-11-14):** `docs/qa/evidence/x01-2026-11-14-full-check-HEAD.txt` saves the backend run at HEAD `c7e360f`: 523 tests passed (34445 assertions), PHPStan no errors, Pint 146 files pass.
 - `CLAUDE.md` "Current state" said TOTP was not built; updated with this change.
 
 ---
@@ -657,6 +657,8 @@ Every result below is from real output saved in `docs/qa/evidence/x01-2026-11-14
 Done and awaiting review: versions, ADR-000 to ADR-011, diagram, phase boundaries, threat model, permission matrix, backlog, acceptance tests. Open items: ADR-011 (session separation, MFA factor, email verification), ADR-002 caps, ADR-007 tile provider, city status values, permission matrix questions.
 
 ## Blocked on a human
+Superseded by the Phase 1 position section (2026-11-14).
+
 | Item | Needed for |
 |---|---|
 | Install Docker Desktop | Finishing Sprint 2, all of Sprint 3 |
@@ -666,9 +668,13 @@ Done and awaiting review: versions, ADR-000 to ADR-011, diagram, phase boundarie
 | Android SDK and JDK | Rider device builds |
 
 ## Rollback
+Superseded by the Phase 1 position section (2026-11-14).
+
 Commit `b38e8e3` holds Sprints 1 and 2 up to the first check run. Commit `28f6430` adds the value objects and Boost. The third pass (geometry validator, design tokens) is uncommitted.
 
 ## Next steps
+Superseded by the Phase 1 position section (2026-11-14).
+
 1. Human: install Docker Desktop.
 2. Agent, once Docker exists: validate and start the stack, fix what breaks, run backend tests in the container, record the boot logs, then close the Sprint 2 gate.
 3. Agent: commit the third pass, on request.
