@@ -159,6 +159,45 @@ class RiderTokenTest extends AuthTestCase
         $this->withToken2($old, 'POST', '/api/v1/auth/mobile/token/refresh')->assertStatus(401);
     }
 
+    public function test_refresh_stops_thirty_days_after_sign_in(): void
+    {
+        $this->rider();
+        $token = (string) $this->issue()->json('data.token');
+        $device = (string) DB::table('devices')->value('id');
+
+        // Day 29: refresh still works.
+        DB::table('devices')->where('id', $device)->update(['created_at' => now()->subDays(29)]);
+        $this->fresh();
+        $token = (string) $this->withToken2($token, 'POST', '/api/v1/auth/mobile/token/refresh')->assertStatus(201)->json('data.token');
+
+        // Day 30 and later: refused, the token and device are ended, and the rider must sign in again.
+        DB::table('devices')->where('id', $device)->update(['created_at' => now()->subDays(30)->subMinute()]);
+        $this->fresh();
+        $this->withToken2($token, 'POST', '/api/v1/auth/mobile/token/refresh')
+            ->assertStatus(401)
+            ->assertJsonPath('error.code', 'AUTH_REQUIRED');
+        $this->assertSame(0, DB::table('personal_access_tokens')->count());
+        $this->assertNotNull(DB::table('devices')->where('id', $device)->value('revoked_at'));
+        $this->fresh();
+        $this->withToken2($token, 'GET', '/api/v1/rider/me')->assertStatus(401);
+
+        $this->issue()->assertCreated();
+    }
+
+    public function test_a_refreshed_token_never_outlives_the_thirty_days(): void
+    {
+        $this->rider();
+        $token = (string) $this->issue()->json('data.token');
+        $started = now()->subDays(30)->addMinutes(20);
+        DB::table('devices')->update(['created_at' => $started]);
+
+        $this->fresh();
+        $expires = (string) $this->withToken2($token, 'POST', '/api/v1/auth/mobile/token/refresh')->assertStatus(201)->json('data.expires_at');
+
+        // 20 minutes left of the 30 days, not a fresh 60.
+        $this->assertSame($started->copy()->addDays(30)->utc()->format('Y-m-d\TH:i:s\Z'), $expires);
+    }
+
     public function test_sign_out_revokes_the_token_and_the_device(): void
     {
         $this->rider();

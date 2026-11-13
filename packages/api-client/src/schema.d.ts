@@ -195,6 +195,9 @@ export interface paths {
          * Swap a valid token for a new one
          * @description The old token is deleted as the new one is issued, on the same device.
          *     An expired token cannot be refreshed; the rider signs in again.
+         *     One sign-in lasts at most 30 days from when the device signed in:
+         *     refreshing never goes past that, the last token's `expires_at` stops
+         *     at it, and after it refresh answers 401 and the device is revoked.
          */
         post: operations["authMobileRefresh"];
         delete?: never;

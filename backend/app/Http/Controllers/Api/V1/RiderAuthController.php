@@ -10,6 +10,7 @@ use App\Support\Http\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -26,6 +27,14 @@ use Laravel\Sanctum\PersonalAccessToken;
 class RiderAuthController extends Controller
 {
     private const MINUTES_VALID = 60;
+
+    /**
+     * Absolute limit on one sign-in, counted from when the device signed in
+     * (devices.created_at). Refreshing cannot go past it, so a stolen token
+     * dies within this time even if it is refreshed every hour. Agreed with
+     * the product owner on 2026-11-14.
+     */
+    private const DAYS_PER_SIGN_IN = 30;
 
     private static ?string $decoyHash = null;
 
@@ -98,13 +107,27 @@ class RiderAuthController extends Controller
         /** @var PersonalAccessToken $token */
         $token = $request->attributes->get('rider_token');
 
-        $data = DB::transaction(function () use ($user, $token): array {
+        $data = DB::transaction(function () use ($user, $token): ?array {
             $deviceId = (string) $token->name;
             $token->delete();
+
+            $signedInAt = DB::table('devices')->where('id', $deviceId)->lockForUpdate()->value('created_at');
+            $endsAt = $signedInAt === null ? null : Carbon::parse((string) $signedInAt)->addDays(self::DAYS_PER_SIGN_IN);
+            if ($endsAt === null || ! now()->lessThan($endsAt)) {
+                // Sign-in is over: end the device too, so nothing can continue it.
+                DB::table('devices')->where('id', $deviceId)->update(['revoked_at' => now(), 'updated_at' => now()]);
+
+                return null;
+            }
+
             DB::table('devices')->where('id', $deviceId)->update(['last_seen_at' => now(), 'updated_at' => now()]);
 
-            return $this->mint($user, $deviceId);
+            return $this->mint($user, $deviceId, $endsAt);
         });
+
+        if ($data === null) {
+            throw new ApiError(401, 'AUTH_REQUIRED', 'Your sign-in has ended. Sign in again.');
+        }
 
         return ApiResponse::data($request, $data, 201);
     }
@@ -142,9 +165,12 @@ class RiderAuthController extends Controller
     /**
      * @return array{token: string, token_type: string, abilities: list<string>, expires_at: string}
      */
-    private function mint(User $user, string $deviceId): array
+    private function mint(User $user, string $deviceId, ?Carbon $endsAt = null): array
     {
         $expires = now()->addMinutes(self::MINUTES_VALID);
+        if ($endsAt !== null && $endsAt->lessThan($expires)) {
+            $expires = $endsAt->copy();
+        }
         $token = $user->createToken($deviceId, [EnsureRiderToken::ABILITY], $expires);
 
         return [

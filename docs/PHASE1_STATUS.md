@@ -7,7 +7,7 @@ Last updated: 2026-11-14. Phase 1 has working browser authentication, rider toke
 Evidence: `docs/qa/evidence/phase1-2026-11-14-rider-signin-check.txt` (`dev.ps1 check`, exit 0; 410 backend tests, 47 rider tests).
 
 - **Security fix (automated review of the pushed code):** a password reset ended browser sessions but not rider app tokens, so a stolen rider token outlived the reset. `PasswordRecovery::reset` now deletes the user's API tokens and marks their devices revoked in the same transaction. RiderTokenTest has a new case.
-- **Open finding (needs a decision):** a rider token can be refreshed indefinitely, so the 60-minute expiry never forces a new sign-in. Fix: refuse refresh after an absolute lifetime counted from the device's sign-in (`devices.created_at`); the length is a product decision.
+- **Second finding, fixed after the product owner chose 30 days:** a rider token could be refreshed indefinitely. One sign-in now lasts at most 30 days from the device's sign-in (`devices.created_at`). A refreshed token's `expires_at` stops at that limit; after it, refresh answers 401 `AUTH_REQUIRED` and the device is revoked. Two new RiderTokenTest cases; OpenAPI describes the limit.
 - **Rider sign-in (U-08):**
   - `lib/core/api/rider_api.dart` is a `dart:io` client for sign-in, `/rider/me` and sign-out, with typed failures for 401, 422 field errors, 429, offline and not configured. It logs nothing, and the token is hidden from `toString`.
   - `lib/features/sign_in/sign_in_screen.dart` is the sign-in screen.
