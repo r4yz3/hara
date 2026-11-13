@@ -8,7 +8,7 @@ Sprint 1 documents await human review. The Docker stack now starts healthy and t
 ## Sprint 7: production images and rollback rehearsal (E-05, 2026-11-13)
 Evidence: `docs/qa/evidence/e05-rollback-rehearsal.txt` (each step) and `e05-full-check.txt` (`dev.ps1 check`, exit 0; 387 backend tests).
 
-- Production images (ADR-014, proposed and reversible), both from `infra/docker/prod/api.Dockerfile`:
+- Production images (ADR-014, accepted by the product owner on 2026-11-13), both from `infra/docker/prod/api.Dockerfile`:
   - `api`: PHP-FPM as `www-data`, with code baked in, no development packages, production `php.ini` with OPcache, uploads off, and no Composer or tests in the image.
   - `web`: unprivileged nginx serving `public/` and passing everything else to `api:9000`; hidden files and other `.php` paths return 404.
   - Configuration comes from the environment only; the entry point caches config and routes. Checked inside the images: user, modules, ini values, and a package list without development packages.

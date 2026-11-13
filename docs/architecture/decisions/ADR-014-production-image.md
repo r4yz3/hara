@@ -1,6 +1,6 @@
 # ADR-014: Production image is PHP-FPM behind nginx, both unprivileged
 
-- Status: proposed (agent decision, reversible; needs the product owner's review)
+- Status: accepted by the product owner on 2026-11-13 (reversible)
 - Date: 2026-11-13
 - Backlog: E-05
 
