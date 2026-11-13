@@ -1,6 +1,7 @@
 # Development image for the Laravel API. Not a production image: it runs the
-# built-in server and mounts the source tree. A hardened production image
-# (non-root, php-fpm behind nginx, no dev dependencies) is backlog E-05.
+# built-in server and mounts the source tree. The production images (non-root
+# PHP-FPM behind nginx, no dev dependencies) are infra/docker/prod/api.Dockerfile
+# (ADR-014).
 #
 # Built and run locally on 2026-11-13 (Docker 29.9.3).
 

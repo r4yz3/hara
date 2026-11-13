@@ -1,0 +1,108 @@
+# E-05 rollback rehearsal on the production-like stack (infra/rehearsal), 2026-11-13T14:29:41Z
+# Release n = HEAD 40687a6 plus the uncommitted E-05 image files. Release n1 = n plus one throwaway
+# migration (adds cities.rehearsal_note and table rehearsal_things), built and then deleted from the tree.
+
+## 0. Before: release n serving, one synthetic city
+ledger=10 last=2026_11_13_000018_create_personal_access_tokens_table column=0 table=f
+live=200 cities=['Rehearsal City']
+
+## 1. Back up before deploying
+==> dump database
+==> copy backup out
+ food-delivery-rehearsal-postgres-1 Copying food-delivery-rehearsal-postgres-1:/tmp/rehearsal.dump to F:\PROJECTS\hara\infra\backups\rehearsal\rehearsal-20261113-142943.dump
+ food-delivery-rehearsal-postgres-1 Copied food-delivery-rehearsal-postgres-1:/tmp/rehearsal.dump to F:\PROJECTS\hara\infra\backups\rehearsal\rehearsal-20261113-142943.dump
+==> remove copy in container
+Backup written to F:\PROJECTS\hara\infra\backups\rehearsal\rehearsal-20261113-142943.dump
+exit 0
+
+## 2. Migrate with release n1 while release n still serves (expand step)
+==> migrate
+
+   INFO  Running migrations.  
+
+  2099_01_01_000000_rehearsal_only_change ....................... 12.08ms DONE
+
+exit 0
+ledger=11 last=2099_01_01_000000_rehearsal_only_change column=1 table=t
+old code on new schema: live=200 cities=['Rehearsal City']
+
+## 3. Switch traffic to release n1
+==> run release rehearsal-n1
+exit 0
+live=200 cities=['Rehearsal City']
+n1 wrote: written by n1
+
+## 4. Roll back: undo the migration, using release n1 (only it knows the down())
+==> roll back 1 migration(s)
+
+   INFO  Rolling back migrations.  
+
+  2099_01_01_000000_rehearsal_only_change ....................... 11.32ms DONE
+
+exit 0
+ledger=10 last=2026_11_13_000018_create_personal_access_tokens_table column=0 table=f
+Note: the value n1 wrote into cities.rehearsal_note was dropped with the column. Undoing an expand migration loses whatever the new release stored there.
+
+## 5. Switch traffic back to release n
+==> run release rehearsal-n
+exit 0
+live=200 cities=['Rehearsal City']
+ledger=10 last=2026_11_13_000018_create_personal_access_tokens_table column=0 table=f
+api image now: food-delivery-api:rehearsal-n  web image now: food-delivery-web:rehearsal-n
+
+## 6. Second path: forward again to n1, then recover by restoring the step 1 backup instead
+ledger=11 last=2099_01_01_000000_rehearsal_only_change column=1 table=t
+==> run release rehearsal-n
+switch to n: exit 0
+Restoring rehearsal-20261113-142943.dump
+==> copy backup in
+ food-delivery-rehearsal-postgres-1 Copying F:\PROJECTS\hara\infra\backups\rehearsal\rehearsal-20261113-142943.dump to food-delivery-rehearsal-postgres-1:/tmp/rehearsal.dump
+ food-delivery-rehearsal-postgres-1 Copied F:\PROJECTS\hara\infra\backups\rehearsal\rehearsal-20261113-142943.dump to food-delivery-rehearsal-postgres-1:/tmp/rehearsal.dump
+==> restore
+restore: exit 0
+ledger=10 last=2026_11_13_000018_create_personal_access_tokens_table column=0 table=t
+live=200 cities=['Rehearsal City']
+row made by n1 after restore: rehearsal_things
+
+## 7. Restore refuses a backup whose checksum does not match
+At F:\PROJECTS\hara\infra\scripts\rehearsal.ps1:143 char:99
++ ... $expected) { throw 'Backup checksum does not match; not restoring.' }
++                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : OperationStopped: (Backup checksum... not restoring.:String) [], RuntimeException
+    + FullyQualifiedErrorId : Backup checksum does not match; not restoring.
+ 
+exit 1 (expected non-zero)
+ledger=10 last=2026_11_13_000018_create_personal_access_tokens_table column=0 table=t
+
+FINDING in step 6: after 'pg_restore --clean' the table rehearsal_things survived (table=t) while the ledger no longer
+lists its migration. --clean drops only objects that are in the backup. A later deploy of n1 would fail on
+'table already exists'. Fixed: restore now drops and recreates the whole database, then restores into it.
+
+## 6 (repeated with the fixed restore). Forward to n1 again, then recover by restoring the step 1 backup
+ledger=11 last=2099_01_01_000000_rehearsal_only_change column=1 table=t postgis=3.5.7
+==> run release rehearsal-n
+switch to n: exit 0
+Restoring rehearsal-20261113-142943.dump
+==> copy backup in
+ food-delivery-rehearsal-postgres-1 Copying F:\PROJECTS\hara\infra\backups\rehearsal\rehearsal-20261113-142943.dump to food-delivery-rehearsal-postgres-1:/tmp/rehearsal.dump
+ food-delivery-rehearsal-postgres-1 Copied F:\PROJECTS\hara\infra\backups\rehearsal\rehearsal-20261113-142943.dump to food-delivery-rehearsal-postgres-1:/tmp/rehearsal.dump
+==> replace database
+==> restore
+restore: exit 0
+ledger=10 last=2026_11_13_000018_create_personal_access_tokens_table column=0 table=f postgis=3.5.7
+live=200 ready=200 cities=['Rehearsal City']
+
+## 8. After the restore, n1 can be deployed again cleanly (proves no leftover objects)
+==> migrate
+
+   INFO  Running migrations.  
+
+  2099_01_01_000000_rehearsal_only_change ....................... 10.95ms DONE
+
+exit 0
+ledger=11 last=2099_01_01_000000_rehearsal_only_change column=1 table=t postgis=3.5.7
+rolled back again: ledger=10 last=2026_11_13_000018_create_personal_access_tokens_table column=0 table=f postgis=3.5.7
+
+## 9. The audit log is still append-only after the restore
+update: ERROR:  audit_logs is append-only
+delete: ERROR:  audit_logs is append-only

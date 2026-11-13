@@ -5,6 +5,39 @@ Last updated: 2026-11-13, Sprint 4 in progress (roles, permissions, audit and si
 ## Summary
 Sprint 1 documents await human review. The Docker stack now starts healthy and the backend checks run inside it against PostGIS and Redis. The Sprint 2 gate ("clean clone boot smoke with logs") is **still not met**: the boot was done in the working tree, not from a clean clone, and CI has never run. The product owner supplied front-end reference images; the customer home screen is built in that direction.
 
+## Sprint 7: production images and rollback rehearsal (E-05, 2026-11-13)
+Evidence: `docs/qa/evidence/e05-rollback-rehearsal.txt` (each step) and `e05-full-check.txt` (`dev.ps1 check`, exit 0; 387 backend tests).
+
+- Production images (ADR-014, proposed and reversible), both from `infra/docker/prod/api.Dockerfile`:
+  - `api`: PHP-FPM as `www-data`, with code baked in, no development packages, production `php.ini` with OPcache, uploads off, and no Composer or tests in the image.
+  - `web`: unprivileged nginx serving `public/` and passing everything else to `api:9000`; hidden files and other `.php` paths return 404.
+  - Configuration comes from the environment only; the entry point caches config and routes. Checked inside the images: user, modules, ini values, and a package list without development packages.
+- The probe found and fixed two logging problems before the rehearsal:
+  - nginx logged every request as `GET /index.php`. It now logs the requested path with the query string cut off (ADR-013), plus the request id.
+  - PHP-FPM wrote a second access log of every request. It is now off.
+- Rehearsal stack: `infra/rehearsal/compose.yaml` and `infra/scripts/rehearsal.ps1`. It runs the images under `APP_ENV=staging`, with random secrets in a git-ignored `.env`, its own database and Redis, and only nginx published, on `127.0.0.1:8088`. `ProductionGuard` accepted the settings.
+- Rehearsed, with a throwaway N+1 release that added a column and a table:
+  - backup;
+  - migrate with N+1 while N served (N kept working on the new schema);
+  - switch to N+1;
+  - roll the migration back with N+1;
+  - switch back to N;
+  - forward again, then recover by restoring the backup;
+  - a restore with a wrong checksum was refused.
+- Found and fixed: the restore used `pg_restore --clean`, which left behind a table created after the backup while the migration ledger said it did not exist, so the next deploy would have failed. The restore now drops and recreates the database. After the fix, N+1 deployed again cleanly and the audit log was still append-only.
+- Also learned: undoing a migration deletes whatever the new release wrote into what it added. The runbook says so and prefers a forward fix.
+- `ProductionGuard` does not block `migrate:rollback` when settings are safe; no change needed.
+- CI: the `image` job now scans three images (development API, production API, production web) as a matrix, with matrix values passed through `env`. All three scan clean locally with the job's own scripts.
+- Docs: `docs/operations/deploy.md`, `docs/operations/runbook.md`, `docs/security/incident-response.md`.
+- Not done:
+  - no real host (E-07);
+  - no TLS in the rehearsal, and trusted proxies are not configured, so HSTS is never sent behind a proxy yet;
+  - no read-only root filesystem;
+  - no queue worker or scheduler (none needed in Phase 1);
+  - no `APP_KEY` rotation procedure;
+  - incident roles are unnamed;
+  - the web apps and the rider app have no deployment procedure.
+
 ## Sprint 7: container image scan (E-04, 2026-11-13)
 Evidence: `docs/qa/evidence/sprint7-container-scan-check.txt` (scan runs) and `sprint7-container-scan-full-check.txt` (`dev.ps1 check`, exit 0; 387 backend tests). Policy and findings: `docs/security/container-scan.md`.
 

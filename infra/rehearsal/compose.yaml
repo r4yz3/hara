@@ -1,0 +1,66 @@
+# Production-like rehearsal stack (backlog E-05). Runs the production images
+# (infra/docker/prod/api.Dockerfile) with APP_ENV=staging, so ProductionGuard
+# applies in full. Separate project, network and volumes from the development
+# stack: nothing here can touch development data. Only nginx is published, on
+# 127.0.0.1. There is no TLS here; the guard's https settings are satisfied by
+# configuration, as they would be behind a TLS-terminating proxy.
+#
+# Use infra/scripts/rehearsal.ps1 rather than calling this directly.
+
+name: food-delivery-rehearsal
+
+services:
+  api:
+    image: food-delivery-api:${RELEASE:?Set RELEASE to the image tag to run}
+    env_file: [.env]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+
+  web:
+    image: food-delivery-web:${RELEASE:?Set RELEASE to the image tag to run}
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    ports:
+      - "127.0.0.1:${REHEARSAL_PORT:-8088}:8080"
+    depends_on: [api]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+  postgres:
+    image: postgis/postgis:17-3.5-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-food_delivery}
+      POSTGRES_USER: ${DB_USERNAME:-food_delivery}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Run rehearsal.ps1 env first}
+    volumes:
+      - rehearsal_postgres:/var/lib/postgresql/data
+      - ../docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+  redis:
+    image: redis:8.8.4-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  rehearsal_postgres:

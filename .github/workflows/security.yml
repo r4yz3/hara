@@ -26,9 +26,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # Builds the API image and scans it (backlog E-04). Fails on any HIGH or
-  # CRITICAL vulnerability that has a fix, and on any secret in the image.
-  # The weekly schedule above re-scans for newly published vulnerabilities.
+  # Builds each container image and scans it (backlog E-04, E-05). Fails on
+  # any HIGH or CRITICAL vulnerability that has a fix, and on any secret in
+  # the image. The weekly schedule above re-scans for newly published
+  # vulnerabilities.
   #
   # Trivy runs from its official image pinned by digest, not through
   # aquasecurity/trivy-action: in March 2026 that action's version tags were
@@ -40,23 +41,40 @@ jobs:
   # the digest and the version comment.
   image:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: api-dev
+            dockerfile: infra/docker/php/Dockerfile
+            target: ""
+          - name: api-prod
+            dockerfile: infra/docker/prod/api.Dockerfile
+            target: api
+          - name: web-prod
+            dockerfile: infra/docker/prod/api.Dockerfile
+            target: web
     env:
       TRIVY_IMAGE: aquasec/trivy@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb # 0.76.2
+      # Passed through the environment, not pasted into the scripts below.
+      IMAGE_NAME: ${{ matrix.name }}
+      DOCKERFILE: ${{ matrix.dockerfile }}
+      TARGET: ${{ matrix.target }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Build the API image
-        run: docker build --pull -f infra/docker/php/Dockerfile -t food-delivery-api:scan .
-      - name: Scan the API image
+      - name: Build the image
+        run: docker build --pull -f "$DOCKERFILE" ${TARGET:+--target "$TARGET"} -t "food-delivery-$IMAGE_NAME:scan" .
+      - name: Scan the image
         run: |
-          docker save food-delivery-api:scan -o "$RUNNER_TEMP/api.tar"
+          docker save "food-delivery-$IMAGE_NAME:scan" -o "$RUNNER_TEMP/image.tar"
           docker run --rm \
             -v "$RUNNER_TEMP:/work:ro" \
             -v "$GITHUB_WORKSPACE/.trivyignore:/policy/.trivyignore:ro" \
             "$TRIVY_IMAGE" image \
-            --input /work/api.tar \
+            --input /work/image.tar \
             --scanners vuln,secret \
             --severity HIGH,CRITICAL \
             --ignore-unfixed \
