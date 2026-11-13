@@ -1,0 +1,31 @@
+# E-04 container scan, run locally on 2026-11-13 with the `image` job's own script
+# (extracted from .github/workflows/security.yml) under `bash --noprofile --norc -eo pipefail`,
+# RUNNER_TEMP and GITHUB_WORKSPACE set to local folders.
+# Scanner: aquasec/trivy@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb (0.76.2;
+# `docker buildx imagetools inspect` shows this is the OCI image index for that tag; GitHub reports the
+# v0.76.2 release as immutable, published 2026-11-05).
+
+## 1. API image built from cached layers (before the Dockerfile change)
+Target /work/api.tar (alpine 3.23.8): 38 vulnerabilities, all HIGH, all in libpq 18.6-r0, fixed in 18.7-r0.
+composer-vendor (var/www/backend/vendor/composer/installed.json): 0.
+exit 1
+
+## 2. Alpine repository at the same time
+apk policy libpq in php:8.4-fpm-alpine3.23 -> 18.7-r0 available from dl-cdn.alpinelinux.org/alpine/v3.23/main
+
+## 3. API image rebuilt with `docker build --pull --no-cache` after adding `apk upgrade`
+alpine 3.23.8: 0    composer-vendor: 0
+Full scan, every severity, fixed and unfixed, vuln and secret scanners: 0 vulnerabilities, 0 secrets.
+exit 0
+
+## 4. Fixed image plus a planted fake token (throwaway image, deleted afterwards)
+/var/www/backend/leaked.env (secrets): Total: 1 (HIGH: 0, CRITICAL: 1)
+CRITICAL: GitHub (github-pat) GitHub Personal Access Token
+exit 1
+
+## 5. Image name that does not exist
+Error response from daemon: No such image: food-delivery-api:does-not-exist
+exit 1 (the step stops before any scan; no stale tarball is used)
+
+## 6. Local stack after `dev.ps1 up` with the new Dockerfile
+apk info in the api container: libpq-18.7-r0

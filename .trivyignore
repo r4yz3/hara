@@ -1,0 +1,11 @@
+# Accepted container-scan findings (backlog E-04). Read by the `image` job in
+# .github/workflows/security.yml.
+#
+# Empty on purpose. Add a finding only with a reason a reviewer can check and
+# a date to look at it again, one ID per line, for example:
+#
+#   # libexample: only reachable through a feature this image never enables.
+#   # Review by 2027-01-31. Accepted by <name> on <date>.
+#   CVE-0000-00000
+#
+# Record each accepted finding in docs/security/container-scan.md as well.

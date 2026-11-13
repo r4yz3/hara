@@ -26,5 +26,40 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-# Container image scanning (Trivy) is added with the production image in
-# Sprint 7 (backlog E-04); there is no deployable image yet.
+  # Builds the API image and scans it (backlog E-04). Fails on any HIGH or
+  # CRITICAL vulnerability that has a fix, and on any secret in the image.
+  # The weekly schedule above re-scans for newly published vulnerabilities.
+  #
+  # Trivy runs from its official image pinned by digest, not through
+  # aquasecurity/trivy-action: in March 2026 that action's version tags were
+  # rewritten to credential-stealing code (GHSA-69fq-xp46-6x23), and the action
+  # downloads a further action and the Trivy binary at run time. A digest is
+  # one immutable artifact. Dependabot does not update it; to move to a newer
+  # Trivy, check its release is immutable, read
+  # `docker buildx imagetools inspect aquasec/trivy:<version>` and replace both
+  # the digest and the version comment.
+  image:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      TRIVY_IMAGE: aquasec/trivy@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb # 0.76.2
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build the API image
+        run: docker build --pull -f infra/docker/php/Dockerfile -t food-delivery-api:scan .
+      - name: Scan the API image
+        run: |
+          docker save food-delivery-api:scan -o "$RUNNER_TEMP/api.tar"
+          docker run --rm \
+            -v "$RUNNER_TEMP:/work:ro" \
+            -v "$GITHUB_WORKSPACE/.trivyignore:/policy/.trivyignore:ro" \
+            "$TRIVY_IMAGE" image \
+            --input /work/api.tar \
+            --scanners vuln,secret \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --ignorefile /policy/.trivyignore \
+            --exit-code 1 \
+            --no-progress

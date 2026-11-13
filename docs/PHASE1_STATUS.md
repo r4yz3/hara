@@ -5,6 +5,15 @@ Last updated: 2026-11-13, Sprint 4 in progress (roles, permissions, audit and si
 ## Summary
 Sprint 1 documents await human review. The Docker stack now starts healthy and the backend checks run inside it against PostGIS and Redis. The Sprint 2 gate ("clean clone boot smoke with logs") is **still not met**: the boot was done in the working tree, not from a clean clone, and CI has never run. The product owner supplied front-end reference images; the customer home screen is built in that direction.
 
+## Sprint 7: container image scan (E-04, 2026-11-13)
+Evidence: `docs/qa/evidence/sprint7-container-scan-check.txt` (scan runs) and `sprint7-container-scan-full-check.txt` (`dev.ps1 check`, exit 0; 387 backend tests). Policy and findings: `docs/security/container-scan.md`.
+
+- New `image` job in `.github/workflows/security.yml`: builds the API image and scans it with Trivy, failing on any HIGH or CRITICAL vulnerability that has a fix and on any secret in the image. Runs on push, pull request, weekly and on demand, with the workflow's existing read-only token; the scanner gets only read-only mounts of the image tarball and `.trivyignore`.
+- Trivy runs from `aquasec/trivy@sha256:8f6bb947…` (0.76.2, an immutable release), not `aquasecurity/trivy-action`. The action's tags were rewritten to credential-stealing code in March 2026 (GHSA-69fq-xp46-6x23), and it fetches a second action and the Trivy binary at run time; the advisory lists images referenced by digest as unaffected. The product owner approved adding Trivy; this is the same scanner without the action.
+- First scan: 38 HIGH findings, all in Alpine's `libpq` 18.6 (PostgreSQL client library), fixed in 18.7. The local image had 18.6 only because Docker reused a cached layer. Fixed by running `apk upgrade` first in the Dockerfile; the rebuilt image scans clean at every severity, with no secrets. The local stack now runs 18.7.
+- Checked with the job's own script and GitHub's shell flags: the fixed image passes, the old image fails with the 38 findings, an image with a planted fake GitHub token fails with one CRITICAL secret, and a missing image fails before any scan.
+- Not done: the job has not run on GitHub (not pushed). Dependabot cannot update the Trivy digest, so upgrades are manual (steps in the policy). Trivy's vulnerability database is fetched at run time and not pinned, by design. The web and rider apps are not container images and are not scanned; Flutter dependencies have no audit step; `pnpm audit --prod` skips development dependencies. A production image (E-05) will need the same scan.
+
 ## Workstation scripts verified (A-10, 2026-11-13)
 Evidence: `docs/qa/evidence/a10-dev-tasks-check.txt` (each task) and `a10-full-check.txt` (`dev.ps1 check`, exit 0; 387 backend tests).
 
