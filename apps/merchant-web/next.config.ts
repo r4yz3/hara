@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   async headers() {
     return securityHeaders();
   },
-  transpilePackages: ["@food-delivery/session"],
+  transpilePackages: ["@food-delivery/session", "@food-delivery/ui"],
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

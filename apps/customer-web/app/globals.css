@@ -3,6 +3,7 @@
 
 /* Shared sign-in components carry Tailwind classes too. */
 @source "../../../packages/session/src";
+@source "../../../packages/ui/src";
 
 /*
  * Colours come from packages/design-tokens, where each approved

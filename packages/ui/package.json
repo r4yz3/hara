@@ -3,10 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Shared UI for the web apps. Currently the map component (backlog U-04, ADR-007).",
+  "description": "Shared UI for the web apps: the map component (backlog U-04, ADR-007) and the error and not-found screens (U-03).",
   "exports": {
     "./map": "./src/map-view.tsx",
-    "./map-state": "./src/map-state.ts"
+    "./map-state": "./src/map-state.ts",
+    "./problem-page": "./src/problem-page.tsx",
+    "./fault": "./src/fault.tsx"
   },
   "scripts": {
     "test": "node --test"
