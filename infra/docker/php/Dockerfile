@@ -7,7 +7,7 @@
 
 FROM composer:2.11.2 AS composer
 
-FROM php:8.4-fpm-alpine3.23
+FROM php:8.5-fpm-alpine3.23
 
 # apk upgrade first: the base image can lag behind Alpine's security fixes
 # (E-04 found libpq 18.6 with 38 HIGH findings while 18.7 was available).
