@@ -96,10 +96,85 @@ export interface paths {
          * @description Starts a session on the calling app. A wrong password, an unknown
          *     account, a suspended account and an account not entitled to this app
          *     all produce the same 401. Five failures for one account from one
-         *     address within a minute produce 429. Until two-step verification is
-         *     available, the admin surface refuses sign-in outside local and testing.
+         *     address within a minute produce 429. On the admin app, staff with a
+         *     confirmed second factor are not signed in by a correct password: the
+         *     answer is `{"data":{"mfa_required":true}}` and `POST /auth/mfa/verify`
+         *     finishes sign-in. In deployed environments, staff without a second
+         *     factor get an enrolment-only session (see `POST /me/mfa/totp`).
          */
         post: operations["authLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/mfa/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Finish staff sign-in with the second step
+         * @description Admin app only. Follows a login that answered `mfa_required`. Send a
+         *     six-digit `code` from the authenticator app or one `recovery_code`.
+         *     A code works once; so does a recovery code. A wrong code, an expired
+         *     pending sign-in (5 minutes) and a missing one all produce the same 401.
+         *     Five failures for one account from one address within a minute produce
+         *     429. On success it answers like login.
+         */
+        post: operations["authMfaVerify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/mfa/totp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start two-step sign-in setup
+         * @description Admin app only. Creates an unconfirmed authenticator secret and returns
+         *     it once, with an otpauth URI for a QR code. Calling again before
+         *     confirming replaces the secret. Once confirmed, 409. In deployed
+         *     environments a staff session without a confirmed second factor may call
+         *     only this, the confirm route and logout; everything else answers 403.
+         */
+        post: operations["meMfaTotpStart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/mfa/totp/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm two-step sign-in setup
+         * @description Admin app only. Send a current code from the authenticator app. Returns
+         *     ten single-use recovery codes, once; they are stored only as hashes.
+         *     In deployed environments the session ends afterwards and the person
+         *     signs in again with the second step. Five failures in a minute produce 429.
+         */
+        post: operations["meMfaTotpConfirm"];
         delete?: never;
         options?: never;
         head?: never;
@@ -781,6 +856,7 @@ export interface components {
             name: string;
             email: string;
             email_verified: boolean;
+            mfa_enabled: boolean;
             /** @enum {string} */
             surface: "customer" | "merchant" | "admin";
             grants: {
@@ -790,6 +866,13 @@ export interface components {
                 scope_id: string | null;
                 permissions: string[];
             }[];
+        };
+        MfaRequiredResponse: {
+            data: {
+                /** @constant */
+                mfa_required: true;
+            };
+            meta: components["schemas"]["Meta"];
         };
         CurrentUserResponse: {
             data: components["schemas"]["CurrentUser"];
@@ -971,6 +1054,39 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Signed in, or a second step is required. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentUserResponse"] | components["schemas"]["MfaRequiredResponse"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    authMfaVerify: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    code?: string;
+                    recovery_code?: string;
+                };
+            };
+        };
+        responses: {
             /** @description Signed in. */
             200: {
                 headers: {
@@ -982,6 +1098,77 @@ export interface operations {
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    meMfaTotpStart: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Setup started. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            secret: string;
+                            otpauth_uri: string;
+                        };
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    meMfaTotpConfirm: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    code: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Confirmed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            recovery_codes: string[];
+                        };
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
             422: components["responses"]["Error"];
             429: components["responses"]["Error"];
         };

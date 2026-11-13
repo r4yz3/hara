@@ -14,7 +14,7 @@ final readonly class CurrentUserResource
     public function __construct(private User $user, private string $surface) {}
 
     /**
-     * @return array{id: string, name: string, email: string, email_verified: bool, surface: string, grants: list<array{role: string, scope_type: string, scope_id: string|null, permissions: list<string>}>}
+     * @return array{id: string, name: string, email: string, email_verified: bool, mfa_enabled: bool, surface: string, grants: list<array{role: string, scope_type: string, scope_id: string|null, permissions: list<string>}>}
      */
     public function toArray(): array
     {
@@ -23,6 +23,7 @@ final readonly class CurrentUserResource
             'name' => (string) $this->user->name,
             'email' => (string) $this->user->email,
             'email_verified' => $this->user->email_verified_at !== null,
+            'mfa_enabled' => DB::table('user_mfa_factors')->where('user_id', $this->user->id)->whereNotNull('confirmed_at')->exists(),
             'surface' => $this->surface,
             'grants' => $this->grants(),
         ];

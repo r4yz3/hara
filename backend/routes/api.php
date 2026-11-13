@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Admin\ExclusionController;
 use App\Http\Controllers\Api\V1\Admin\OversightController;
 use App\Http\Controllers\Api\V1\Admin\ZoneController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\MfaController;
 use App\Http\Controllers\Api\V1\PublicGeoController;
 use App\Http\Controllers\Api\V1\RiderAuthController;
 use App\Http\Middleware\EnsureAdminSurface;
@@ -31,6 +32,7 @@ Route::get('/auth/csrf', [AuthController::class, 'csrf'])->middleware('throttle:
 Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:10,1')->name('auth.register');
 // Per-account limiting happens in the controller; this caps one address overall.
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:30,1')->name('auth.login');
+Route::post('/auth/mfa/verify', [AuthController::class, 'verifyMfa'])->middleware('throttle:30,1')->name('auth.mfa.verify');
 Route::post('/auth/password/forgot', [AuthController::class, 'forgotPassword'])->middleware('throttle:10,1')->name('auth.password.forgot');
 Route::post('/auth/password/reset', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1')->name('auth.password.reset');
 
@@ -46,6 +48,8 @@ Route::middleware(EnsureRiderToken::class)->group(function (): void {
 Route::middleware(EnsureSurfaceSession::class)->group(function (): void {
     Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
     Route::get('/me', [AuthController::class, 'me'])->name('me.show');
+    Route::post('/me/mfa/totp', [MfaController::class, 'start'])->name('me.mfa.totp.start');
+    Route::post('/me/mfa/totp/confirm', [MfaController::class, 'confirm'])->name('me.mfa.totp.confirm');
 
     // Staff. Each action checks its own permission and scope (ADR-005).
     Route::middleware(EnsureAdminSurface::class)->prefix('admin')->group(function (): void {

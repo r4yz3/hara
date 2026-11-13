@@ -24,7 +24,7 @@ class SessionAndMeTest extends AuthTestCase
         $response = $this->via('admin')->getJson('/api/v1/me')->assertOk();
 
         $this->assertSame(
-            ['id', 'name', 'email', 'email_verified', 'surface', 'grants'],
+            ['id', 'name', 'email', 'email_verified', 'mfa_enabled', 'surface', 'grants'],
             array_keys($response->json('data')),
         );
         $response->assertJsonPath('data.surface', 'admin')

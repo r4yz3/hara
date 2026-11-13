@@ -2,7 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Application\Commands\StaffMfa;
 use App\Support\Auth\SurfaceAccess;
+use App\Support\Errors\ApiError;
+use App\Support\ProductionGuard;
 use Closure;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
@@ -16,7 +19,13 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class EnsureSurfaceSession
 {
-    public function __construct(private readonly SurfaceAccess $surfaces) {}
+    /** The only routes a deployed staff session without a second factor may use. */
+    private const ENROLMENT_ROUTES = ['me.mfa.totp.start', 'me.mfa.totp.confirm', 'auth.logout'];
+
+    public function __construct(
+        private readonly SurfaceAccess $surfaces,
+        private readonly StaffMfa $mfa,
+    ) {}
 
     public function handle(Request $request, Closure $next): Response
     {
@@ -39,6 +48,48 @@ class EnsureSurfaceSession
             throw new AuthenticationException;
         }
 
+        if ($surface === 'admin') {
+            $this->requireSecondStep($request, (string) $user->getAuthIdentifier());
+        }
+
         return $next($request);
+    }
+
+    /**
+     * ADR-011. A staff member with a confirmed second factor needs a session
+     * that passed it. Without one, local and testing keep password-only
+     * sessions; anywhere else the session may only enrol a factor.
+     */
+    private function requireSecondStep(Request $request, string $userId): void
+    {
+        $session = $request->session();
+
+        if ($this->mfa->isConfirmed($userId)) {
+            if ($session->get('mfa_verified') !== true) {
+                $this->endSession($request);
+            }
+
+            return;
+        }
+
+        if (app()->environment(ProductionGuard::DEVELOPMENT_ENVIRONMENTS)) {
+            return;
+        }
+
+        if ($session->get('mfa_enrolment_only') !== true) {
+            $this->endSession($request);
+        }
+
+        if (! in_array($request->route()?->getName(), self::ENROLMENT_ROUTES, true)) {
+            throw ApiError::forbidden('Set up two-step sign-in before using the admin console.');
+        }
+    }
+
+    private function endSession(Request $request): never
+    {
+        Auth::guard('web')->logoutCurrentDevice();
+        $request->session()->invalidate();
+
+        throw new AuthenticationException;
     }
 }

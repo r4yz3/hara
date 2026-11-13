@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Application\Commands\PasswordRecovery;
 use App\Application\Commands\RegisterCustomer;
+use App\Application\Commands\StaffMfa;
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\ResolveSurface;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
@@ -13,6 +15,7 @@ use App\Models\User;
 use App\Support\Auth\SurfaceAccess;
 use App\Support\Errors\ApiError;
 use App\Support\Http\ApiResponse;
+use App\Support\ProductionGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -57,13 +60,9 @@ class AuthController extends Controller
         return ApiResponse::data($request, ['status' => 'registration_received'], 202);
     }
 
-    public function login(LoginRequest $request, SurfaceAccess $surfaces): JsonResponse
+    public function login(LoginRequest $request, SurfaceAccess $surfaces, StaffMfa $mfa): JsonResponse
     {
         $surface = $this->surfaceOrFail($request);
-
-        if (! $surfaces->isOpen($surface)) {
-            throw ApiError::forbidden('Staff sign-in is unavailable until two-step verification is enabled.');
-        }
 
         $email = $request->email();
         $throttleKey = 'login:'.hash('sha256', $email.'|'.$request->ip());
@@ -88,16 +87,71 @@ class AuthController extends Controller
 
         RateLimiter::clear($throttleKey);
 
-        $guard = Auth::guard('web');
-        $guard->login($user);
-        $request->session()->regenerate();
-        $request->session()->put([
-            'surface' => $surface,
-            'password_hash_web' => $guard->hashPasswordForCookie($user->getAuthPassword()),
+        if ($surface === 'admin' && $mfa->isConfirmed($user->id)) {
+            // Password only: nobody is signed in until the second step.
+            $request->session()->regenerate();
+            $request->session()->put('mfa_pending', [
+                'user_id' => $user->id,
+                'expires_at' => now()->getTimestamp() + (int) config('surfaces.mfa.pending_seconds'),
+            ]);
+
+            return ApiResponse::data($request, ['mfa_required' => true]);
+        }
+
+        // Deployed staff without a second factor may only enrol one.
+        $this->startSession($request, $user, $surface, [
+            'mfa_enrolment_only' => $surface === 'admin' && ! app()->environment(ProductionGuard::DEVELOPMENT_ENVIRONMENTS),
         ]);
 
-        DB::table('users')->where('id', $user->id)->update(['last_login_at' => now()]);
-        Log::info('auth.login', ['user_id' => $user->id, 'surface' => $surface]);
+        return ApiResponse::data($request, (new CurrentUserResource($user, $surface))->toArray());
+    }
+
+    public function verifyMfa(Request $request, SurfaceAccess $surfaces, StaffMfa $mfa): JsonResponse
+    {
+        $surface = $this->surfaceOrFail($request);
+        $input = $request->validate([
+            'code' => ['nullable', 'string', 'max:64', 'required_without:recovery_code'],
+            'recovery_code' => ['nullable', 'string', 'max:64', 'required_without:code'],
+        ]);
+
+        $pending = $request->session()->get('mfa_pending');
+        $userId = is_array($pending) && is_string($pending['user_id'] ?? null) && is_int($pending['expires_at'] ?? null)
+            && $pending['expires_at'] > now()->getTimestamp() ? $pending['user_id'] : null;
+
+        // No marker, an expired one, another surface: the same answer as a wrong code.
+        if ($surface !== 'admin' || $userId === null) {
+            $request->session()->forget('mfa_pending');
+
+            throw ApiError::invalidCredentials();
+        }
+
+        $throttleKey = 'mfa:'.hash('sha256', $userId.'|'.$request->ip());
+        $maxAttempts = (int) config('surfaces.login.max_attempts');
+
+        if (RateLimiter::tooManyAttempts($throttleKey, $maxAttempts)) {
+            throw ApiError::rateLimited(RateLimiter::availableIn($throttleKey));
+        }
+
+        $user = User::query()->find($userId);
+        $method = $user !== null && $surfaces->allows($user->id, $surface) && $mfa->isConfirmed($user->id)
+            ? $mfa->challenge($user->id, $input['code'] ?? null, $input['recovery_code'] ?? null)
+            : null;
+
+        if ($user === null || $method === null) {
+            RateLimiter::hit($throttleKey, (int) config('surfaces.login.decay_seconds'));
+            Log::info('auth.mfa.failed', ['surface' => $surface]);
+
+            if ($user !== null) {
+                $mfa->recordFailed($user->id, 'sign_in', $request->ip(), AssignRequestId::for($request));
+            }
+
+            throw ApiError::invalidCredentials();
+        }
+
+        RateLimiter::clear($throttleKey);
+        $mfa->recordVerified($user->id, $method, $request->ip(), AssignRequestId::for($request));
+
+        $this->startSession($request, $user, $surface, ['mfa_verified' => true]);
 
         return ApiResponse::data($request, (new CurrentUserResource($user, $surface))->toArray());
     }
@@ -146,6 +200,24 @@ class AuthController extends Controller
         $user = Auth::guard('web')->user();
 
         return ApiResponse::data($request, (new CurrentUserResource($user, (string) ResolveSurface::of($request)))->toArray());
+    }
+
+    /**
+     * @param  array<string, bool>  $flags  session facts about how this sign-in was earned
+     */
+    private function startSession(Request $request, User $user, string $surface, array $flags): void
+    {
+        $guard = Auth::guard('web');
+        $guard->login($user);
+        $request->session()->regenerate();
+        $request->session()->forget('mfa_pending');
+        $request->session()->put([
+            'surface' => $surface,
+            'password_hash_web' => $guard->hashPasswordForCookie($user->getAuthPassword()),
+        ] + $flags);
+
+        DB::table('users')->where('id', $user->id)->update(['last_login_at' => now()]);
+        Log::info('auth.login', ['user_id' => $user->id, 'surface' => $surface]);
     }
 
     private function surfaceOrFail(Request $request): string

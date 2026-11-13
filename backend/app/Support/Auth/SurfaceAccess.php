@@ -2,7 +2,6 @@
 
 namespace App\Support\Auth;
 
-use App\Support\ProductionGuard;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -12,15 +11,11 @@ use Illuminate\Support\Facades\DB;
  */
 class SurfaceAccess
 {
-    public function isOpen(string $surface): bool
-    {
-        // ADR-011: deployed admin surfaces stay closed until MFA is reviewed.
-        return $surface !== 'admin' || app()->environment(ProductionGuard::DEVELOPMENT_ENVIRONMENTS);
-    }
-
     public function allows(string $userId, string $surface): bool
     {
-        if (! $this->isOpen($surface) || DB::table('users')->where('id', $userId)->value('status') !== 'active') {
+        // Whether a deployed admin session may do more than enrol a second
+        // factor is decided by EnsureSurfaceSession (ADR-011), not here.
+        if (DB::table('users')->where('id', $userId)->value('status') !== 'active') {
             return false;
         }
 

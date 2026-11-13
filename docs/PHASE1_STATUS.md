@@ -2,6 +2,23 @@
 
 Last updated: 2026-11-14. Phase 1 has working browser authentication, rider token endpoints, and city, zone and serviceability APIs. Sprint 8 acceptance remains open.
 
+## November 14 staff two-step sign-in (B-09, backend)
+
+- Built by a Sonnet subagent and reviewed before commit: the TOTP code, the session gate and the verify step were read line by line, and pint, phpstan, the full backend suite (453 passed) and the generated-types test were re-run.
+- `POST /api/v1/auth/login` for staff with a confirmed factor now answers `mfa_required` and grants nothing. `POST /api/v1/auth/mfa/verify` takes a 6-digit code or a recovery code and completes sign-in with a new session id. It uses the same generic 401 and the same 5-per-minute limit as a password.
+- `POST /api/v1/me/mfa/totp` starts enrolment and shows the secret once. `.../confirm` confirms it and shows 10 recovery codes once; they are stored as keyed hashes and work once each.
+- The secret is encrypted at rest. Codes cannot be replayed within a step. A clock drift of one step either way is accepted.
+- Gate (`EnsureSurfaceSession`):
+  - Once a factor is confirmed, every admin session must have passed it, in every environment.
+  - Outside `local` and `testing`, staff without a factor may only enrol or sign out; everything else answers 403.
+  - Local development keeps password-only sign-in for staff who have not enrolled.
+- Audit: `auth.mfa_enrolled`, `auth.mfa_verified` (method), `auth.mfa_failed` (stage); ids only.
+- Not done:
+  - the admin web screens (enrolment with a QR code, and the code step at sign-in), so deployed admin sign-in works only through the API;
+  - no way to disable, reset or regenerate codes, so a staff member who loses the device and the codes has no recovery path yet;
+  - rotating `APP_KEY` invalidates unused recovery codes;
+  - the recovery-code design awaits product owner review (ADR-011).
+
 ## November 14 rider sign-in, password reset fix and Phase 2 draft
 
 Evidence: `docs/qa/evidence/phase1-2026-11-14-rider-signin-check.txt` (`dev.ps1 check`, exit 0; 410 backend tests, 47 rider tests).

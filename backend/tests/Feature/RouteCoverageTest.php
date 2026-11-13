@@ -36,6 +36,7 @@ class RouteCoverageTest extends TestCase
         'auth.csrf',
         'auth.register',
         'auth.login',
+        'auth.mfa.verify',
         'auth.password.forgot',
         'auth.password.reset',
         'auth.mobile.token',

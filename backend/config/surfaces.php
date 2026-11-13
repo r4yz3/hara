@@ -23,4 +23,10 @@ return [
         'decay_seconds' => 60,
     ],
 
+    // Staff second step (ADR-011). A correct password only earns a pending
+    // marker in the session, valid for this long.
+    'mfa' => [
+        'pending_seconds' => 300,
+    ],
+
 ];

@@ -136,8 +136,11 @@ paths:
         Starts a session on the calling app. A wrong password, an unknown
         account, a suspended account and an account not entitled to this app
         all produce the same 401. Five failures for one account from one
-        address within a minute produce 429. Until two-step verification is
-        available, the admin surface refuses sign-in outside local and testing.
+        address within a minute produce 429. On the admin app, staff with a
+        confirmed second factor are not signed in by a correct password: the
+        answer is `{"data":{"mfa_required":true}}` and `POST /auth/mfa/verify`
+        finishes sign-in. In deployed environments, staff without a second
+        factor get an enrolment-only session (see `POST /me/mfa/totp`).
       operationId: authLogin
       security: []
       parameters:
@@ -154,12 +157,132 @@ paths:
                 password: { type: string, maxLength: 1024, format: password }
       responses:
         "200":
+          description: Signed in, or a second step is required.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - { $ref: "#/components/schemas/CurrentUserResponse" }
+                  - { $ref: "#/components/schemas/MfaRequiredResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/v1/auth/mfa/verify:
+    post:
+      tags: [Auth]
+      summary: Finish staff sign-in with the second step
+      description: |
+        Admin app only. Follows a login that answered `mfa_required`. Send a
+        six-digit `code` from the authenticator app or one `recovery_code`.
+        A code works once; so does a recovery code. A wrong code, an expired
+        pending sign-in (5 minutes) and a missing one all produce the same 401.
+        Five failures for one account from one address within a minute produce
+        429. On success it answers like login.
+      operationId: authMfaVerify
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code: { type: string, maxLength: 64 }
+                recovery_code: { type: string, maxLength: 64 }
+      responses:
+        "200":
           description: Signed in.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/CurrentUserResponse" }
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/v1/me/mfa/totp:
+    post:
+      tags: [Auth]
+      summary: Start two-step sign-in setup
+      description: |
+        Admin app only. Creates an unconfirmed authenticator secret and returns
+        it once, with an otpauth URI for a QR code. Calling again before
+        confirming replaces the secret. Once confirmed, 409. In deployed
+        environments a staff session without a confirmed second factor may call
+        only this, the confirm route and logout; everything else answers 403.
+      operationId: meMfaTotpStart
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      responses:
+        "201":
+          description: Setup started.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    required: [secret, otpauth_uri]
+                    properties:
+                      secret: { type: string, pattern: "^[A-Z2-7]{32}$" }
+                      otpauth_uri: { type: string }
+                  meta: { $ref: "#/components/schemas/Meta" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/me/mfa/totp/confirm:
+    post:
+      tags: [Auth]
+      summary: Confirm two-step sign-in setup
+      description: |
+        Admin app only. Send a current code from the authenticator app. Returns
+        ten single-use recovery codes, once; they are stored only as hashes.
+        In deployed environments the session ends afterwards and the person
+        signs in again with the second step. Five failures in a minute produce 429.
+      operationId: meMfaTotpConfirm
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string, maxLength: 64 }
+      responses:
+        "200":
+          description: Confirmed.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    required: [recovery_codes]
+                    properties:
+                      recovery_codes:
+                        type: array
+                        minItems: 10
+                        maxItems: 10
+                        items: { type: string }
+                  meta: { $ref: "#/components/schemas/Meta" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
         "422": { $ref: "#/components/responses/Error" }
         "429": { $ref: "#/components/responses/Error" }
   /api/v1/auth/password/forgot:
@@ -1249,12 +1372,13 @@ components:
     CurrentUser:
       type: object
       additionalProperties: false
-      required: [id, name, email, email_verified, surface, grants]
+      required: [id, name, email, email_verified, mfa_enabled, surface, grants]
       properties:
         id: { type: string, pattern: "^[0-9a-z]{26}$" }
         name: { type: string }
         email: { type: string }
         email_verified: { type: boolean }
+        mfa_enabled: { type: boolean }
         surface: { type: string, enum: [customer, merchant, admin] }
         grants:
           type: array
@@ -1269,6 +1393,18 @@ components:
               permissions:
                 type: array
                 items: { type: string }
+    MfaRequiredResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [mfa_required]
+          properties:
+            mfa_required: { type: boolean, const: true }
+        meta: { $ref: "#/components/schemas/Meta" }
     CurrentUserResponse:
       type: object
       additionalProperties: false

@@ -133,7 +133,7 @@ class SessionLoginTest extends AuthTestCase
 
     #[TestWith(['production'])]
     #[TestWith(['staging'])]
-    public function test_admin_sign_in_is_refused_outside_development_until_two_step_verification_exists(string $environment): void
+    public function test_deployed_admin_sign_in_without_a_second_factor_is_enrolment_only(string $environment): void
     {
         $staff = $this->user('staff@example.com');
         $this->grantRole($staff, 'platform_owner');
@@ -144,9 +144,9 @@ class SessionLoginTest extends AuthTestCase
             $token = $this->via('admin')->getJson('/api/v1/auth/csrf')->assertOk()->json('data.csrf_token');
             $this->withSession(['_token' => $token])->withHeader('X-CSRF-TOKEN', $token);
             $this->login('admin', 'staff@example.com')
-                ->assertStatus(403)
-                ->assertJsonPath('error.message', 'Staff sign-in is unavailable until two-step verification is enabled.');
-            $this->assertGuest();
+                ->assertOk();
+            $this->assertAuthenticatedAs($staff);
+            $this->via('admin')->getJson('/api/v1/admin/cities')->assertForbidden();
         } finally {
             $this->app['env'] = 'testing';
         }
