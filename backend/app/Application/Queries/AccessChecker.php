@@ -5,6 +5,7 @@ namespace App\Application\Queries;
 use App\Domain\Identity\Scope;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Answers "may this user do this, here?" (ADR-005).
@@ -27,6 +28,15 @@ class AccessChecker
                 return true;
             }
         }
+
+        // The `rbac.denied` event (spec 11.3). Callers turn this into a 403
+        // or a 404; the log records the real reason either way.
+        Log::warning('rbac.denied', [
+            'user_id' => $user->getKey(),
+            'permission' => $permission,
+            'scope_type' => $target->type,
+            'scope_id' => $target->id,
+        ]);
 
         return false;
     }

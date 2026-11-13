@@ -97,7 +97,7 @@ Status key: `todo`, `blocked`, `done`.
 
 | ID | Story | Acceptance | Depends on | Status |
 |---|---|---|---|---|
-| E-01 | Structured logs with request IDs and the named events | Events from spec 11.3 emitted; no exact customer coordinates logged | A-04 | todo |
+| E-01 | Structured logs with request IDs and the named events | Events from spec 11.3 emitted; no exact customer coordinates logged | A-04 | done except `outbox.failure` (no outbox worker yet) and alerting (needs E-07): JSON logs with redaction, request id on every record, StructuredLogTest (9) |
 | E-02 | CSP, CORS, cookie review | Negative tests pass | B-02 | todo |
 | E-03 | Backup and restore script and drill | Restore into a new database; migrations and spatial data verified; evidence recorded | D-01 | done locally: backup and restore-drill tasks, drill run and passed against the development database (`docs/qa/evidence/restore-drill.txt`); no schedule, off-machine copy, encryption or fault-injection case (`docs/operations/backups.md`) |
 | E-04 | Security scans in CI | Secret scan, dependency audits, container scan; findings classified | A-11 | todo |

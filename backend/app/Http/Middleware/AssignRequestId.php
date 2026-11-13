@@ -21,11 +21,37 @@ class AssignRequestId
     {
         $id = self::for($request);
         Log::withContext(['request_id' => $id]);
+        $started = hrtime(true);
 
         $response = $next($request);
         $response->headers->set(self::HEADER, $id);
 
+        self::logRequest($request, $response, $started);
+
         return $response;
+    }
+
+    /**
+     * The `http.request` event (spec 11.3). The route template is logged, not
+     * the path or query string, so ids and any personal data in the URL stay
+     * out of the log; an unmatched path is logged as null.
+     */
+    private static function logRequest(Request $request, Response $response, int $started): void
+    {
+        $status = $response->getStatusCode();
+        $context = [
+            'method' => $request->getMethod(),
+            'route' => $request->route()?->uri(),
+            'status' => $status,
+            'duration_ms' => round((hrtime(true) - $started) / 1e6, 1),
+            'user_id' => $request->user()?->getAuthIdentifier(),
+        ];
+
+        if ($status >= 500) {
+            Log::error('http.request', $context);
+        } else {
+            Log::info('http.request', $context);
+        }
     }
 
     /**

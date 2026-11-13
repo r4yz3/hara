@@ -6,6 +6,7 @@ use App\Domain\Geo\CityStatus;
 use App\Domain\Geo\ZoneGeometry;
 use App\Support\Errors\ApiError;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -127,6 +128,7 @@ class ZoneService
 
                 $valid = DB::selectOne('SELECT ST_IsValid(coverage) AND NOT ST_IsEmpty(coverage) AS valid FROM delivery_zones WHERE id = ?', [$zoneId])->valid ?? false;
                 if ($valid !== true) {
+                    Log::notice('zone.validation_failed', ['zone_id' => $zoneId, 'reason' => 'invalid_on_activation']);
                     throw new ApiError(409, 'CONFLICT', 'The zone shape is not valid and cannot be activated.');
                 }
             }
@@ -141,6 +143,11 @@ class ZoneService
 
             $after = ['status' => $target->value] + ($reason === null ? [] : ['reason' => $reason]);
             $this->audit->record($actorId, 'zone.status_changed', 'delivery_zone', $zoneId, (string) $row->city_id, before: ['status' => $current->value], after: $after);
+
+            if ($target === CityStatus::Active) {
+                $cityId = (string) $row->city_id;
+                DB::afterCommit(fn () => Log::info('zone.activated', ['zone_id' => $zoneId, 'city_id' => $cityId, 'actor_user_id' => $actorId]));
+            }
         });
     }
 
@@ -155,6 +162,7 @@ class ZoneService
         $valid = DB::selectOne('SELECT ST_IsValid(ST_GeomFromGeoJSON(?)) AS valid', [$geoJson])->valid ?? false;
 
         if ($valid !== true) {
+            Log::notice('zone.validation_failed', ['reason' => 'invalid_in_postgis']);
             throw ValidationException::withMessages(['geometry' => ['The shape is not valid: it crosses itself or has a misplaced hole.']]);
         }
 

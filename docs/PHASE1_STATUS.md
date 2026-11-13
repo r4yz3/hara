@@ -5,6 +5,14 @@ Last updated: 2026-11-13, Sprint 4 in progress (roles, permissions, audit and si
 ## Summary
 Sprint 1 documents await human review. The Docker stack now starts healthy and the backend checks run inside it against PostGIS and Redis. The Sprint 2 gate ("clean clone boot smoke with logs") is **still not met**: the boot was done in the working tree, not from a clean clone, and CI has never run. The product owner supplied front-end reference images; the customer home screen is built in that direction.
 
+## Sprint 7: structured logs and named events (E-01, 2026-11-13)
+Evidence: `docs/qa/evidence/sprint7-structured-logs-check.txt` (`dev.ps1 check`, exit 0; 374 backend tests).
+
+- Log format: the `single` channel (the default) and a new `json` channel (stderr, for containers; select with `LOG_STACK=json`) write one JSON object per line through `App\Support\Logging\UseStructuredLogs`. A processor redacts credentials and exact-position keys (`latitude`, `lng`, `point`, ...) in every record, using the audit log's word list.
+- Events from spec 11.3: `http.request` (method, route template, status, duration, user id; never the path or query string; level error for 5xx), `rbac.denied` (user, permission, scope; logged inside `AccessChecker`, so it also covers refusals the API answers with 404), `zone.validation_failed` (machine reason only, never coordinates), `zone.activated`, and every audited change (`city.updated`, `zone.status_changed`, ...) logged under its action name with ids only, after the transaction commits. `auth.login` already existed. Every record carries `request_id`.
+- Tests: StructuredLogTest (9), including that a serviceability check leaves its position nowhere in the log and that a rolled-back audit entry is never logged.
+- Not done: `outbox.failure` (no outbox worker exists in Phase 1, so nothing can fail yet); alerts for 5xx rate, DB down, queue depth, backup failure and disk (need a staging host and a monitoring service, E-07); tracing beyond the request id; log shipping and retention.
+
 ## Sprint 4, fifth slice: rider app sign-in (2026-11-13)
 Evidence: `docs/qa/evidence/sprint4-rider-token-check.txt` (`dev.ps1 check`, exit 0; 365 backend tests) and `sprint4-rider-token-smoke.txt` (ten real requests against the running stack).
 

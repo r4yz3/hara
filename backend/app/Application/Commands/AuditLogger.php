@@ -3,6 +3,7 @@
 namespace App\Application\Commands;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -54,6 +55,17 @@ class AuditLogger
             'ip_hash' => $ip === null ? null : hash_hmac('sha256', $ip, (string) config('app.key')),
             'correlation_id' => $correlationId,
         ]);
+
+        // Every audited change is also a structured log event (spec 11.3),
+        // sent only once the change is committed. Ids only: the before and
+        // after values stay in the audit table.
+        DB::afterCommit(fn () => Log::info($action, [
+            'audit_id' => $id,
+            'actor_user_id' => $actorUserId,
+            'subject_type' => $subjectType,
+            'subject_id' => $subjectId,
+            'scope_city_id' => $scopeCityId,
+        ]));
 
         return $id;
     }

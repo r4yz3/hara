@@ -19,6 +19,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -153,6 +154,7 @@ class ZoneController extends Controller
                 (float) config('geo.zone_max_extent_degrees'),
             ));
         } catch (InvalidZoneGeometry $e) {
+            Log::notice('zone.validation_failed', ['shape' => 'zone', 'reason' => $e->reason]);
             throw ValidationException::withMessages(['geometry' => [$e->getMessage()]]);
         }
     }

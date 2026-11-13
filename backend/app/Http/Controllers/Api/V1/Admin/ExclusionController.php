@@ -20,6 +20,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -87,6 +88,7 @@ class ExclusionController extends Controller
                 (float) config('geo.zone_max_extent_degrees'),
             ));
         } catch (InvalidZoneGeometry $e) {
+            Log::notice('zone.validation_failed', ['shape' => 'exclusion', 'zone_id' => $zoneId, 'reason' => $e->reason]);
             throw ValidationException::withMessages(['geometry' => [$e->getMessage()]]);
         }
 

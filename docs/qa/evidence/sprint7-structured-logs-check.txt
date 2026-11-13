@@ -1,0 +1,626 @@
+==> web lint
+
+> food-delivery@ lint F:\PROJECTS\hara
+> pnpm -r --if-present lint
+
+Scope: 9 of 10 workspace projects
+apps/admin-web lint$ eslint
+apps/customer-web lint$ eslint
+apps/merchant-web lint$ eslint
+apps/merchant-web lint: Done
+apps/customer-web lint: Done
+apps/admin-web lint: Done
+==> web typecheck
+
+> food-delivery@ typecheck F:\PROJECTS\hara
+> pnpm -r --if-present typecheck
+
+Scope: 9 of 10 workspace projects
+packages/api-client typecheck$ tsc --noEmit
+packages/api-client typecheck: Done
+apps/admin-web typecheck$ next typegen && tsc --noEmit
+apps/customer-web typecheck$ next typegen && tsc --noEmit
+apps/merchant-web typecheck$ next typegen && tsc --noEmit
+apps/customer-web typecheck: Generating route types...
+apps/admin-web typecheck: Generating route types...
+apps/merchant-web typecheck: Generating route types...
+apps/customer-web typecheck: ✓ Types generated successfully
+apps/admin-web typecheck: ✓ Types generated successfully
+apps/merchant-web typecheck: ✓ Types generated successfully
+apps/customer-web typecheck: Done
+apps/merchant-web typecheck: Done
+apps/admin-web typecheck: Done
+==> web tests
+
+> food-delivery@ test F:\PROJECTS\hara
+> pnpm -r --if-present test
+
+Scope: 9 of 10 workspace projects
+packages/design-tokens test$ node --test
+packages/api-client test$ node --test
+packages/design-tokens test: ✔ contrast ratio matches the WCAG reference values (1.2144ms)
+packages/design-tokens test: ✔ rejects colours that are not #rrggbb (0.3007ms)
+packages/design-tokens test: ✔ light and dark define the same tokens (0.7026ms)
+packages/design-tokens test: ✔ every approved pair meets its threshold in both themes (0.5642ms)
+packages/design-tokens test: ✔ restricted tokens really do fail, so the restriction is not stale (0.1696ms)
+packages/design-tokens test: ✔ tokens.css is up to date with tokens.mjs (0.9357ms)
+packages/design-tokens test: ✔ contrast report is up to date with tokens.mjs (1.9315ms)
+packages/design-tokens test: ✔ the rider app's Dart tokens are up to date with tokens.mjs (0.9856ms)
+packages/design-tokens test: ℹ tests 8
+packages/design-tokens test: ℹ suites 0
+packages/design-tokens test: ℹ pass 8
+packages/design-tokens test: ℹ fail 0
+packages/design-tokens test: ℹ cancelled 0
+packages/design-tokens test: ℹ skipped 0
+packages/design-tokens test: ℹ todo 0
+packages/design-tokens test: ℹ duration_ms 104.8758
+packages/design-tokens test: Done
+packages/api-client test: ✔ generated types match the OpenAPI document (92.2892ms)
+packages/api-client test: ✔ every documented operation is typed (2.7118ms)
+packages/api-client test: ℹ tests 2
+packages/api-client test: ℹ suites 0
+packages/api-client test: ℹ pass 2
+packages/api-client test: ℹ fail 0
+packages/api-client test: ℹ cancelled 0
+packages/api-client test: ℹ skipped 0
+packages/api-client test: ℹ todo 0
+packages/api-client test: ℹ duration_ms 804.4274
+packages/api-client test: Done
+==> web build
+
+> food-delivery@ build F:\PROJECTS\hara
+> pnpm -r --if-present build
+
+Scope: 9 of 10 workspace projects
+packages/design-tokens build$ node src/build.mjs
+packages/design-tokens build: Wrote tokens.css, the contrast report and the rider app's tokens.g.dart
+packages/design-tokens build: Done
+apps/merchant-web build$ next build
+apps/admin-web build$ next build
+apps/customer-web build$ next build
+apps/merchant-web build: ▲ Next.js 16.4.6 (Turbopack)
+apps/customer-web build: ▲ Next.js 16.4.6 (Turbopack)
+apps/admin-web build: ▲ Next.js 16.4.6 (Turbopack)
+apps/merchant-web build: ✓ Running next.config.ts took 38ms
+apps/customer-web build: ✓ Running next.config.ts took 39ms
+apps/admin-web build: ✓ Running next.config.ts took 37ms
+apps/merchant-web build: - Cache Components enabled
+apps/merchant-web build: - Partial Prefetching enabled
+apps/merchant-web build:   Creating an optimized production build ...
+apps/customer-web build: - Cache Components enabled
+apps/admin-web build: - Cache Components enabled
+apps/admin-web build: - Partial Prefetching enabled
+apps/customer-web build: - Partial Prefetching enabled
+apps/customer-web build:   Creating an optimized production build ...
+apps/admin-web build:   Creating an optimized production build ...
+apps/merchant-web build: ✓ Compiled successfully in 497ms
+apps/merchant-web build:   Running TypeScript ...
+apps/customer-web build: ✓ Compiled successfully in 873ms
+apps/admin-web build: ✓ Compiled successfully in 852ms
+apps/admin-web build:   Running TypeScript ...
+apps/customer-web build:   Running TypeScript ...
+apps/merchant-web build:   Finished TypeScript in 1859ms ...
+apps/merchant-web build:   Collecting page data using 8 workers ...
+apps/customer-web build:   Finished TypeScript in 2.2s ...
+apps/customer-web build:   Collecting page data using 9 workers ...
+apps/admin-web build:   Finished TypeScript in 2.2s ...
+apps/admin-web build:   Collecting page data using 11 workers ...
+apps/merchant-web build:   Generating static pages using 8 workers (0/7) ...
+apps/customer-web build:   Generating static pages using 9 workers (0/8) ...
+apps/admin-web build:   Generating static pages using 11 workers (0/10) ...
+apps/merchant-web build:   Generating static pages using 8 workers (1/7) 
+apps/merchant-web build:   Generating static pages using 8 workers (3/7) 
+apps/merchant-web build:   Generating static pages using 8 workers (5/7) 
+apps/merchant-web build: ✓ Generating static pages using 8 workers (7/7) in 1804ms
+apps/merchant-web build:   Finalizing page optimization ...
+apps/merchant-web build: Route (app)
+apps/merchant-web build: ┌ ○ /
+apps/merchant-web build: ├ ○ /_not-found
+apps/merchant-web build: ├ ○ /forgot-password
+apps/merchant-web build: ├ ○ /login
+apps/merchant-web build: └ ○ /reset-password
+apps/merchant-web build: ○  (Static)  prerendered as static content
+apps/customer-web build:   Generating static pages using 9 workers (2/8) 
+apps/customer-web build:   Generating static pages using 9 workers (4/8) 
+apps/customer-web build:   Generating static pages using 9 workers (6/8) 
+apps/customer-web build: ✓ Generating static pages using 9 workers (8/8) in 1223ms
+apps/customer-web build:   Finalizing page optimization ...
+apps/customer-web build: Route (app)
+apps/customer-web build: ┌ ◐ /
+apps/customer-web build: ├ ○ /_not-found
+apps/customer-web build: ├ ○ /forgot-password
+apps/customer-web build: ├ ○ /location
+apps/customer-web build: ├ ○ /login
+apps/customer-web build: └ ○ /reset-password
+apps/customer-web build: ○  (Static)             prerendered as static content
+apps/customer-web build: ◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content
+apps/merchant-web build: Done
+apps/admin-web build:   Generating static pages using 11 workers (2/10) 
+apps/admin-web build:   Generating static pages using 11 workers (4/10) 
+apps/admin-web build:   Generating static pages using 11 workers (7/10) 
+apps/admin-web build: ✓ Generating static pages using 11 workers (10/10) in 1356ms
+apps/admin-web build:   Finalizing page optimization ...
+apps/admin-web build: Route (app)
+apps/admin-web build: ┌ ◐ /
+apps/admin-web build: ├ ○ /_not-found
+apps/admin-web build: ├ ○ /audit
+apps/admin-web build: ├ ○ /cities
+apps/admin-web build: ├   /cities/[id]
+apps/admin-web build: │ └ ◐ /cities/[id]
+apps/admin-web build: ├ ○ /forgot-password
+apps/admin-web build: ├ ○ /login
+apps/admin-web build: └ ○ /reset-password
+apps/admin-web build: ○  (Static)             prerendered as static content
+apps/admin-web build: ◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content
+apps/customer-web build: Done
+apps/admin-web build: Done
+==> backend format
+
+  ............................................................................
+  ...................................................
+
+  ──────────────────────────────────────────────────────────────────── Laravel  
+    PASS   ......................................................... 127 files  
+
+==> backend static analysis
+Note: Using configuration file /var/www/backend/phpstan.neon.
+
+ [OK] No errors                                                                 
+
+==> backend tests
+
+   PASS  Tests\Unit\ArchitectureTest
+  ✓ expected domain modules exist                                        0.01s  
+  ✓ domain code does not import http layer                               0.06s  
+  ✓ modules reference each other only through contracts                  0.04s  
+
+   PASS  Tests\Unit\Domain\Geo\CoordinateBoundsTest
+  ✓ accepts values inside and on the bounds with data set "origin"       0.01s  
+  ✓ accepts values inside and on the bounds with data set "asymmetric"
+  ✓ accepts values inside and on the bounds with data set "north pole, date line"
+  ✓ accepts values inside and on the bounds with data set "south pole, antimeridian"
+  ✓ accepts values inside and on the bounds with data set "fractional"
+  ✓ rejects out of range and non finite values with data set "latitude just above"
+  ✓ rejects out of range and non finite values with data set "latitude just below"
+  ✓ rejects out of range and non finite values with data set "longitude just above"
+  ✓ rejects out of range and non finite values with data set "longitude just below"
+  ✓ rejects out of range and non finite values with data set "swapped asymmetric pair"
+  ✓ rejects out of range and non finite values with data set "latitude na n"
+  ✓ rejects out of range and non finite values with data set "longitude na n"
+  ✓ rejects out of range and non finite values with data set "latitude infinite"
+  ✓ rejects out of range and non finite values with data set "longitude negative infinite"
+  ✓ geojson position is longitude then latitude
+  ✓ reads a geojson position as longitude then latitude
+  ✓ geojson position ignores altitude
+  ✓ integer json numbers are accepted in positions
+  ✓ rejects malformed geojson positions with data set "empty"
+  ✓ rejects malformed geojson positions with data set "one value"
+  ✓ rejects malformed geojson positions with data set "four values"
+  ✓ rejects malformed geojson positions with data set "numeric strings"
+  ✓ rejects malformed geojson positions with data set "null"
+  ✓ rejects malformed geojson positions with data set "boolean"
+  ✓ rejects malformed geojson positions with data set "nested"
+  ✓ rejects malformed geojson positions with data set "keyed"
+  ✓ rejects malformed geojson positions with data set "swapped asymmetric pair"
+
+   PASS  Tests\Unit\Domain\Geo\ZoneGeometryValidatorTest
+  ✓ accepts a multipolygon and returns it unchanged                      0.02s  
+  ✓ wraps a polygon into a multipolygon
+  ✓ drops altitude and casts integers
+  ✓ keeps holes and multiple polygons
+  ✓ ignores unknown members such as bbox
+  ✓ rejects invalid input with a reason with data set "no type"
+  ✓ rejects invalid input with a reason with data set "point"
+  ✓ rejects invalid input with a reason with data set "feature wrapper"
+  ✓ rejects invalid input with a reason with data set "geometry collection"
+  ✓ rejects invalid input with a reason with data set "type is not a string"
+  ✓ rejects invalid input with a reason with data set "lower-case type"
+  ✓ rejects invalid input with a reason with data set "missing coordinates"
+  ✓ rejects invalid input with a reason with data set "coordinates not a list"
+  ✓ rejects invalid input with a reason with data set "keyed coordinates"
+  ✓ rejects invalid input with a reason with data set "empty multipolygon"
+  ✓ rejects invalid input with a reason with data set "polygon without rings"
+  ✓ rejects invalid input with a reason with data set "multipolygon with empty polygon"
+  ✓ rejects invalid input with a reason with data set "polygon depth given as multipolygon"
+  ✓ rejects invalid input with a reason with data set "multipolygon depth given as polygon"
+  ✓ rejects invalid input with a reason with data set "ring is not a list"
+  ✓ rejects invalid input with a reason with data set "ring too short"
+  ✓ rejects invalid input with a reason with data set "ring not closed"
+  ✓ rejects invalid input with a reason with data set "ring collapsed to a line"
+  ✓ rejects invalid input with a reason with data set "string coordinates"
+  ✓ rejects invalid input with a reason with data set "latitude out of range"
+  ✓ rejects invalid input with a reason with data set "axes swapped"
+  ✓ rejects more vertices than the cap
+  ✓ accepts exactly the vertex cap
+  ✓ rejects an extent wider than the cap
+  ✓ extent is measured across all polygons
+  ✓ accepts an extent within the cap
+  ✓ limits must be positive
+
+   PASS  Tests\Unit\Support\Money\CurrencyAmountTest
+  ✓ holds minor units and currency                                       0.02s  
+  ✓ currency is normalized to upper case
+  ✓ rejects invalid currency codes with data set "empty"
+  ✓ rejects invalid currency codes with data set "too short"
+  ✓ rejects invalid currency codes with data set "too long"
+  ✓ rejects invalid currency codes with data set "symbol"
+  ✓ rejects invalid currency codes with data set "digits"
+  ✓ rejects invalid currency codes with data set "padded"
+  ✓ adds and subtracts exactly
+  ✓ amounts that break floats stay exact
+  ✓ is immutable
+  ✓ signed amounts are allowed
+  ✓ multiplies by whole quantity
+  ✓ refuses to combine different currencies
+  ✓ refuses to compare different currencies
+  ✓ equals is false across currencies
+  ✓ compares within a currency
+  ✓ addition overflow throws instead of becoming a float
+  ✓ subtraction overflow throws
+  ✓ multiplication overflow throws
+  ✓ negating the minimum integer throws
+  ✓ parses decimal strings without floats with data set "whole"
+  ✓ parses decimal strings without floats with data set "two decimals"
+  ✓ parses decimal strings without floats with data set "one decimal"
+  ✓ parses decimal strings without floats with data set "float-hostile"
+  ✓ parses decimal strings without floats with data set "another float-hostile"
+  ✓ parses decimal strings without floats with data set "negative"
+  ✓ parses decimal strings without floats with data set "zero"
+  ✓ parses decimal strings without floats with data set "large"
+  ✓ rejects malformed decimal strings with data set "empty"
+  ✓ rejects malformed decimal strings with data set "three decimals"
+  ✓ rejects malformed decimal strings with data set "thousands separator"
+  ✓ rejects malformed decimal strings with data set "currency symbol"
+  ✓ rejects malformed decimal strings with data set "exponent"
+  ✓ rejects malformed decimal strings with data set "trailing dot"
+  ✓ rejects malformed decimal strings with data set "leading dot"
+  ✓ rejects malformed decimal strings with data set "spaces"
+  ✓ rejects malformed decimal strings with data set "plus sign"
+  ✓ rejects malformed decimal strings with data set "words"
+  ✓ rejects malformed decimal strings with data set "out of range"
+  ✓ serializes to amount and currency only
+
+   PASS  Tests\Unit\Support\ProductionGuardTest
+  ✓ a safe configuration has no violations                               0.02s  
+  ✓ each unsafe setting is reported with data set "debug on"
+  ✓ each unsafe setting is reported with data set "debug unset"
+  ✓ each unsafe setting is reported with data set "debug as a string"
+  ✓ each unsafe setting is reported with data set "no app key"
+  ✓ each unsafe setting is reported with data set "api over http"
+  ✓ each unsafe setting is reported with data set "cookie not secure"
+  ✓ each unsafe setting is reported with data set "cookie secure unset"
+  ✓ each unsafe setting is reported with data set "cookie readable by script"
+  ✓ each unsafe setting is reported with data set "cross-site cookie"
+  ✓ each unsafe setting is reported with data set "wildcard cors"
+  ✓ each unsafe setting is reported with data set "cors pattern"
+  ✓ each unsafe setting is reported with data set "cors patterns unset"
+  ✓ each unsafe setting is reported with data set "cors over http"
+  ✓ each unsafe setting is reported with data set "cors unset"
+  ✓ each unsafe setting is reported with data set "app origin over http"
+  ✓ each unsafe setting is reported with data set "app origin on localhost"
+  ✓ each unsafe setting is reported with data set "app origins unset"
+  ✓ each unsafe setting is reported with data set "two apps on one origin"
+  ✓ each unsafe setting is reported with data set "weak hashing"
+  ✓ each unsafe setting is reported with data set "demo accounts enabled"
+  ✓ each unsafe setting is reported with data set "placeholder database password"
+  ✓ an empty set of facts fails every rule
+  ✓ every problem is listed at once
+  ✓ the guard applies everywhere except development and repair commands with data set "local web"
+  ✓ the guard applies everywhere except development and repair commands with data set "test suite"
+  ✓ the guard applies everywhere except development and repair commands with data set "production web"
+  ✓ the guard applies everywhere except development and repair commands with data set "staging web"
+  ✓ the guard applies everywhere except development and repair commands with data set "mistyped environment"
+  ✓ the guard applies everywhere except development and repair commands with data set "production queue worker"
+  ✓ the guard applies everywhere except development and repair commands with data set "production scheduler"
+  ✓ the guard applies everywhere except development and repair commands with data set "production tinker"
+  ✓ the guard applies everywhere except development and repair commands with data set "production seeder"
+  ✓ the guard applies everywhere except development and repair commands with data set "production key generation"
+  ✓ the guard applies everywhere except development and repair commands with data set "production migrate"
+  ✓ the guard applies everywhere except development and repair commands with data set "image build discovery"
+  ✓ the guard applies everywhere except development and repair commands with data set "bare artisan"
+
+   PASS  Tests\Feature\Admin\AuditLogAndStatusTest
+  ✓ both routes need a session and the admin app                         1.03s  
+  ✓ staff without the permission are refused                             0.21s  
+  ✓ owner reads entries newest first with safe fields only               0.19s  
+  ✓ sensitive values are redacted even if stored raw                     0.18s  
+  ✓ filters and paging                                                   0.24s  
+  ✓ a city scoped admin sees only their city                             0.20s  
+  ✓ system status reports health and counts without secrets              0.20s  
+
+   PASS  Tests\Feature\Admin\CrossTenantIsolationTest
+  ✓ every parameterised admin route is in the attempt list               0.19s  
+  ✓ staff of one city cannot see or change another city with data set "… 0.33s  
+  ✓ staff of one city cannot see or change another city with data set "… 0.29s  
+  ✓ staff of one city cannot see or change another city with data set "… 0.28s  
+  ✓ staff of one city cannot see or change another city with data set "… 0.29s  
+  ✓ staff of one city cannot see or change another city with data set "… 0.28s  
+  ✓ lists never include the other city with data set "city manager"      0.21s  
+  ✓ lists never include the other city with data set "city-scoped platf… 0.22s  
+  ✓ lists never include the other city with data set "dispatcher"        0.21s  
+  ✓ lists never include the other city with data set "city-scoped suppo… 0.22s  
+  ✓ lists never include the other city with data set "city-scoped finan… 0.22s  
+  ✓ a grant for one city is not widened by request input                 0.22s  
+  ✓ a revoked grant stops working at once                                0.21s  
+  ✓ losing one city keeps the other                                      0.22s  
+
+   PASS  Tests\Feature\ApiErrorEnvelopeTest
+  ✓ unknown api route returns the error envelope                         0.10s  
+  ✓ every api response carries a request id header matching the body     0.09s  
+  ✓ a well formed incoming request id is kept and a hostile one is repl… 0.09s  
+  ✓ wrong method is reported without internals                           0.09s  
+  ✓ unexpected errors reveal nothing even with debug on                  0.09s  
+
+   PASS  Tests\Feature\Auth\PasswordRecoveryTest
+  ✓ known and unknown addresses get the same answer                      0.20s  
+  ✓ the email goes to the account and links to the app that asked        0.17s  
+  ✓ only a hash of the token is stored                                   0.17s  
+  ✓ a valid token sets a new password once                               0.21s  
+  ✓ an expired token is refused                                          0.18s  
+  ✓ a wrong token is refused with the same message as an expired one     0.18s  
+  ✓ a weak new password is refused and the link stays usable             0.18s  
+  ✓ a newer request cancels the older link                               0.18s  
+  ✓ a suspended account gets no email                                    0.17s  
+  ✓ repeated requests for one address stop sending mail but answer the…  0.19s  
+  ✓ recovery needs a known app origin and valid input                    0.17s  
+  ✓ resetting does not reactivate a suspended account                    0.21s  
+
+   PASS  Tests\Feature\Auth\RegisterCustomerTest
+  ✓ registration is closed unless the feature flag is on                 0.19s  
+  ✓ registration creates a customer and nothing more                     0.17s  
+  ✓ role scope and status in the request are ignored                     0.17s  
+  ✓ an existing email gets the same answer and changes nothing           0.19s  
+  ✓ weak or malformed input is a validation error                        0.17s  
+  ✓ registration is only offered on the customer surface                 0.17s  
+
+   PASS  Tests\Feature\Auth\RiderTokenTest
+  ✓ an approved rider receives a scoped short lived token                0.20s  
+  ✓ every refusal looks the same                                         0.21s  
+  ✓ the token opens the riders own profile and nothing secret            0.19s  
+  ✓ requests without a valid token are refused                           0.17s  
+  ✓ a token stops working after an hour                                  0.19s  
+  ✓ refresh replaces the token and the old one dies                      0.20s  
+  ✓ sign out revokes the token and the device                            0.18s  
+  ✓ a rider token does not work on browser or admin routes               0.18s  
+  ✓ a browser session does not work on rider routes                      0.18s  
+  ✓ suspension cuts off an existing token on the next request            0.20s  
+  ✓ a revoked device cuts off its token                                  0.18s  
+  ✓ repeated failures are rate limited                                   0.22s  
+  ✓ device details are validated                                         0.23s  
+
+   PASS  Tests\Feature\Auth\SessionAndMeTest
+  ✓ me requires a session                                                0.17s  
+  ✓ me returns the user with grants and no secret fields                 0.18s  
+  ✓ revoked grants do not appear in me                                   0.18s  
+  ✓ logout ends the session                                              0.18s  
+  ✓ logout without a session is refused                                  0.16s  
+  ✓ a customer session is not valid on the admin surface                 0.18s  
+  ✓ a suspended user loses their session on the next request             0.18s  
+  ✓ staff lose the admin surface when their last staff grant is revoked  0.18s  
+  ✓ csrf endpoint issues a token only to known origins                   0.16s  
+
+   PASS  Tests\Feature\Auth\SessionLoginTest
+  ✓ valid credentials sign the user in on the customer surface           0.18s  
+  ✓ response never contains secrets                                      0.17s  
+  ✓ email is matched without regard to case or spaces                    0.17s  
+  ✓ wrong password unknown account and suspended account look identical  0.18s  
+  ✓ login requires a known app origin                                    0.18s  
+  ✓ missing fields are a validation error                                0.16s  
+  ✓ a customer cannot sign in to the admin or merchant surface           0.18s  
+  ✓ staff sign in to the admin surface with its own cookie               0.17s  
+  ✓ a revoked staff grant no longer opens the admin surface              0.21s  
+  ✓ merchant surface needs an active staff membership                    0.22s  
+  ✓ admin sign in is refused in production until two step verification…  0.17s  
+  ✓ repeated failures are rate limited per account                       0.22s  
+
+   PASS  Tests\Feature\Geo\AdminCityTest
+  ✓ admin routes need a session                                          0.17s  
+  ✓ a customer session cannot reach admin routes                         0.18s  
+  ✓ owner creates a draft city and it is audited                         0.25s  
+  ✓ status and id in a create request are ignored                        0.26s  
+  ✓ invalid city input is rejected field by field                        0.21s  
+  ✓ a slug can be used once                                              0.19s  
+  ✓ a city manager sees only their city and cannot create or edit        0.22s  
+  ✓ staff without city permissions get nothing                           0.18s  
+  ✓ ids are matched in any letter case and malformed ids are not found   0.20s  
+  ✓ owner edits safe fields only                                         0.19s  
+  ✓ status moves only along allowed transitions                          0.27s  
+  ✓ an archived city cannot be edited                                    0.20s  
+  ✓ list is paged sorted and filterable                                  0.26s  
+
+   PASS  Tests\Feature\Geo\AdminExclusionTest
+  ✓ exclusion routes need a session                                      0.19s  
+  ✓ an exclusion is created takes effect and is audited                  0.22s  
+  ✓ a time window is stored in utc and respected                         0.21s  
+  ✓ invalid input is rejected                                            0.24s  
+  ✓ an exclusion must touch its zone                                     0.20s  
+  ✓ an archived zone takes no exclusions                                 0.20s  
+  ✓ list and delete                                                      0.25s  
+  ✓ deleting the last exclusion restores service                         0.23s  
+  ✓ permission and city scope are enforced                               0.31s  
+
+   PASS  Tests\Feature\Geo\AdminZoneStatusTest
+  ✓ activation needs explicit confirmation                               0.21s  
+  ✓ a draft zone in an active city activates and becomes serviceable     0.21s  
+  ✓ a zone cannot activate unless its city is active                     0.23s  
+  ✓ pause needs a reason and records it                                  0.22s  
+  ✓ status moves only along allowed transitions                          0.31s  
+  ✓ a stale version is a conflict                                        0.22s  
+  ✓ permission and city scope are enforced                               0.25s  
+  ✓ status routes need a session                                         0.19s  
+
+   PASS  Tests\Feature\Geo\AdminZoneTest
+  ✓ zone routes need a session                                           0.17s  
+  ✓ owner creates a draft zone with version one and it is audited        0.20s  
+  ✓ structurally invalid geometry is rejected                            0.22s  
+  ✓ self intersecting geometry is rejected by postgis                    0.19s  
+  ✓ other fields are validated and slug is unique per city               0.27s  
+  ✓ an archived city takes no new zones                                  0.21s  
+  ✓ city scope is enforced                                               0.28s  
+  ✓ read only staff cannot write zones                                   0.27s  
+  ✓ update bumps the version and is audited                              0.23s  
+  ✓ a stale version is a conflict and changes nothing                    0.23s  
+  ✓ update needs a version and valid geometry                            0.23s  
+  ✓ an archived zone cannot be edited                                    0.22s  
+  ✓ list is paged and omits geometry                                     0.27s  
+  ✓ malformed ids are not found                                          0.19s  
+
+   PASS  Tests\Feature\Geo\PublicConfigTest
+  ✓ defaults show nothing open and everything off                        0.12s  
+  ✓ service is open only with an active zone in an active city           0.14s  
+  ✓ flags and map style follow configuration                             0.11s  
+  ✓ a map style that is not an https url is withheld                     0.12s  
+  ✓ it exposes no secret or internal setting                             0.11s  
+
+   PASS  Tests\Feature\Geo\ServiceabilityTest
+  ✓ nothing configured is not serviceable and invents no location        0.12s  
+  ✓ point inside an active zone of an active city is serviceable         0.12s  
+  ✓ boundary points count as inside                                      0.14s  
+  ✓ point outside every zone is not serviceable                          0.14s  
+  ✓ swapped axes do not match                                            0.14s  
+  ✓ draft paused and archived zones or cities are not serviceable        0.14s  
+  ✓ an active exclusion removes its area including its boundary          0.14s  
+  ✓ exclusions outside their time window do not apply                    0.13s  
+  ✓ overlapping zones resolve by priority then id                        0.14s  
+  ✓ a point excluded from the top zone falls through to the next         0.13s  
+  ✓ invalid coordinates are rejected before any query                    0.13s  
+  ✓ a position is never accepted in the url                              0.13s  
+  ✓ decimal strings and json numbers are both accepted                   0.14s  
+  ✓ response never exposes geometry or internal fields                   0.13s  
+  ✓ public cities lists only active cities with public fields            0.12s  
+  ✓ serviceability is rate limited                                       0.36s  
+
+   PASS  Tests\Feature\HealthTest
+  ✓ live returns minimal body                                            0.11s  
+  ✓ health routes run outside the session middleware                     0.09s  
+  ✓ live does not touch the session store                                0.09s  
+  ✓ ready is hidden from public addresses                                0.09s  
+  ✓ ready reports only dependency state to internal callers              0.10s  
+  ✓ framework default health route is not registered                     0.11s  
+  ✓ no later phase api routes exist                                      0.09s  
+
+   PASS  Tests\Feature\ProductionConfigTest
+  ✓ a fully safe configuration is accepted                               0.09s  
+  ✓ the facts never contain a secret value                               0.08s  
+  ✓ real settings drive each secret fact                                 0.09s  
+  ✓ unsafe settings are refused without leaking secrets or leaving debu… 0.08s  
+  ✓ the guard does not apply to the test suite itself                    0.08s  
+
+   PASS  Tests\Feature\RouteCoverageTest
+  ✓ every route has a name                                               0.09s  
+  ✓ the public list names only real routes                               0.09s  
+  ✓ every route is public on purpose or behind the session guard         0.09s  
+  ✓ every admin route is behind the admin surface guard and nothing els… 0.10s  
+  ✓ the guards run in the right order on admin routes                    0.09s  
+  ✓ public api routes are rate limited                                   0.09s  
+  ✓ readiness stays internal                                             0.10s  
+  ✓ every guarded route really refuses an anonymous request              0.15s  
+
+   PASS  Tests\Feature\RouteInventoryTest
+  ✓ only expected routes are registered                                  0.08s  
+
+   PASS  Tests\Feature\StructuredLogTest
+  ✓ every request logs http request with its id and route template       0.20s  
+  ✓ no log record carries the position that was checked                  0.17s  
+  ✓ the route template hides ids from the path                           0.17s  
+  ✓ a permission refusal logs rbac denied                                0.18s  
+  ✓ a city change logs city updated after commit                         0.19s  
+  ✓ an audit entry rolled back is never logged                           0.16s  
+  ✓ activating a zone logs zone activated                                0.22s  
+  ✓ a rejected shape logs zone validation failed without coordinates     0.21s  
+  ✓ the structured channel writes json and redacts positions and secret… 0.17s  
+
+   PASS  Tests\Integration\AccessCheckerTest
+  ✓ a user without grants is denied everything                           0.26s  
+  ✓ customer and rider roles carry no permissions                        0.24s  
+  ✓ global grant covers every city                                       0.21s  
+  ✓ city grant covers its own city only                                  0.18s  
+  ✓ scope does not add permissions the role lacks                        0.17s  
+  ✓ only the owner may change feature flags                              0.17s  
+  ✓ revoked grant stops working immediately                              0.17s  
+  ✓ suspended user is denied even with a live grant                      0.17s  
+  ✓ city grant reaches branches in that city only                        0.18s  
+  ✓ city reach lists cities for query filtering                          0.17s  
+  ✓ scope rejects malformed values                                       0.15s  
+
+   PASS  Tests\Integration\AuditAndCatalogueTest
+  ✓ sensitive values are redacted at any depth                           0.17s  
+  ✓ recorded entries are redacted and never hold the raw ip              0.16s  
+  ✓ catalogue is seeded exactly and reseeding changes nothing            0.21s  
+  ✓ catalogue matches the accepted matrix                                0.22s  
+  ✓ reseeding removes a permission that left the catalogue               0.20s  
+
+   PASS  Tests\Integration\MigrationRollbackTest
+  ✓ fresh rollback and remigrate                                         1.09s  
+
+   PASS  Tests\Integration\RoleGrantServiceTest
+  ✓ owner grants a role and it is audited in the same step               0.18s  
+  ✓ nobody can grant themselves a role                                   0.17s  
+  ✓ a customer cannot grant anything                                     0.17s  
+  ✓ platform owner is never grantable even by an owner                   0.16s  
+  ✓ onboarding roles are not grantable through this service              0.16s  
+  ✓ an admin cannot grant a role at or above their own                   0.17s  
+  ✓ a city manager can grant dispatcher in their city and nothing else   0.18s  
+  ✓ a city scoped admin cannot reach outside that city                   0.18s  
+  ✓ a role cannot be granted at a scope it does not support              0.16s  
+  ✓ a grant needs a scope that exists                                    0.17s  
+  ✓ unknown roles and inactive targets are refused                       0.18s  
+  ✓ the same grant cannot be made twice                                  0.19s  
+  ✓ revoking removes access and is audited                               0.19s  
+  ✓ only someone who could grant a role can revoke it                    0.20s  
+  ✓ a revoked grantor can no longer grant                                0.17s  
+
+   PASS  Tests\Integration\SchemaTest
+  ✓ postgis is available                                                 0.11s  
+  ✓ expected tables exist                                                0.10s  
+  ✓ no later phase tables exist                                          0.10s  
+  ✓ geometry columns have gist indexes                                   0.14s  
+  ✓ ulids are stored in one case                                         0.10s  
+  ✓ city starts as draft and rejects unknown status                      0.10s  
+  ✓ city slug is unique                                                  0.10s  
+  ✓ zone round trips as a multipolygon in lon lat order                  0.11s  
+  ✓ boundary point is covered and outside point is not                   0.11s  
+  ✓ self intersecting zone is rejected by the database                   0.11s  
+  ✓ zone slug is unique within a city only                               0.11s  
+  ✓ city with zones cannot be deleted                                    0.11s  
+  ✓ exclusion window must end after it starts                            0.11s  
+  ✓ global grant has no scope id and scoped grant needs one              0.10s  
+  ✓ a live grant cannot be duplicated but can be regranted after revoca… 0.10s  
+  ✓ audit log is append only                                             0.10s  
+  ✓ user email must be lower case and status known                       0.09s  
+  ✓ status and roles are not mass assignable                             0.10s  
+  ✓ only one default address per user                                    0.11s  
+  ✓ development seeder creates labelled demo data once                   0.23s  
+  ✓ development seeder creates demo accounts only when a password is co… 0.27s  
+  ✓ development seeder refuses to run in production                      0.10s  
+
+   PASS  Tests\Integration\ServiceabilityPlanTest
+  ✓ spatial indexes exist                                                0.15s  
+  ✓ serviceability uses the spatial index at scale                       0.24s  
+
+   PASS  Tests\Contract\OpenApiDocumentTest
+  ✓ document is openapi 3 1                                              0.12s  
+  ✓ documented operations equal registered routes                        0.11s  
+  ✓ every operation has an id and documents its errors                   0.11s  
+  ✓ error codes in the document match the renderer                       0.12s  
+  ✓ live error and health bodies use only documented fields              0.13s  
+
+  Tests:    374 passed (1916 assertions)
+  Duration: 43.01s
+
+==> flutter analyze
+Analyzing rider-flutter...                                      
+No issues found! (ran in 2.0s)
+==> flutter test
+00:00 +0: loading F:/PROJECTS/hara/apps/rider-flutter/test/render_evidence_test.dart
+00:00 +0: F:/PROJECTS/hara/apps/rider-flutter/test/render_evidence_test.dart: render home (dark)
+00:00 +0 ~1: F:/PROJECTS/hara/apps/rider-flutter/test/render_evidence_test.dart: render home (light)
+00:00 +0 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart: home is labelled as a scaffold
+00:00 +1 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart: online toggle is off and disabled
+00:01 +2 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart: scaffold label is exposed to screen readers
+00:01 +3 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart: only the Home destination is enabled
+00:01 +4 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart: shows no invented money, distance or offer
+00:01 +5 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart: fits a narrow phone without overflow
+00:01 +6 ~2: F:/PROJECTS/hara/apps/rider-flutter/test/widget_test.dart: android manifest requests no location permission
+00:01 +7 ~2: All tests passed!
+All checks passed.
