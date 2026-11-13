@@ -69,8 +69,8 @@ The opt-in desktop run covers live admin sign-in, city creation and activation, 
 | Check | Method | Result |
 |---|---|---|
 | No route registered for ordering, payments, dispatch, tracking, payouts | RouteInventoryTest and OpenApiDocumentTest | pass locally |
-| No invented restaurants, ETAs, KPIs or balances in any shell | Manual review of screenshots plus a text search of the apps | not run |
-| No hardcoded city, coordinate or map centre outside test fixtures and the gated demo seeder | Repository search | not run |
+| No invented restaurants, ETAs, KPIs or balances in any shell | Manual review of screenshots plus a text search of the apps | text search pass (searches 7 to 9: no restaurant names, amounts or ETAs; every hit is a comment, a generic message or a test guard); screenshot review not done. Evidence `docs/qa/evidence/x01-2026-11-14-text-searches.txt` |
+| No hardcoded city, coordinate or map centre outside test fixtures and the gated demo seeder | Repository search | pass: searches 1 to 5 and 10 found no city name, coordinate or centre outside the gated demo seeder (synthetic polygon, `ZZ` country) and tests; the only place name is the `Asia/Manila` default display timezone for screens with no city (ADR-004). Evidence `docs/qa/evidence/x01-2026-11-14-text-searches.txt` |
 | Rider app requests no location permission | Android manifest review and Flutter test | not run |
 | Production config refuses seeders, debug and MFA-less privileged login | SchemaTest, ProductionGuardTest and SessionLoginTest | pass locally |
 

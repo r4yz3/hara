@@ -2,6 +2,13 @@
 
 Last updated: 2026-11-14. Phase 1 has working browser authentication, rider token endpoints, and city, zone and serviceability APIs. Sprint 8 acceptance remains open.
 
+## November 14 matrix gaps G6 and G7, X-01 text searches
+
+- Changed: `apps/customer-web/app/account/account-screen.tsx` shows a "Back to home" link on a 403 (no Retry). New tests in `tests/browser/customer.spec.ts`: a refused account leads back home; a held sign-out request keeps the button disabled and a second click and Enter send no second request. Matrix: G6 and G7 closed, totals 64 covered, 30 n/a, 5 gap.
+- X-01: ten grep searches (place names, country and phone literals, coordinates, map centres, amounts, restaurant names, ETAs, UI wording, seeded coordinates) saved in `docs/qa/evidence/x01-2026-11-14-text-searches.txt`. No problem found. Remaining hits are comments, test guards, the gated demo seeder's synthetic polygon, and the `Asia/Manila` default display timezone (ADR-004).
+- Results: `pnpm lint`, `pnpm typecheck` and `pnpm --filter customer-web build` passed; `pnpm exec playwright test tests/browser/customer.spec.ts`: 63 passed, 3 skipped (the existing fixme).
+- Rollback: revert the account screen link, the two tests, the doc edits and delete the evidence file.
+
 ## November 14 customer account page and Playwright scenarios (U-06)
 
 - Built (apps/customer-web only): `/account` (`app/account/page.tsx`, `account-screen.tsx`). It reads `GET /api/v1/me` through the session client and shows the customer's own name and email, a sign-out, and loading, error (with retry) and empty ("No name on file") states. A signed-out visitor is sent to `/login?next=%2Faccount`. Saved addresses, orders and payment methods appear only under "Not available yet". The mobile Account tab on the home page now links to `/account`. No backend route, no address, order or payment feature.

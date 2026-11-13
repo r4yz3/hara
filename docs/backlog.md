@@ -109,7 +109,7 @@ Status key: `todo`, `blocked`, `done`.
 
 | ID | Story | Acceptance | Status |
 |---|---|---|---|
-| X-01 | Run every check in `docs/qa/phase1-acceptance.md` | Real output recorded; no invented results | partial: local full check passed on 2026-11-14; also 2026-11-14: Playwright default (267 passed, 66 opt-in skipped) and live (1 passed), axe inside the default suite, clean-clone `setup` plus web and Flutter checks, hosted CI green on `099a3db`. Remaining: clean-clone `up`/`migrate`/`seed-demo`/backend tests (would collide with the running stack), manual screen-reader and keyboard review, staging (blocked on E-07, human). Evidence `docs/qa/evidence/x01-2026-11-14-*.txt` |
+| X-01 | Run every check in `docs/qa/phase1-acceptance.md` | Real output recorded; no invented results | partial: local full check passed on 2026-11-14; also 2026-11-14: Playwright default (267 passed, 66 opt-in skipped) and live (1 passed), axe inside the default suite, clean-clone `setup` plus web and Flutter checks, hosted CI green on `099a3db`. text searches for hardcoded cities, coordinates, map centres, amounts, restaurant names and ETAs run (no problem found; `x01-2026-11-14-text-searches.txt`). Remaining: clean-clone `up`/`migrate`/`seed-demo`/backend tests (would collide with the running stack), manual screen-reader and keyboard review, staging (blocked on E-07, human). Evidence `docs/qa/evidence/x01-2026-11-14-*.txt` |
 | X-02 | Final `docs/PHASE1_STATUS.md` | Done, partial, blocked and future separated accurately | todo |
 | X-03 | Phase 2 backlog | Merchant and catalogue stories with open decisions | drafted: `docs/phase2-backlog.md` (6 epics, 39 stories, 22 open decisions), awaiting product owner review |
 

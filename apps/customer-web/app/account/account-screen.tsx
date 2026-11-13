@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -58,7 +59,11 @@ export function AccountScreen() {
     return (
       <div role="alert" className="flex flex-col items-start gap-3 rounded-3xl border border-border bg-surface p-5">
         <p className="font-medium text-danger">{describe(state.failure)}</p>
-        {state.failure.kind === "forbidden" ? null : (
+        {state.failure.kind === "forbidden" ? (
+          <Link href="/" className={`${button} inline-flex items-center`}>
+            Back to home
+          </Link>
+        ) : (
           <button type="button" onClick={() => {
               setState({ phase: "loading" });
               setAttempt((n) => n + 1);

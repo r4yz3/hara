@@ -167,6 +167,37 @@ test("account: a lost connection is reported, with a retry", async ({ page }) =>
   await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
 });
 
+test("account: a refused account says so and leads back to the home page", async ({ page }) => {
+  await signedOut(page);
+  await page.route("**/api/v1/me", (route) =>
+    stub(route, 403, { error: { code: "forbidden", message: "This account cannot open the customer app." } }));
+  await page.goto(`${customer}/account`);
+  await expect(page.getByRole("main").getByRole("alert")).toContainText("This account cannot open the customer app.");
+  await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
+  await page.getByRole("main").getByRole("link", { name: "Back to home" }).click();
+  await expect(page).toHaveURL(`${customer}/`);
+});
+
+test("account: a slow sign-out disables the button and a second press sends nothing", async ({ page }) => {
+  let logouts = 0;
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => { release = resolve; });
+  await page.route("**/api/v1/me", (route) => stub(route, 200, { data: user }));
+  await page.route("**/api/v1/auth/csrf", (route) => stub(route, 200, { data: { csrf_token: "browser-test" } }));
+  await page.route("**/api/v1/auth/logout", async (route) => { logouts++; await held; await stub(route, 204); });
+  await page.goto(`${customer}/account`);
+  const button = page.getByRole("main").getByRole("button", { name: /Sign(ing)? out/ });
+  await button.click();
+  await expect(button).toBeDisabled();
+  await expect(button).toHaveText("Signing out…");
+  await button.dispatchEvent("click");
+  await page.keyboard.press("Enter");
+  expect(logouts).toBe(1);
+  release();
+  await expect(page).toHaveURL(`${customer}/`);
+  expect(logouts).toBe(1);
+});
+
 test("account: sign out ends the session once and returns to the start page", async ({ page }) => {
   let signedIn = true;
   let logouts = 0;

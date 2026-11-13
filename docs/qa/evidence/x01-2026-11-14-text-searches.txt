@@ -1,0 +1,64 @@
+X-01 text searches, 2026-11-14, GNU grep from the repository root (Git Bash).
+D = apps packages backend/app backend/database backend/config
+G = --exclude-dir=node_modules --exclude-dir=vendor --exclude-dir=.next --exclude-dir=build --exclude-dir=.dart_tool --exclude-dir=.turbo --exclude=*.lock --exclude=pnpm-lock.yaml --exclude=*.tsbuildinfo --exclude=schema.d.ts --exclude=*.svg --exclude=*.png --exclude=*.json
+
+### 1 Philippine place names (whole word, case-insensitive)
+$ grep -rnE -i -w 'manila|quezon|makati|cebu|davao|taguig|pasig|mandaluyong|pasay|caloocan|paranaque|marikina|cagayan|iloilo|baguio|bacolod|zamboanga|angeles|laguna|cavite|bgc|bonifacio|ortigas|luzon|visayas|mindanao' $G $D
+backend/config/platform.php:13:    'display_timezone' => (string) env('DEFAULT_DISPLAY_TIMEZONE', 'Asia/Manila'),
+
+### 2 country and phone literals
+$ grep -rnE -i 'philippin|\+63|\b09[0-9]{9}\b' $G $D
+
+### 3 decimal coordinate literals
+$ grep -rnE -e '-?\b1?[0-9]{1,2}\.[0-9]{4,}\b' $G $D
+packages/design-tokens/src/contrast.mjs:10:    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+packages/design-tokens/src/contrast.mjs:13:  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+### 4 lat/lng keyed literals and lon,lat pairs
+$ grep -rnE -i '\b(lat|lng|lon|latitude|longitude)\b[ ]*[:=][ ]*-?[0-9]|\[[ ]*1[12][0-9](\.[0-9]+)?[ ]*,[ ]*[0-9]{1,2}(\.[0-9]+)?[ ]*\]' $G $D
+
+### 5 map centre, zoom, view calls
+$ grep -rnE -i 'map.?cent(er|re)|defaultCenter|initialCenter|center:|centre:|setView|flyTo|fitBounds' $G $D
+packages/ui/src/map-view.tsx:23:  fitBounds: (bounds: [[number, number], [number, number]], options?: Record<string, unknown>) => void;
+packages/ui/src/map-view.tsx:87:        // No `center` and no `zoom` are passed; the view comes from fitBounds only.
+packages/ui/src/map-view.tsx:94:          map.fitBounds([[west, south], [east, north]], { padding: 24, animate: false });
+packages/ui/test/map-state.test.mjs:23:test("there is no default centre: no shape means no bounds and no centre field", () => {
+packages/ui/test/map-state.test.mjs:45:    assert.doesNotMatch(source, /\bcenter\s*:|\bzoom\s*:|setCenter|setZoom|flyTo|jumpTo/, file);
+backend/config/geo.php:10:    | No coordinates, city or map centre belong in this file.
+
+### 6 peso and currency amounts
+$ grep -rnE '₱|PHP ?[0-9]|\bPhp ?[0-9]|peso|[$€£][ ]?[0-9]' $G $D
+apps/admin-web/app/security/security-screen.tsx:43:  return secret.replace(/\s+/g, "").replace(/(.{4})(?=.)/g, "$1 ");
+Binary file apps/rider-flutter/android/gradle/wrapper/gradle-wrapper.jar matches
+apps/rider-flutter/android/gradlew:13:APP_BASE_NAME=`basename "$0"`
+apps/rider-flutter/android/gradlew:46:# Resolve links: $0 may be a link
+apps/rider-flutter/android/gradlew:47:PRG="$0"
+apps/rider-flutter/test/widget_test.dart:72:    final invented = RegExp(r'[₱€$]|[0-9]+(\.[0-9]+)? ?(km|min)');
+backend/app/Application/Commands/AuditLogger.php:99:        $words = preg_split('/[^a-z0-9]+/', strtolower((string) preg_replace('/([a-z0-9])([A-Z])/', '$1_$2', $key))) ?: [];
+
+### 7 fake restaurant and brand names
+$ grep -rnE -i 'jollibee|mcdonald|chowking|mang inasal|greenwich|kfc|starbucks|goldilocks|sample restaurant|demo restaurant|test restaurant|lorem|ipsum' $G $D
+
+### 8 ETA, distance and duration literals
+$ grep -rnE -i '\b[0-9]+ ?(-|–|to) ?[0-9]+ ?(min|mins|minutes)\b|\b[0-9]+ ?(mins?|minutes)\b|\b[0-9]+(\.[0-9]+)? ?km\b|arrives in|arriving|delivered in|\beta\b|estimated (arrival|delivery)' $G $D
+apps/rider-flutter/lib/app/rider_app.dart:54:    // call is best effort; the token expires after 60 minutes anyway.
+packages/session/src/sign-in-form.tsx:186:      return `That ${recovery ? "recovery code" : "code"} was not accepted. If you signed in more than 5 minutes ago, start again.`;
+backend/app/Http/Controllers/Api/V1/RiderAuthController.php:47:            // Android first (master plan); iOS arrives in a later phase.
+
+### 9 restaurant wording in app UI sources (excluding tests)
+$ grep -rnE -i 'restaurant' --include=*.tsx --include=*.dart --exclude-dir=test $G apps
+apps/customer-web/app/page.tsx:20:// Cuisine types are generic categories, not data about any restaurant.
+apps/customer-web/app/page.tsx:68:            Search dishes and restaurants
+apps/customer-web/app/page.tsx:74:            placeholder="Search opens with the first restaurants"
+apps/customer-web/app/page.tsx:129:        <section aria-labelledby="restaurants-heading" className="flex flex-col gap-3">
+apps/customer-web/app/page.tsx:130:          <h2 id="restaurants-heading" className="text-xl font-semibold">
+apps/customer-web/app/page.tsx:131:            Restaurants near you
+apps/customer-web/app/page.tsx:135:            <p className="text-lg font-medium">No restaurants yet</p>
+apps/customer-web/app/page.tsx:137:              Restaurants appear here once merchants have joined and a delivery area is open. Nothing below is a real
+apps/customer-web/app/page.tsx:142:          <p className="pt-2 text-sm text-text-secondary">Layout preview, with no real restaurants:</p>
+apps/customer-web/app/page.tsx:143:          <ul aria-label="Layout preview, not real restaurants" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+apps/customer-web/components/service-banner.tsx:109:          No delivery area has been opened. When one is, this page will show the restaurants that deliver to your
+
+### 10 seeded coordinates
+$ grep -rnE 'coordinates' backend/database
+backend/database/seeders/DevelopmentSeeder.php:61:                        'coordinates' => [[[100.0, 10.0], [100.02, 10.0], [100.02, 10.02], [100.0, 10.02], [100.0, 10.0]]],
