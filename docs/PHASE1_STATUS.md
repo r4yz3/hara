@@ -5,6 +5,14 @@ Last updated: 2026-11-13, Sprint 4 in progress (roles, permissions, audit and si
 ## Summary
 Sprint 1 documents await human review. The Docker stack now starts healthy and the backend checks run inside it against PostGIS and Redis. The Sprint 2 gate ("clean clone boot smoke with logs") is **still not met**: the boot was done in the working tree, not from a clean clone, and CI has never run. The product owner supplied front-end reference images; the customer home screen is built in that direction.
 
+## Sprint 5 follow-up: geometry fuzz tests (C-03, 2026-11-13)
+Evidence: `docs/qa/evidence/sprint5-geometry-fuzz-check.txt` (`dev.ps1 check`, exit 0; 387 backend tests).
+
+- ZoneGeometryFuzzTest (unit, no database): 3,000 inputs per run, a third fully random and the rest valid shapes with one to three random edits (deleted or replaced members, lists turned into maps, extra nesting, huge or negative numbers, numeric strings). Each must be rejected with `InvalidZoneGeometry` or come back as a MultiPolygon whose rings are closed, at least four positions long, inside the coordinate bounds and caps, with an exact vertex count, and unchanged when validated again. Nothing else may be thrown.
+- ZoneGeometryPostgisFuzzTest (against PostGIS): 150 random polygons per run, often crossing themselves, some with a hole inside or outside and some as two overlapping polygons, posted to `POST /admin/cities/{city}/zones`. The status must be 201 exactly when `ST_IsValid` says the shape is valid and 422 otherwise; a 422 must not echo coordinates; a stored shape must be valid and `ST_Equals` what was sent.
+- Both are seeded (fixed default; `FUZZ_SEED=<n>` replays a failure, and the seed is in every failure message). Besides the default, the unit test was run under seeds 1 to 30 (90,000 inputs) and the PostGIS test under seeds 1 to 15 (2,250 shapes). No defect found; no application code changed.
+- Not covered: shapes near the antimeridian or the poles, and coordinates with more than six decimals in the PostGIS test.
+
 ## Sprint 7: browser boundary review (E-02, 2026-11-13)
 Evidence: `docs/qa/evidence/sprint7-browser-boundary-full-check.txt` (`dev.ps1 check`, exit 0; 385 backend tests) and `sprint7-browser-boundary-check.txt` (requests against the running stack and the customer app).
 
