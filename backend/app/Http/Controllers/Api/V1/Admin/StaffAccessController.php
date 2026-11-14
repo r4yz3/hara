@@ -30,8 +30,8 @@ use Illuminate\Validation\ValidationException;
  * caller's reach are shown. A person outside that reach is 404, as if they
  * did not exist. Granting needs `users.roles.assign` and the entitlement
  * rules in the service; nobody can change their own roles. Accounts that hold
- * no staff role cannot be reached from here: bringing a new person in needs
- * an invitation flow that does not exist yet.
+ * no staff role cannot be reached from here: bringing a new person in goes
+ * through StaffInvitationController.
  */
 class StaffAccessController extends Controller
 {

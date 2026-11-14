@@ -420,6 +420,98 @@ paths:
         "403": { $ref: "#/components/responses/Error" }
         "422": { $ref: "#/components/responses/Error" }
         "429": { $ref: "#/components/responses/Error" }
+  /api/v1/auth/invitations/inspect:
+    post:
+      tags: [Auth]
+      summary: Look at a staff invitation before accepting it
+      description: |
+        Public; admin app only. The emailed token goes in the body, never in
+        a URL (the link carries it in the fragment). Shows only the invitee's
+        name, the role label, a place label and the expiry. An unknown, used,
+        revoked or expired token all give the same 404. Looking does not use
+        the invitation up.
+      operationId: authInvitationsInspect
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string, maxLength: 200 }
+      responses:
+        "200":
+          description: A live invitation.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data: { $ref: "#/components/schemas/InvitationPreview" }
+                  meta: { $ref: "#/components/schemas/Meta" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/v1/auth/invitations/accept:
+    post:
+      tags: [Auth]
+      summary: Accept a staff invitation
+      description: |
+        Public; admin app only. In one transaction: the account is created
+        (or, when the address already has one, the role is attached to it),
+        the role is granted through the same audited path as `POST
+        /admin/users/{user}/roles` with the inviter as grantor, and the
+        invitation is marked used. The password is the new account's
+        password (at least 10 characters). When the address already has an
+        account it must be that account's current password, which is not
+        changed; this is never revealed in any response. Anything that fails
+        (unknown, used, revoked or expired token, wrong password for an
+        existing account, an inviter who no longer has the right, an inactive
+        account, a role already held) gives the same 404. Five failures per
+        token in 15 minutes give 429. Nobody is signed in: sign in as usual;
+        in deployed environments the admin console then needs two-step
+        sign-in set up first (ADR-011).
+      operationId: authInvitationsAccept
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, password]
+              properties:
+                token: { type: string, maxLength: 200 }
+                password: { type: string, minLength: 10, maxLength: 1024, format: password }
+      responses:
+        "200":
+          description: Accepted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    required: [status]
+                    properties:
+                      status: { type: string, const: invitation_accepted }
+                  meta: { $ref: "#/components/schemas/Meta" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
   /api/v1/auth/mobile/token:
     post:
       tags: [Rider]
@@ -1210,8 +1302,8 @@ paths:
         roles whoever asks, and for the caller's own account. 409 when the
         person already holds that role there or the account is not active.
         404 for a city that does not exist. Written with the audit row
-        `role.granted` in one transaction. The person must already hold a
-        staff role: inviting someone new is not built.
+        `role.granted` in one transaction. To bring in a
+        person with no staff role yet, use `POST /admin/invitations`.
       operationId: adminUsersRolesStore
       parameters:
         - { $ref: "#/components/parameters/CsrfToken" }
@@ -1272,6 +1364,121 @@ paths:
       responses:
         "204":
           description: Revoked.
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/invitations:
+    get:
+      tags: [Admin]
+      summary: Pending staff invitations
+      description: |
+        Needs `users.read`. Lists invitations that are neither accepted,
+        revoked nor expired, within the caller's reach (global reach sees all,
+        city reach only those anchored to its cities). Never carries token
+        data. The address is masked unless the caller could grant that role
+        there. Oldest id first.
+      operationId: adminInvitationsIndex
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Cursor" }
+      responses:
+        "200":
+          description: A page of pending invitations.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/StaffInvitation" }
+                  meta: { $ref: "#/components/schemas/PageMeta" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+    post:
+      tags: [Admin]
+      summary: Invite a person to the admin team
+      description: |
+        Needs `users.roles.assign`, and the caller must be allowed to grant
+        that role at that scope under the same rules as `POST
+        /admin/users/{user}/roles` (ADR-005); staff roles only. 403 when not
+        allowed (including `platform_owner`), 404 for a city that does not
+        exist, 422 for an invalid field or an invitation to the caller's own
+        address, 409 when a live invitation for that address, role and scope
+        already exists, 429 after five invitation emails to one address in a
+        day or twenty requests a minute. Always answers 202 with the same
+        body, whether or not the address already has an account; no lookup
+        is made. An email with a single-use link (token in the URL fragment)
+        valid for 72 hours is sent to the address. Nothing is granted until
+        the person accepts. Audit `staff_invitation.created`, without the
+        address.
+      operationId: adminInvitationsStore
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [name, email, role, scope_type]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 120 }
+                email: { type: string, maxLength: 255 }
+                role: { type: string, maxLength: 40, description: "A staff role slug from `GET /admin/roles`." }
+                scope_type: { type: string, enum: [global, city] }
+                scope_id: { type: [string, "null"], description: "Required for `city`, forbidden for `global`." }
+      responses:
+        "202":
+          description: Invitation recorded and emailed.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    required: [id, status]
+                    properties:
+                      id: { type: string }
+                      status: { type: string, const: invitation_sent }
+                  meta: { $ref: "#/components/schemas/Meta" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/invitations/{invitation}:
+    parameters:
+      - name: invitation
+        in: path
+        required: true
+        schema: { type: string }
+        description: Id of a pending invitation from `GET /admin/invitations`. Letter case is ignored.
+    delete:
+      tags: [Admin]
+      summary: Withdraw a pending invitation
+      description: |
+        Whoever could not have granted the role cannot withdraw the
+        invitation: needs `users.read` to see it (404 otherwise, as for any
+        invitation outside the caller's reach, or already accepted, revoked
+        or expired) and then `users.roles.assign` with an entitled role over
+        the same scope (403). Written with the audit row
+        `staff_invitation.revoked`. The link stops working at once.
+      operationId: adminInvitationsDestroy
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      responses:
+        "204":
+          description: Withdrawn.
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
@@ -1555,6 +1762,33 @@ components:
         grants:
           type: array
           items: { $ref: "#/components/schemas/StaffGrant" }
+    StaffInvitation:
+      type: object
+      additionalProperties: false
+      required: [id, name, email, email_masked, role, role_label, scope_type, scope_id, city_name, invited_by_me, created_at, expires_at, can_revoke]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string, description: "Masked (first letter, then asterisks) when `email_masked` is true." }
+        email_masked: { type: boolean }
+        role: { type: string }
+        role_label: { type: string }
+        scope_type: { type: string, enum: [global, city] }
+        scope_id: { type: [string, "null"] }
+        city_name: { type: [string, "null"] }
+        invited_by_me: { type: boolean }
+        created_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+        can_revoke: { type: boolean }
+    InvitationPreview:
+      type: object
+      additionalProperties: false
+      required: [name, role_label, scope_label, expires_at]
+      properties:
+        name: { type: string }
+        role_label: { type: string }
+        scope_label: { type: string, description: "The city's name, or `All cities` for a deployment-wide role." }
+        expires_at: { type: string, format: date-time }
     AssignableRole:
       type: object
       additionalProperties: false

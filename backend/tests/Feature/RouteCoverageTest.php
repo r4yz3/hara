@@ -39,6 +39,8 @@ class RouteCoverageTest extends TestCase
         'auth.mfa.verify',
         'auth.password.forgot',
         'auth.password.reset',
+        'auth.invitations.inspect',
+        'auth.invitations.accept',
         'auth.mobile.token',
     ];
 

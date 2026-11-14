@@ -124,6 +124,20 @@ class RoleGrantService
     }
 
     /**
+     * Whether the actor could grant this role at this scope to someone else:
+     * the same rules `grant` enforces, without a target. For invitations
+     * (backlog U-05), where the person has no account yet. The real grant is
+     * checked again when the invitation is accepted.
+     *
+     * @throws AccessDenied
+     */
+    public function assertMayInvite(User $actor, string $roleSlug, Scope $scope): void
+    {
+        // An empty id never equals a real actor, so the self-grant rule is not hit.
+        $this->assertMayAssign($actor, (new User)->forceFill(['id' => '']), $roleSlug, $scope);
+    }
+
+    /**
      * Roles the actor could hand out, and where: a conservative reading of
      * the rules `assertMayAssign` enforces, used to fill a form. A role is
      * listed only when one of the actor's own grants both carries

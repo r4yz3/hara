@@ -38,6 +38,8 @@ class CrossTenantIsolationTest extends AuthTestCase
 
     private string $theirGrant;
 
+    private string $theirInvitation;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -55,6 +57,12 @@ class CrossTenantIsolationTest extends AuthTestCase
         $this->theirStaff = $staff->id;
         $this->grantRole($staff, 'dispatcher', 'city', $this->other->id);
         $this->theirGrant = (string) DB::table('user_role_scopes')->where('user_id', $staff->id)->value('id');
+        $this->theirInvitation = strtolower((string) Str::ulid());
+        DB::table('staff_invitations')->insert([
+            'id' => $this->theirInvitation, 'email' => 'invited-theirs@example.com', 'name' => 'Theirs', 'role_id' => DB::table('roles')->where('slug', 'dispatcher')->value('id'),
+            'scope_type' => 'city', 'scope_id' => $this->other->id, 'invited_by' => $staff->id, 'token_hash' => hash('sha256', 'theirs'),
+            'expires_at' => now()->addDay(), 'created_at' => now(), 'updated_at' => now(),
+        ]);
         $this->exclusion = strtolower((string) Str::ulid());
         DB::insert(
             "INSERT INTO coverage_exclusions (id, delivery_zone_id, reason, geometry) VALUES (?, ?, 'Theirs', ST_Multi(ST_GeomFromGeoJSON(?)))",
@@ -87,6 +95,7 @@ class CrossTenantIsolationTest extends AuthTestCase
             'admin.exclusions.destroy' => ['DELETE', "exclusions/{$this->exclusion}", []],
             'admin.users.roles.store' => ['POST', "users/{$this->theirStaff}/roles", ['role' => 'dispatcher', 'scope_type' => 'city', 'scope_id' => $city]],
             'admin.users.roles.destroy' => ['DELETE', "users/{$this->theirStaff}/roles/{$this->theirGrant}", []],
+            'admin.invitations.destroy' => ['DELETE', "invitations/{$this->theirInvitation}", []],
         ];
     }
 
@@ -98,6 +107,7 @@ class CrossTenantIsolationTest extends AuthTestCase
             DB::table('delivery_zones')->where('city_id', $this->other->id)->orderBy('id')->get(['id', 'name', 'slug', 'status', 'priority', 'version', 'updated_at']),
             DB::table('coverage_exclusions')->where('delivery_zone_id', $this->zone)->orderBy('id')->get(['id', 'reason', 'active_from', 'active_until']),
             DB::table('user_role_scopes')->where('user_id', $this->theirStaff)->orderBy('id')->get(['id', 'revoked_at']),
+            DB::table('staff_invitations')->where('scope_id', $this->other->id)->orderBy('id')->get(['id', 'revoked_at', 'accepted_at']),
             DB::table('audit_logs')->where('scope_city_id', $this->other->id)->count(),
         ]);
     }

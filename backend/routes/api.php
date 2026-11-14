@@ -4,11 +4,13 @@ use App\Http\Controllers\Api\V1\Admin\CityController;
 use App\Http\Controllers\Api\V1\Admin\ExclusionController;
 use App\Http\Controllers\Api\V1\Admin\OversightController;
 use App\Http\Controllers\Api\V1\Admin\StaffAccessController;
+use App\Http\Controllers\Api\V1\Admin\StaffInvitationController;
 use App\Http\Controllers\Api\V1\Admin\ZoneController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\MfaController;
 use App\Http\Controllers\Api\V1\PublicGeoController;
 use App\Http\Controllers\Api\V1\RiderAuthController;
+use App\Http\Controllers\Api\V1\StaffInvitationAcceptController;
 use App\Http\Middleware\EnsureAdminSurface;
 use App\Http\Middleware\EnsureRiderToken;
 use App\Http\Middleware\EnsureSurfaceSession;
@@ -36,6 +38,9 @@ Route::post('/auth/login', [AuthController::class, 'login'])->middleware('thrott
 Route::post('/auth/mfa/verify', [AuthController::class, 'verifyMfa'])->middleware('throttle:30,1')->name('auth.mfa.verify');
 Route::post('/auth/password/forgot', [AuthController::class, 'forgotPassword'])->middleware('throttle:10,1')->name('auth.password.forgot');
 Route::post('/auth/password/reset', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1')->name('auth.password.reset');
+// The invitee holds only the emailed token, sent in the body (never a URL). Failures all answer alike.
+Route::post('/auth/invitations/inspect', [StaffInvitationAcceptController::class, 'inspect'])->middleware('throttle:10,1')->name('auth.invitations.inspect');
+Route::post('/auth/invitations/accept', [StaffInvitationAcceptController::class, 'accept'])->middleware('throttle:10,1')->name('auth.invitations.accept');
 
 // Rider app: bearer tokens, not cookies. Per-account limiting is in the controller.
 Route::post('/auth/mobile/token', [RiderAuthController::class, 'issue'])->middleware('throttle:30,1')->name('auth.mobile.token');
@@ -74,6 +79,9 @@ Route::middleware(EnsureSurfaceSession::class)->group(function (): void {
         Route::post('/users/{user}/roles', [StaffAccessController::class, 'grant'])->name('admin.users.roles.store');
         Route::delete('/users/{user}/roles/{grant}', [StaffAccessController::class, 'revoke'])->name('admin.users.roles.destroy');
         Route::post('/users/{user}/mfa/reset', [MfaController::class, 'reset'])->name('admin.users.mfa.reset');
+        Route::get('/invitations', [StaffInvitationController::class, 'index'])->name('admin.invitations.index');
+        Route::post('/invitations', [StaffInvitationController::class, 'store'])->middleware('throttle:20,1')->name('admin.invitations.store');
+        Route::delete('/invitations/{invitation}', [StaffInvitationController::class, 'destroy'])->name('admin.invitations.destroy');
         Route::get('/audit-logs', [OversightController::class, 'auditLogs'])->name('admin.audit-logs.index');
         Route::get('/system/status', [OversightController::class, 'systemStatus'])->name('admin.system.status');
     });

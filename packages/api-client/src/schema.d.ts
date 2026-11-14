@@ -254,6 +254,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/invitations/inspect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Look at a staff invitation before accepting it
+         * @description Public; admin app only. The emailed token goes in the body, never in
+         *     a URL (the link carries it in the fragment). Shows only the invitee's
+         *     name, the role label, a place label and the expiry. An unknown, used,
+         *     revoked or expired token all give the same 404. Looking does not use
+         *     the invitation up.
+         */
+        post: operations["authInvitationsInspect"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/invitations/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept a staff invitation
+         * @description Public; admin app only. In one transaction: the account is created
+         *     (or, when the address already has one, the role is attached to it),
+         *     the role is granted through the same audited path as `POST
+         *     /admin/users/{user}/roles` with the inviter as grantor, and the
+         *     invitation is marked used. The password is the new account's
+         *     password (at least 10 characters). When the address already has an
+         *     account it must be that account's current password, which is not
+         *     changed; this is never revealed in any response. Anything that fails
+         *     (unknown, used, revoked or expired token, wrong password for an
+         *     existing account, an inviter who no longer has the right, an inactive
+         *     account, a role already held) gives the same 404. Five failures per
+         *     token in 15 minutes give 429. Nobody is signed in: sign in as usual;
+         *     in deployed environments the admin console then needs two-step
+         *     sign-in set up first (ADR-011).
+         */
+        post: operations["authInvitationsAccept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/mobile/token": {
         parameters: {
             query?: never;
@@ -787,8 +844,8 @@ export interface paths {
          *     roles whoever asks, and for the caller's own account. 409 when the
          *     person already holds that role there or the account is not active.
          *     404 for a city that does not exist. Written with the audit row
-         *     `role.granted` in one transaction. The person must already hold a
-         *     staff role: inviting someone new is not built.
+         *     `role.granted` in one transaction. To bring in a
+         *     person with no staff role yet, use `POST /admin/invitations`.
          */
         post: operations["adminUsersRolesStore"];
         delete?: never;
@@ -822,6 +879,74 @@ export interface paths {
          *     Written with the audit row `role.revoked` in one transaction.
          */
         delete: operations["adminUsersRolesDestroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pending staff invitations
+         * @description Needs `users.read`. Lists invitations that are neither accepted,
+         *     revoked nor expired, within the caller's reach (global reach sees all,
+         *     city reach only those anchored to its cities). Never carries token
+         *     data. The address is masked unless the caller could grant that role
+         *     there. Oldest id first.
+         */
+        get: operations["adminInvitationsIndex"];
+        put?: never;
+        /**
+         * Invite a person to the admin team
+         * @description Needs `users.roles.assign`, and the caller must be allowed to grant
+         *     that role at that scope under the same rules as `POST
+         *     /admin/users/{user}/roles` (ADR-005); staff roles only. 403 when not
+         *     allowed (including `platform_owner`), 404 for a city that does not
+         *     exist, 422 for an invalid field or an invitation to the caller's own
+         *     address, 409 when a live invitation for that address, role and scope
+         *     already exists, 429 after five invitation emails to one address in a
+         *     day or twenty requests a minute. Always answers 202 with the same
+         *     body, whether or not the address already has an account; no lookup
+         *     is made. An email with a single-use link (token in the URL fragment)
+         *     valid for 72 hours is sent to the address. Nothing is granted until
+         *     the person accepts. Audit `staff_invitation.created`, without the
+         *     address.
+         */
+        post: operations["adminInvitationsStore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/invitations/{invitation}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Id of a pending invitation from `GET /admin/invitations`. Letter case is ignored. */
+                invitation: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Withdraw a pending invitation
+         * @description Whoever could not have granted the role cannot withdraw the
+         *     invitation: needs `users.read` to see it (404 otherwise, as for any
+         *     invitation outside the caller's reach, or already accepted, revoked
+         *     or expired) and then `users.roles.assign` with an entitled role over
+         *     the same scope (403). Written with the audit row
+         *     `staff_invitation.revoked`. The link stops working at once.
+         */
+        delete: operations["adminInvitationsDestroy"];
         options?: never;
         head?: never;
         patch?: never;
@@ -994,6 +1119,33 @@ export interface components {
             mfa_enrolled: boolean;
             is_self: boolean;
             grants: components["schemas"]["StaffGrant"][];
+        };
+        StaffInvitation: {
+            id: string;
+            name: string;
+            /** @description Masked (first letter, then asterisks) when `email_masked` is true. */
+            email: string;
+            email_masked: boolean;
+            role: string;
+            role_label: string;
+            /** @enum {string} */
+            scope_type: "global" | "city";
+            scope_id: string | null;
+            city_name: string | null;
+            invited_by_me: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            expires_at: string;
+            can_revoke: boolean;
+        };
+        InvitationPreview: {
+            name: string;
+            role_label: string;
+            /** @description The city's name, or `All cities` for a deployment-wide role. */
+            scope_label: string;
+            /** Format: date-time */
+            expires_at: string;
         };
         AssignableRole: {
             slug: string;
@@ -1493,6 +1645,81 @@ export interface operations {
                 };
             };
             403: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    authInvitationsInspect: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    token: string;
+                };
+            };
+        };
+        responses: {
+            /** @description A live invitation. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InvitationPreview"];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    authInvitationsAccept: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    token: string;
+                    /** Format: password */
+                    password: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Accepted. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** @constant */
+                            status: "invitation_accepted";
+                        };
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
             422: components["responses"]["Error"];
             429: components["responses"]["Error"];
         };
@@ -2384,6 +2611,110 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Revoked. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    adminInvitationsIndex: {
+        parameters: {
+            query?: {
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque value from `meta.next_cursor` of the previous page. */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of pending invitations. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StaffInvitation"][];
+                        meta: components["schemas"]["PageMeta"];
+                    };
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    adminInvitationsStore: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    email: string;
+                    /** @description A staff role slug from `GET /admin/roles`. */
+                    role: string;
+                    /** @enum {string} */
+                    scope_type: "global" | "city";
+                    /** @description Required for `city`, forbidden for `global`. */
+                    scope_id?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Invitation recorded and emailed. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            /** @constant */
+                            status: "invitation_sent";
+                        };
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    adminInvitationsDestroy: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path: {
+                /** @description Id of a pending invitation from `GET /admin/invitations`. Letter case is ignored. */
+                invitation: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Withdrawn. */
             204: {
                 headers: {
                     [name: string]: unknown;
