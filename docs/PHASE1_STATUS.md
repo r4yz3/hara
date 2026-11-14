@@ -11,7 +11,7 @@ Evidence: `docs/qa/evidence/e07-2026-11-14-staging-deploy.txt` (the operator's r
 - **Checked from the workstation through Cloudflare:** staging, staging-merchant and staging-admin return 200; staging-api `/health/live` returns `{"status":"ok"}`; `/health/ready` is 404 through the edge (hidden by design); direct HTTPS to the origin gets no response. Web apps send the CSP baseline, `X-Frame-Options: DENY`, `nosniff` and HSTS `max-age=604800`; the API sends HSTS `max-age=31536000` and a deny-all CSP. Pages show `cf-cache-status: DYNAMIC`.
 - **Found and fixed during the deploy:** empty `apps/*/public` folders are not tracked by git, so the web image build failed; fixed in `bce7e3f`.
 - **Not done:**
-  - first admin account (no bootstrap command; open decision, so nobody can sign in to the admin app on staging yet);
+  - first admin account: `php artisan staff:bootstrap-owner` is built and tested locally (ADR-018, proposed; 20 tests, full suite 775 passed), but staging runs `bce7e3f`, which does not contain it. Redeploy, migrate, then run it once (`docs/operations/staging-setup.md` section 9). Rollback: revert the commit; migration `2026_11_14_000003` is expand-only and its `down` removes the column;
   - reboot persistence test;
   - backup schedule and off-server copy;
   - monitoring and alerting;

@@ -304,6 +304,23 @@ cd /srv/hara/infra/staging && docker compose logs --tail 40 api
 
 **Not possible on staging as the code stands, on purpose.** `DevelopmentSeeder` refuses to run outside the `local` and `testing` environments, and `DEMO_PASSWORD` must be unset or the guard refuses to serve. Do not weaken either. Staging therefore starts with the role catalogue only. If a synthetic city and zone are wanted on staging, that needs a new, explicitly staging-safe seeder (no real coordinates, no accounts with a known password) approved by a human; it is an open decision (section 14). No real restaurant, customer or coordinate data belongs on staging either.
 
+
+### First platform owner (once)
+
+Staging starts with no account. After the release that contains ADR-018 is built, migrated (`php artisan migrate --force`, adds one nullable column and one flag column to `staff_invitations`) and running, create the first platform owner from the server. It works only while no active platform owner exists, and it prints a link to the admin app instead of creating a password:
+
+```bash
+cd /srv/hara/infra/staging && docker compose run --rm --no-deps api php artisan staff:bootstrap-owner <OWNER_EMAIL>
+```
+
+`--no-deps` is enough: it reuses the already running `postgres` on the project network, as the migrate command above does (the database must be up). It needs `ADMIN_APP_URL` in `.env` (already set) and `APP_ENV=staging` passing the production guard.
+
+- Open the printed link (`https://staging-admin.haradelivery.com/invite#token=...`) yourself, set a password of 10 or more characters, sign in, and enrol the authenticator (TOTP) when asked. Save the recovery codes.
+- The link is valid 72 hours, works once, and is shown only in this terminal. Do not paste it into chat or a ticket, and do not leave it in shell history or a screen recording.
+- Lost or expired link: run it again. If the first link is still live the command refuses; add `--replace` to revoke it and print a new one:
+  `docker compose run --rm --no-deps api php artisan staff:bootstrap-owner <OWNER_EMAIL> --replace`
+- Once an owner exists the command refuses. Everyone else is invited from the admin app (ADR-016). Design: ADR-018.
+
 ## 10. Smoke tests
 
 On the server, bypassing Cloudflare (the certificate is Cloudflare-only, hence `-k`; `--resolve` sends the request to this machine):
@@ -493,7 +510,7 @@ Found on the host: empty `apps/*/public` folders are not tracked by git, so the 
 
 ## 14. Decisions and open items for the operator
 
-1. **First admin account.** There is no command or seeder that creates the first `platform_owner` outside the development seeder, and staff are otherwise invited by an existing owner. Without it nobody can sign in to the admin app on staging. A small, audited bootstrap command (run once on the host, prints nothing secret) needs a decision and an ADR note; it is not built.
+1. **First admin account.** Built, not yet run on staging: `staff:bootstrap-owner` (ADR-018, section 9). Needs a redeploy of a release that contains it, then the one command. The ADR is proposed and needs the operator's review.
 2. **Mail.** `MAIL_MAILER=log` writes messages, including any reset or invitation link, into the API container log. Choosing a provider (open since `budget-plan.md`) also needs outbound network access for `api`: add the `edge` network to the `api` service in `compose.yaml` (the `backend` network has no route out). Keep the provider's key out of git.
 3. **Demo/synthetic data on staging** (section 9).
 4. **Authenticated Origin Pulls** and Cloudflare WAF/rate-limit rules: optional hardening not done.

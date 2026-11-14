@@ -37,6 +37,7 @@ class StaffInvitations
     public function __construct(
         private readonly RoleGrantService $grants,
         private readonly AuditLogger $audit,
+        private readonly BootstrapOwner $bootstrap,
     ) {}
 
     /**
@@ -198,8 +199,9 @@ class StaffInvitations
                 // Serializes with registration and other work on this address.
                 DB::select('SELECT pg_advisory_xact_lock(hashtext(?))', ["register:{$invite->email}"]);
 
-                $inviter = User::query()->find($invite->invited_by);
-                if ($inviter === null) {
+                // No inviter: the console's first-owner invitation (ADR-018).
+                $inviter = $invite->bootstrap ? null : User::query()->find($invite->invited_by);
+                if (! $invite->bootstrap && $inviter === null) {
                     return false;
                 }
 
@@ -218,14 +220,23 @@ class StaffInvitations
                     $user->forceFill(['email_verified_at' => now()])->save();
                 }
 
-                try {
-                    $this->grants->grant($inviter, $user, $invite->slug, Scope::of($invite->scope_type, $invite->scope_id));
-                } catch (AccessDenied $denied) {
-                    // The inviter lost the right, the role or place went away, or the account is suspended.
-                    Log::info('staff_invitation.accept.refused', ['invitation_id' => $invite->id, 'reason' => $denied->reason]);
+                if ($inviter === null) {
+                    if (! $this->bootstrap->grantOnAcceptance($user, $invite)) {
+                        Log::info('staff_invitation.accept.refused', ['invitation_id' => $invite->id, 'reason' => 'bootstrap']);
 
-                    // Undoes the account created above too.
-                    throw new InvitationNotAccepted;
+                        // Undoes the account created above too.
+                        throw new InvitationNotAccepted;
+                    }
+                } else {
+                    try {
+                        $this->grants->grant($inviter, $user, $invite->slug, Scope::of($invite->scope_type, $invite->scope_id));
+                    } catch (AccessDenied $denied) {
+                        // The inviter lost the right, the role or place went away, or the account is suspended.
+                        Log::info('staff_invitation.accept.refused', ['invitation_id' => $invite->id, 'reason' => $denied->reason]);
+
+                        // Undoes the account created above too.
+                        throw new InvitationNotAccepted;
+                    }
                 }
 
                 DB::table('staff_invitations')->where('id', $invite->id)->update(['accepted_at' => now(), 'updated_at' => now()]);
