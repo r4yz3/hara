@@ -690,4 +690,4 @@ Found on the host: empty `apps/*/public` folders are not tracked by git, so the 
 8. **CSP:** the web apps still send only the static baseline CSP (the nonce trade-off is an open decision in the Phase 1 status).
 9. **Image scan** for the three web images in `security.yml`.
 10. **Monitoring and alerting** (5xx rate, disk, database, backups): none; the compose healthchecks only restart nothing by themselves (`restart: unless-stopped` restarts a crashed container, not an unhealthy one).
-11. **Rider app and tile hosting** are out of scope here (ADR-015: R2 bucket, `MAP_STYLE_URL` stays empty until then).
+11. **Rider app** is out of scope here. **Map tiles:** the hosting plan (public R2 bucket, `tiles.haradelivery.com`, extract, style, `MAP_STYLE_URL`) is in `map-tiles.md`; written, not run. `MAP_STYLE_URL` stays empty until the operator has done it (ADR-015).
