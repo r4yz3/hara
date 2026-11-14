@@ -3,9 +3,11 @@ export interface HeaderRule {
   headers: { key: string; value: string }[];
 }
 
-export function securityHeaders(options?: { geolocation?: boolean }): HeaderRule[];
+export function securityHeaders(options?: { geolocation?: boolean; baselineCsp?: boolean }): HeaderRule[];
 
 export function apiOriginFrom(env?: Record<string, string | undefined>): string;
 export function createNonce(): string;
 export function tileOriginFrom(env?: Record<string, string | undefined>): string | null;
 export function contentSecurityPolicy(options: { nonce: string; apiOrigin: string; tileOrigin?: string | null; dev?: boolean }): string;
+export const NONCE_HEADER: "x-nonce";
+export function nonceCsp(options: { env: Record<string, string | undefined>; dev?: boolean }): { nonce: string; policy: string };

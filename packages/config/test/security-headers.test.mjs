@@ -71,3 +71,46 @@ test("map tiles: only the configured https origin is added, and only to connect-
   assert.equal(tileOriginFrom({ MAP_STYLE_URL: "http://tiles.example.test/style.json" }), null);
   assert.equal(tileOriginFrom({}), null);
 });
+
+import { NONCE_HEADER, nonceCsp } from "../security-headers.mjs";
+
+test("nonceCsp: a fresh nonce per call, API and tile origins from the environment, strict in a build", () => {
+  const env = { NEXT_PUBLIC_API_URL: "https://api.example.test", NEXT_PUBLIC_MAP_STYLE_URL: "https://tiles.example.test/style.json" };
+  const a = nonceCsp({ env });
+  const b = nonceCsp({ env });
+  assert.notEqual(a.nonce, b.nonce);
+  assert.ok(a.policy.includes(`'nonce-${a.nonce}'`));
+  assert.ok(!a.policy.includes(b.nonce));
+  assert.match(a.policy, /connect-src 'self' https:\/\/api\.example\.test https:\/\/tiles\.example\.test;/);
+  assert.doesNotMatch(a.policy, /unsafe-/);
+  assert.equal(NONCE_HEADER, "x-nonce");
+});
+
+test("nonceCsp: without a map style there is no tile origin; dev is the only loosening", () => {
+  const { policy } = nonceCsp({ env: { NEXT_PUBLIC_API_URL: "https://api.example.test" } });
+  assert.match(policy, /connect-src 'self' https:\/\/api\.example\.test;/);
+  assert.doesNotMatch(nonceCsp({ env: {}, dev: false }).policy, /unsafe-/);
+  assert.match(nonceCsp({ env: {}, dev: true }).policy, /'unsafe-eval'/);
+});
+
+test("the policy lists exactly the directives the apps rely on", () => {
+  const { policy } = nonceCsp({ env: {} });
+  const names = policy.split("; ").map((d) => d.split(" ")[0]);
+  assert.deepEqual(names, ["default-src", "script-src", "style-src", "img-src", "font-src", "connect-src", "worker-src", "object-src", "base-uri", "form-action", "frame-ancestors"]);
+  assert.match(policy, /default-src 'self'/);
+  assert.match(policy, /form-action 'self'/);
+  assert.match(policy, /connect-src 'self' http:\/\/localhost:8000;/);
+});
+
+test("the baseline CSP can be left to the proxy, and the other headers stay", () => {
+  const h = byKey(securityHeaders({ baselineCsp: false }));
+  assert.equal(h["Content-Security-Policy"], undefined);
+  assert.equal(h["X-Frame-Options"], "DENY");
+  assert.equal(h["X-Content-Type-Options"], "nosniff");
+});
+
+test("images and workers need no extra sources: MapLibre fetches sprites and tiles (connect-src) and its worker is same-origin", () => {
+  const { policy } = nonceCsp({ env: { NEXT_PUBLIC_MAP_STYLE_URL: "https://tiles.example.test/style.json" } });
+  assert.match(policy, /img-src 'self';/);
+  assert.match(policy, /worker-src 'self';/);
+});

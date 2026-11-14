@@ -428,7 +428,7 @@ test("exclusions: a refused or malformed shape focuses the shape field; a slow a
   await form.getByLabel("Exclusion shape (GeoJSON)").fill('{"type":"Polygon","coordinates":[]}');
   await form.getByLabel("Exclusion reason").focus();
   await form.getByRole("button", { name: "Add exclusion" }).click();
-  await expect(page.getByRole("status")).toContainText("Working…");
+  await expect(page.getByRole("main").getByRole("status")).toContainText("Working…");
   await expect(form.getByRole("button", { name: "Add exclusion" })).toBeDisabled();
   held.open();
   await expect(page.getByRole("main").getByRole("alert")).toContainText("The shape is not a polygon.");

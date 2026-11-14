@@ -1,18 +1,19 @@
 // Response headers for the three web apps (backlog E-02).
 //
-// Two layers of CSP are sent. The static baseline below (next.config headers)
-// stops framing, plugins and base-tag or form hijacking. The per-request policy
-// from contentSecurityPolicy() (each app's proxy.ts) adds a nonce for scripts
-// and styles and limits connections to the API origin. A browser enforces
-// every CSP header it receives, so the two intersect and neither loosens the other.
+// CSP: the per-request policy from nonceCsp() (each app's proxy.ts) is the policy
+// the apps send. A header set in next.config replaces the proxy's header, so the apps
+// call securityHeaders({ baselineCsp: false }). The static baseline (frame, base,
+// form, object) stays available for any caller that has no proxy.
 
 const BASE_CSP = "frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'";
 
 /**
- * @param {{ geolocation?: boolean }} [options] geolocation: allow this app's
- *   own pages to ask for the device position (the customer app only).
+ * @param {{ geolocation?: boolean, baselineCsp?: boolean }} [options] geolocation: allow this app's
+ *   own pages to ask for the device position (the customer app only). baselineCsp: send the static
+ *   frame/base/form/object CSP. The apps turn it off because a header set in next.config replaces the
+ *   proxy's per-request one (it would also hide the nonce from Next), so the proxy sends the whole policy.
  */
-export function securityHeaders({ geolocation = false } = {}) {
+export function securityHeaders({ geolocation = false, baselineCsp = true } = {}) {
   return [
     {
       source: "/:path*",
@@ -24,7 +25,7 @@ export function securityHeaders({ geolocation = false } = {}) {
           key: "Permissions-Policy",
           value: `camera=(), microphone=(), payment=(), usb=(), geolocation=${geolocation ? "(self)" : "()"}`,
         },
-        { key: "Content-Security-Policy", value: BASE_CSP },
+        ...(baselineCsp ? [{ key: "Content-Security-Policy", value: BASE_CSP }] : []),
       ],
     },
   ];
@@ -70,7 +71,7 @@ export function contentSecurityPolicy({ nonce, apiOrigin, tileOrigin = null, dev
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ""}`,
     // Next.js puts its inline styles through the nonce, so no 'unsafe-inline' outside dev.
     `style-src 'self' ${dev ? "'unsafe-inline'" : `'nonce-${nonce}'`}`,
-    "img-src 'self' blob: data:",
+    "img-src 'self'",
     "font-src 'self'",
     `connect-src 'self' ${apiOrigin}${tiles}`,
     // MapLibre's worker is a same-origin bundled asset (setWorkerUrl), so no blob:.
@@ -81,4 +82,25 @@ export function contentSecurityPolicy({ nonce, apiOrigin, tileOrigin = null, dev
     "frame-ancestors 'none'",
   ];
   return directives.join("; ");
+}
+
+/** Request header that carries the nonce to server components (`(await headers()).get("x-nonce")`). */
+export const NONCE_HEADER = "x-nonce";
+
+/**
+ * What each app's proxy.ts needs for one request: a fresh nonce and the policy that uses it.
+ *
+ * `env` must be passed with literal `process.env.NEXT_PUBLIC_*` reads at the call site, so the bundler
+ * inlines them at build time, the same way it does for the browser bundle:
+ *
+ *   nonceCsp({ env: { NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+ *                     NEXT_PUBLIC_MAP_STYLE_URL: process.env.NEXT_PUBLIC_MAP_STYLE_URL },
+ *              dev: process.env.NODE_ENV === "development" })
+ *
+ * @param {{ env: Record<string, string | undefined>, dev?: boolean }} options
+ */
+export function nonceCsp({ env, dev = false }) {
+  const nonce = createNonce();
+  const policy = contentSecurityPolicy({ nonce, apiOrigin: apiOriginFrom(env), tileOrigin: tileOriginFrom(env), dev });
+  return { nonce, policy };
 }

@@ -2,6 +2,9 @@ import { defineConfig } from "@playwright/test";
 
 const live = process.env.BROWSER_LIVE === "1";
 const publicConfigUrl = "http://127.0.0.1:3089";
+// The CSP allows only the origin of this style (E-02). It is read at build time (dev server: at start), so the apps
+// must start with it set; the map specs and csp.spec.ts serve a synthetic style from this origin.
+const mapStyleUrl = "https://styles.example.test/style.json";
 const serverFetchSpec = /server-fetch-states\.spec\.ts$/;
 
 export default defineConfig({
@@ -38,7 +41,7 @@ export default defineConfig({
       command: "pnpm dev:admin",
       port: 3002,
       timeout: 120_000,
-      env: { API_URL: live ? "http://localhost:8000" : publicConfigUrl },
+      env: { API_URL: live ? "http://localhost:8000" : publicConfigUrl, NEXT_PUBLIC_MAP_STYLE_URL: mapStyleUrl },
     },
     // Production builds (own output folder, so they do not disturb the dev servers) for global-error.spec.ts:
     // the root-layout error screen is not shown by `next dev`. NEXT_PUBLIC_TEST_FAULTS turns on the layout fault hook.
@@ -51,6 +54,7 @@ export default defineConfig({
         NODE_ENV: "production",
         NEXT_DIST_DIR: ".next-fault",
         NEXT_PUBLIC_TEST_FAULTS: "1",
+        NEXT_PUBLIC_MAP_STYLE_URL: mapStyleUrl,
         API_URL: publicConfigUrl,
       },
     })),
