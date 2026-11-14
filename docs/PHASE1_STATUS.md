@@ -69,7 +69,7 @@ How to read it: "evidence" names a file under `docs/qa/evidence/` or a test. Whe
 | U-06 customer | Home, `/login`, `/location`, `/account`. No map pin, address entry or saved addresses. The admin half of scenario 5 is `test.fixme` in `customer.spec.ts`; it is covered only by the opt-in live run. `/account` is not in the screenshot spec. |
 | U-07 merchant shell | Overview and `/login` only. No merchant account exists, so sign-in and the merchant cookie have never been exercised live. |
 | U-08 rider shell | Sign-in, sign-out and home built; 47 Flutter tests. Never run on a device or against the real API; token in memory only; no Android SDK or JDK on this workstation. |
-| B-02 | `PATCH /me` not built. |
+| B-02 | `PATCH /me` is built for the display name only (ProfileUpdateTest; CSRF checked live in `phase1-2026-11-14-profile-csrf.txt`). Changing email or phone needs a verification flow that is not built. |
 | B-08 | No rider approval flow (Phase 2) and no device attestation. |
 | B-09 | No QR code, no way to turn two-step off, enrolment-only redirect only from sign-in and `/security`, city-scoped staff get 403 not 404 on the reset route. |
 | A-10 | Makefile never run (`make` is not installed). |
@@ -77,7 +77,7 @@ How to read it: "evidence" names a file under `docs/qa/evidence/` or a test. Whe
 | E-01 | `outbox.failure` (no outbox worker) and alerts (need a host) not done; no log shipping or retention. |
 | E-02 | API headers, CORS negatives and cookie attributes tested. The web apps send a baseline CSP only, with no script, style or connect restriction (deferred, see blocked). |
 | E-03 | Local drill only: no schedule, off-machine copy, encryption, fault injection or staging restore. Backups are unencrypted. |
-| E-04 | The image scan was proven locally; whether the hosted `image` job ran is not shown in the saved CI file (unverified). No Flutter dependency audit. |
+| E-04 | Hosted image scans of the development API, production API and production web images passed on `61ccc84` (`x01-2026-11-14-hosted-ci-61ccc84.txt`). No Flutter dependency audit. |
 | E-05 | Rehearsed locally under `APP_ENV=staging`: no TLS, no real host, incident roles unnamed, no deploy procedure for the web or rider apps. |
 | C-12 | City scope only; merchant scope waits for merchant endpoints. |
 | X-01 | Clean-clone `up`, `migrate`, `seed-demo`, backend tests and Makefile not run; manual screen-reader and keyboard review not done; staging not possible. |
