@@ -323,6 +323,21 @@ cd /srv/hara/infra/staging && docker compose run --rm --no-deps api php artisan 
   `docker compose run --rm --no-deps api php artisan staff:bootstrap-owner <OWNER_EMAIL> --replace`
 - Once an owner exists the command refuses. Everyone else is invited from the admin app (ADR-016). Design: ADR-018.
 
+### Test rider (once)
+
+Staging has no rider account, so the rider app cannot complete a sign-in. ADR-021 (proposed, awaiting approval) adds a console command that creates one synthetic, approved test rider. Not yet run on staging; the operator runs it.
+
+```bash
+cd /srv/hara/infra/staging && docker compose run --rm --no-deps api php artisan rider:invite-test <EMAIL>
+```
+
+Optional: `--name=<NAME>` (default "Test rider").
+
+- It creates one user with a random password that nobody knows, one approved `riders` row, and nothing else: no role, no customer profile, no vehicle, no city access. It refuses staff, customer, merchant and real-rider addresses. It is rate limited to 3 runs per 15 minutes.
+- It emails a set-password link to the customer app's `/reset-password` page. The token is in the URL fragment and is valid for 60 minutes, once. Do not paste the link into chat or a ticket. This is also the first real end-to-end test of a password-reset style mail on staging.
+- The audit log records `rider_test.created` and `rider_test.link_issued`, without the address or the token.
+- Cleanup: there is no delete command. Suspend the test rider's user account when the rider is no longer needed.
+
 ## 10. Smoke tests
 
 On the server, bypassing Cloudflare (the certificate is Cloudflare-only, hence `-k`; `--resolve` sends the request to this machine):

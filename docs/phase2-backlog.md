@@ -123,7 +123,7 @@ Statuses are copied from `docs/backlog.md`. Only items that are partial, blocked
 | B-06 | done as a service; no HTTP endpoint | Staff invites and role changes need an endpoint | M2-30, M2-32 |
 | B-09 | partial | TOTP not built; merchant MFA depends on it | M2-34 |
 | C-12 | partial (city scope done) | Merchant-scope isolation waits for merchant endpoints | M2-33 |
-| D-07 | proposal, not approved | City status values are provisional; branches depend on an active city | M2-07, M2-12 |
+| D-07 | approved 2026-11-15: draft, active, paused, archived (ADR-000 item 8 closed) | City status values; branches depend on an active city | M2-07, M2-12 |
 | E-02 | partial | Nonce-based CSP for web apps still open; merchant portal inherits it | M2-25, M2-35 |
 | E-03 | done locally | No schedule, off-machine copy or encryption; merchant documents need backups (M2-04) | M2-04 |
 | A-11 | written, never run | CI results unverified; Phase 2 gate needs green CI | All UI and API stories |
