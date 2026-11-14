@@ -73,8 +73,8 @@ export function contentSecurityPolicy({ nonce, apiOrigin, tileOrigin = null, dev
     "img-src 'self' blob: data:",
     "font-src 'self'",
     `connect-src 'self' ${apiOrigin}${tiles}`,
-    // MapLibre runs its tile parsing in a blob: worker.
-    "worker-src 'self' blob:",
+    // MapLibre's worker is a same-origin bundled asset (setWorkerUrl), so no blob:.
+    "worker-src 'self'",
     "object-src 'none'",
     "base-uri 'none'",
     "form-action 'self'",

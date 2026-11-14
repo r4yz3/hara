@@ -8,7 +8,7 @@
 - MapLibre GL JS is pinned at 6.16.0 and the `pmtiles` protocol package at 4.4.1, both exact versions older than two weeks at install time (AGENTS.md rule 10). The `pmtiles://` protocol is registered once, when the map library first loads on the client.
 - `MAP_STYLE_URL` stays the only switch. It points at a style JSON on our tile host whose vector source is `pmtiles://https://<tile host>/<file>.pmtiles`. Empty still means the labelled placeholder (ADR-007).
 - MapLibre's worker is emitted by the bundler as an asset and set with `setWorkerUrl`, so the map works from the built app without a CDN.
-- The CSP helper takes the tile host's origin (`tileOriginFrom`) and adds it to `connect-src` only, plus `worker-src 'self' blob:`. The per-request policy is still unwired (E-02 deferred); the baseline CSP does not restrict connections.
+- The CSP helper takes the tile host's origin (`tileOriginFrom`) and adds it to `connect-src` only, plus `worker-src 'self'` (the worker is a same-origin asset, so no `blob:`). The per-request policy is still unwired (E-02 deferred); the baseline CSP does not restrict connections.
 
 ## Hosting requirements (operator)
 - The host must support HTTP Range requests and return CORS headers allowing `GET` and `Range` from the admin origin.

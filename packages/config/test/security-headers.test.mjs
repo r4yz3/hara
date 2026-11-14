@@ -65,7 +65,8 @@ test("map tiles: only the configured https origin is added, and only to connect-
   assert.match(without, /connect-src 'self' https:\/\/api\.example\.test;/);
   const withTiles = contentSecurityPolicy({ nonce: "abc", apiOrigin: "https://api.example.test", tileOrigin: "https://tiles.example.test" });
   assert.match(withTiles, /connect-src 'self' https:\/\/api\.example\.test https:\/\/tiles\.example\.test;/);
-  assert.match(withTiles, /worker-src 'self' blob:/);
+  assert.match(withTiles, /worker-src 'self';/);
+  assert.doesNotMatch(withTiles, /worker-src[^;]*blob:/);
   assert.equal(tileOriginFrom({ MAP_STYLE_URL: "https://tiles.example.test/style.json" }), "https://tiles.example.test");
   assert.equal(tileOriginFrom({ MAP_STYLE_URL: "http://tiles.example.test/style.json" }), null);
   assert.equal(tileOriginFrom({}), null);
