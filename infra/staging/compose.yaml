@@ -70,6 +70,9 @@ services:
       NODE_ENV: production
       HOSTNAME: 0.0.0.0
       NODE_OPTIONS: --max-old-space-size=256
+      # Server-side calls (admin API status, customer service banner) go to the
+      # API's nginx on the internal edge network, not out through Cloudflare.
+      API_URL: http://web:8080
     networks: [edge]
     mem_limit: 384m
     pids_limit: 128
