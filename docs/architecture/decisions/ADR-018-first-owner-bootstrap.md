@@ -1,6 +1,6 @@
 # ADR-018: First platform owner by console command
 
-- Status: proposed (built and tested locally 2026-11-14; needs the operator's review before use on staging)
+- Status: accepted (human operator approval, 2026-11-15; built and tested locally 2026-11-14)
 - Date: 2026-11-14
 - Relates to: ADR-005 (`platform_owner` is never grantable through the application), ADR-011 (staff sign-in and TOTP), ADR-016 (invitations), backlog E-07
 
