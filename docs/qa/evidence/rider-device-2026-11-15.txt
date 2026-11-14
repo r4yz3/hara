@@ -1,0 +1,40 @@
+Rider app on a physical Android device: first run, 2026-11-15
+
+Scope: first time apps/rider-flutter ran on a device. Evidence only; no code change is recorded here.
+
+Device: Realme RMX2061, Android 11 (API 30), arm64. Serial number not recorded.
+
+Toolchain
+- Flutter 3.41.7.
+- Android SDK installed through Android Studio, at a local path; ANDROID_HOME set.
+- Gradle 8.14 ran on Microsoft OpenJDK 21, set with `flutter config --jdk-dir <JDK 21 path>`. Android Studio's bundled Java 25 fails with "What went wrong: 25.0.4", so it is not used.
+
+Build and install
+- From apps/rider-flutter: flutter build apk --release --dart-define=API_BASE_URL=https://staging-api.haradelivery.com
+- Output: 45.4 MB APK. Installed with adb install.
+
+Result
+- The sign-in screen rendered. Screenshot: docs/qa/evidence/rider-device-2026-11-15-launch.png.
+- First run: every request showed "No internet". Cause: android/app/src/main/AndroidManifest.xml did not declare android.permission.INTERNET. Only the debug and profile manifests had it, so release builds could not reach any API. Fixed by adding the permission to the main manifest; rebuilt and reinstalled.
+- After the fix, `adb shell dumpsys package` lists android.permission.INTERNET for the app.
+- Signing in with an account that does not exist showed "wrong email or password". So the release build reached the staging API and received the expected refusal.
+
+Not verified
+- A successful rider sign-in. No approved rider exists on staging.
+- Rider home screen and token refresh on the device.
+- Other devices and Android versions. iOS.
+- Location permission: the manifest was not re-checked for it in this run.
+
+Open UX item
+- The Sign in button background is nearly the same colour as the page. Text is readable, but non-text contrast is low. Check against docs/ux/contrast-report.md before changing it.
+
+Device notes
+- On this Realme device, adb input injection needs "Disable permission monitoring" turned on in Developer options. Without it, adb input commands did not reach the app.
+
+Rollback
+- The INTERNET line is in the working tree, not committed at the time of this note. Removing it breaks every API call in the release build.
+
+Files from this run
+- apps/rider-flutter/android/app/src/main/AndroidManifest.xml (INTERNET added to the main manifest)
+- docs/qa/evidence/rider-device-2026-11-15-launch.png
+- docs/qa/evidence/rider-device-2026-11-15.txt (this file)
