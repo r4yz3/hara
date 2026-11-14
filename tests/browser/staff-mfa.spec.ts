@@ -239,7 +239,7 @@ test.describe("security page", () => {
 
     await expect(page.getByText("JBSW Y3DP EHPK 3PXP JBSW Y3DP EHPK 3PXP")).toBeVisible();
     await expect(page.getByLabel("Setup link")).toHaveValue(otpauth);
-    await expect(page.getByText("A QR code is not available yet")).toBeVisible();
+    await expect(page.getByText("Scan this with your authenticator app, or type the key below.")).toBeVisible();
     expect(page.url()).not.toContain(secret);
 
     await page.getByLabel("6-digit code from the app").fill("111111");

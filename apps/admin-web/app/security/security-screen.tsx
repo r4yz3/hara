@@ -15,6 +15,8 @@ import {
 
 import { Notice, fieldClass, primaryButton, quietButton } from "@/components/ui";
 
+import { SetupQr } from "./setup-qr";
+
 // Secrets and recovery codes live only in this component's state. They are
 // never written to the URL, web storage or the console, and they are dropped
 // when the person leaves the page (the state goes with the component).
@@ -321,11 +323,14 @@ function Enrol({
   return (
     <div className="flex flex-col gap-5">
       <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm">
-        <li>Open an authenticator app on your phone and choose to add an account by entering a key.</li>
-        <li>Enter the key below. If the app asks, choose time-based codes.</li>
+        <li>Open an authenticator app on your phone and choose to add an account.</li>
+        <li>Scan the QR code, or choose to enter a key and type the key below. If the app asks, choose time-based codes.</li>
         <li>Type the 6-digit code the app shows into the box below and confirm.</li>
       </ol>
-      <p className="text-sm text-text-secondary">A QR code is not available yet, so enter the key by hand or copy the setup link.</p>
+      <div className="flex flex-col gap-2">
+        <p className="text-sm text-text-secondary">Scan this with your authenticator app, or type the key below.</p>
+        <SetupQr uri={uri} />
+      </div>
 
       <div className="flex flex-col gap-2">
         <p className="text-sm font-medium" id="secret-label">
