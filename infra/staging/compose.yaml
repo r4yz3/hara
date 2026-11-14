@@ -156,10 +156,12 @@ services:
   edge:
     <<: *hardened
     image: nginxinc/nginx-unprivileged:1.29.8-alpine
-    # The only published ports. The image listens on 8080/8443 as an unprivileged user.
+    # The only published ports, IPv4 only: there is no AAAA record, so Cloudflare
+    # connects over IPv4, and no IPv6 traffic reaches nginx via docker-proxy from the
+    # bridge gateway. The image listens on 8080/8443 as an unprivileged user.
     ports:
-      - "80:8080"
-      - "443:8443"
+      - "0.0.0.0:80:8080"
+      - "0.0.0.0:443:8443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro

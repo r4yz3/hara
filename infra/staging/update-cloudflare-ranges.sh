@@ -46,7 +46,6 @@ TMP="$(mktemp)"
   echo "real_ip_header CF-Connecting-IP;"
   echo "real_ip_recursive off;"
   printf '%s\n' "$V4" "$V6" | sed 's/^/set_real_ip_from /; s/$/;/'
-  echo "set_real_ip_from $GATEWAY;"
   echo
   echo "# 1 for a peer allowed to talk to this server at all."
   echo "geo \$realip_remote_addr \$hara_trusted_peer {"
