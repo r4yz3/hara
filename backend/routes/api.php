@@ -10,8 +10,10 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\MfaController;
 use App\Http\Controllers\Api\V1\PublicGeoController;
 use App\Http\Controllers\Api\V1\RiderAuthController;
+use App\Http\Controllers\Api\V1\SavedAddressController;
 use App\Http\Controllers\Api\V1\StaffInvitationAcceptController;
 use App\Http\Middleware\EnsureAdminSurface;
+use App\Http\Middleware\EnsureCustomerSurface;
 use App\Http\Middleware\EnsureRiderToken;
 use App\Http\Middleware\EnsureSurfaceSession;
 use Illuminate\Support\Facades\Route;
@@ -58,6 +60,16 @@ Route::middleware(EnsureSurfaceSession::class)->group(function (): void {
     Route::post('/me/mfa/totp', [MfaController::class, 'start'])->name('me.mfa.totp.start');
     Route::post('/me/mfa/totp/confirm', [MfaController::class, 'confirm'])->name('me.mfa.totp.confirm');
     Route::post('/me/mfa/recovery-codes', [MfaController::class, 'regenerateRecoveryCodes'])->name('me.mfa.recovery-codes.regenerate');
+
+    // Saved delivery addresses: customer app only (404 elsewhere). Every query
+    // is scoped to the caller, so another person's id is "not found" (ADR-005).
+    Route::middleware(EnsureCustomerSurface::class)->prefix('me/addresses')->group(function (): void {
+        Route::get('/', [SavedAddressController::class, 'index'])->name('me.addresses.index');
+        Route::post('/', [SavedAddressController::class, 'store'])->name('me.addresses.store');
+        Route::patch('/{address}', [SavedAddressController::class, 'update'])->name('me.addresses.update');
+        Route::delete('/{address}', [SavedAddressController::class, 'destroy'])->name('me.addresses.destroy');
+        Route::post('/{address}/default', [SavedAddressController::class, 'makeDefault'])->name('me.addresses.default');
+    });
 
     // Staff. Each action checks its own permission and scope (ADR-005).
     Route::middleware(EnsureAdminSurface::class)->prefix('admin')->group(function (): void {

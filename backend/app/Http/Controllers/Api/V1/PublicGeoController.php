@@ -3,17 +3,16 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Application\Queries\ServiceabilityQuery;
-use App\Domain\Geo\Coordinates;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CityResource;
 use App\Models\City;
 use App\Support\Http\ApiResponse;
 use App\Support\Http\Cursor;
+use App\Support\Http\PositionInput;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use InvalidArgumentException;
 
 /**
  * Public, unauthenticated geography (spec 7.2). Returns whitelisted fields
@@ -75,36 +74,15 @@ class PublicGeoController extends Controller
 
     public function serviceability(Request $request, ServiceabilityQuery $query): JsonResponse
     {
-        // A position in the query string would be written to access logs by
-        // every server and proxy on the way, so it is refused outright (ADR-013).
-        if ($request->query->has('latitude') || $request->query->has('longitude')) {
-            throw ValidationException::withMessages([
-                'latitude' => ['Send the position in the request body, not in the URL.'],
-                'longitude' => ['Send the position in the request body, not in the URL.'],
-            ]);
-        }
+        PositionInput::refuseInUrl($request);
 
-        // A plain decimal, as a JSON string or number: no exponents, no "NaN", no arrays.
-        $decimal = function (string $attribute, mixed $value, \Closure $fail): void {
-            if (! is_string($value) && ! is_int($value) && ! is_float($value)) {
-                $fail("The {$attribute} must be a number.");
-            } elseif (preg_match('/\A-?\d{1,3}(\.\d{1,12})?\z/', (string) $value) !== 1) {
-                $fail("The {$attribute} must be a plain decimal number.");
-            }
-        };
         $body = $request->json()->all();
         validator($body, [
-            'latitude' => ['present', $decimal],
-            'longitude' => ['present', $decimal],
+            'latitude' => ['present', PositionInput::decimal()],
+            'longitude' => ['present', PositionInput::decimal()],
         ])->validate();
 
-        try {
-            $point = Coordinates::fromLatitudeLongitude((float) $body['latitude'], (float) $body['longitude']);
-        } catch (InvalidArgumentException $e) {
-            $field = str_starts_with($e->getMessage(), 'Latitude') ? 'latitude' : 'longitude';
-
-            throw ValidationException::withMessages([$field => [$e->getMessage()]]);
-        }
+        $point = PositionInput::coordinates($body);
 
         // The position is used for this answer only: it is not logged or stored.
         return ApiResponse::data($request, $query->at($point));

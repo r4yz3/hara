@@ -430,6 +430,101 @@ export interface paths {
         patch: operations["meUpdate"];
         trace?: never;
     };
+    "/api/v1/me/addresses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The signed-in customer's saved delivery addresses
+         * @description Customer app only; the merchant and admin apps get 404. At most 20
+         *     addresses, default first, then newest. Each address holds an exact home
+         *     position: treat the response as personal data and never log it.
+         *     `serviceable` is computed at request time from current coverage;
+         *     `city` is the active city found when the address was last written.
+         */
+        get: operations["meAddressesList"];
+        put?: never;
+        /**
+         * Save a delivery address
+         * @description Customer app only. The position goes in the body, never the URL (a
+         *     `latitude` or `longitude` query parameter is refused with 422). Text
+         *     is trimmed and may not contain control or invisible formatting
+         *     characters (the zero-width joiner and non-joiner are allowed).
+         *     `city_id`, `user_id` and `id` in the body are ignored: the city is
+         *     derived from the point. The first address becomes the default. A
+         *     person may hold 20 addresses; the 21st is refused with 422. Writes an
+         *     `address.created` audit entry that holds the id and field names only.
+         */
+        post: operations["meAddressesCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/addresses/{address}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A saved address id (26 characters, any case). Never put a position or address text in a path. */
+                address: components["parameters"]["AddressId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a saved address
+         * @description Deleting the default leaves the person with no default. 404 for an id
+         *     that is not the caller's. Writes `address.deleted`.
+         */
+        delete: operations["meAddressesDelete"];
+        options?: never;
+        head?: never;
+        /**
+         * Change part of a saved address
+         * @description Any subset of the create fields; at least one is required (else 422).
+         *     `latitude` and `longitude` travel together. `tag: null` clears the
+         *     tag. `is_default: true` moves the default here; `false` on the default
+         *     leaves the person with none. The city is derived again from the point.
+         *     Another person's, an unknown, a malformed and a deleted id all answer
+         *     404. Writes `address.updated` and, if the default moved,
+         *     `address.default_changed` (ids and field names only); a request that
+         *     changes nothing writes nothing.
+         */
+        patch: operations["meAddressesUpdate"];
+        trace?: never;
+    };
+    "/api/v1/me/addresses/{address}/default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A saved address id (26 characters, any case). Never put a position or address text in a path. */
+                address: components["parameters"]["AddressId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Make a saved address the default
+         * @description The previous default is unset in the same transaction, serialised per
+         *     person. Making the current default the default again changes nothing.
+         *     Writes `address.default_changed`. No request body.
+         */
+        post: operations["meAddressesSetDefault"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/public/config": {
         parameters: {
             query?: never;
@@ -1284,6 +1379,52 @@ export interface components {
                 request_id: string;
             };
         };
+        SavedAddress: {
+            id: string;
+            tag: string | null;
+            address_line: string;
+            landmark: string;
+            /** @description Rounded to 6 decimals. Personal data. */
+            latitude: number;
+            /** @description Rounded to 6 decimals. Personal data. */
+            longitude: number;
+            is_default: boolean;
+            /** @description The active city whose active zone covered the point when the address was last written; null if none did. */
+            city: null | {
+                id: string;
+                name: string;
+            };
+            /** @description Computed now from current coverage; not stored. */
+            serviceable: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        SavedAddressResponse: {
+            data: components["schemas"]["SavedAddress"];
+            meta: components["schemas"]["Meta"];
+        };
+        SavedAddressCreate: {
+            address_line: string;
+            /** @description Required by the master plan. */
+            landmark: string;
+            /** @description For example Home or Work. */
+            tag?: string | null;
+            latitude: components["schemas"]["DecimalDegrees"];
+            longitude: components["schemas"]["DecimalDegrees"];
+            is_default?: boolean;
+        };
+        SavedAddressUpdate: {
+            address_line?: string;
+            landmark?: string;
+            tag?: string | null;
+            latitude?: components["schemas"]["DecimalDegrees"];
+            longitude?: components["schemas"]["DecimalDegrees"];
+            is_default?: boolean;
+        };
+        /** @description A plain decimal (at most 12 fractional digits), as a JSON number or string; latitude within -90..90, longitude within -180..180. */
+        DecimalDegrees: number | string;
         CurrentUser: {
             id: string;
             name: string;
@@ -1326,6 +1467,8 @@ export interface components {
     };
     parameters: {
         CsrfToken: string;
+        /** @description A saved address id (26 characters, any case). Never put a position or address text in a path. */
+        AddressId: string;
         Limit: number;
         /** @description Opaque value from `meta.next_cursor` of the previous page. */
         Cursor: string;
@@ -1966,6 +2109,148 @@ export interface operations {
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             422: components["responses"]["Error"];
+        };
+    };
+    meAddressesList: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The caller's own addresses. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SavedAddress"][];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    meAddressesCreate: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavedAddressCreate"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedAddressResponse"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    meAddressesDelete: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path: {
+                /** @description A saved address id (26 characters, any case). Never put a position or address text in a path. */
+                address: components["parameters"]["AddressId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    meAddressesUpdate: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path: {
+                /** @description A saved address id (26 characters, any case). Never put a position or address text in a path. */
+                address: components["parameters"]["AddressId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavedAddressUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedAddressResponse"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    meAddressesSetDefault: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path: {
+                /** @description A saved address id (26 characters, any case). Never put a position or address text in a path. */
+                address: components["parameters"]["AddressId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The address, now the default. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedAddressResponse"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
         };
     };
     publicConfig: {

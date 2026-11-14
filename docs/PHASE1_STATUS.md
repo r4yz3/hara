@@ -2,6 +2,28 @@
 
 Last updated: 2026-11-14. **The Phase 1 gate is not passed.** Staging does not exist (E-07, human), several decisions and document reviews are open, and the rider app has never run on a device. Nothing here is a production-readiness claim: everything built is local, mocked or sandbox-level unless a line says "hosted CI". The dated sections below the definition-of-done checklist are history and are kept unchanged; where they contradict this section, this section is newer.
 
+## November 14 saved addresses API (U-06, backend)
+
+Evidence: `docs/qa/evidence/phase1-2026-11-14-addresses-check.txt` (`dev.ps1 check`, exit 0; 727 backend tests).
+
+- The product owner chose to build addresses now, without a map (no tiles are hosted). Built by a Sonnet subagent and reviewed.
+- Customer app only (`EnsureCustomerSurface`; merchant and admin get 404, rider tokens 401):
+  - `GET /api/v1/me/addresses`;
+  - `POST /api/v1/me/addresses`;
+  - `PATCH /api/v1/me/addresses/{address}`;
+  - `DELETE /api/v1/me/addresses/{address}`;
+  - `POST /api/v1/me/addresses/{address}/default`.
+- Fields: address line, a required landmark (master plan), an optional tag, and latitude and longitude in the body only, validated as for the serviceability check.
+- At most 20 addresses per person. The first address saved becomes the default, and only one can be the default.
+- The server derives the city from the point, never from the client. `serviceable` is recomputed on each read.
+- Every lookup is by address id and owner together, so another person's address, an unknown id or a malformed id all answer 404.
+- Writes lock the owner's row first, so the default switch and the 20-address limit hold under concurrent requests. The test checks the lock order; a true two-request race was not run.
+- Positions and address text never appear in a URL, a log line or the audit log. Audit rows (`address.created`, `.updated`, `.deleted`, `.default_changed`) hold the address id and the names of changed fields only. A test scans logs, audit rows and an error body for them.
+- Tests: SavedAddressTest (77).
+- The shared position checks moved to `App\Support\Http\PositionInput`; the serviceability check behaves as before.
+- The agent reported that the serviceability check let `latitude: null` through as 0. Checked: not true; null was already refused. Three null cases were added to ServiceabilityTest as a guard.
+- Open (threat model T31): positions are stored unencrypted, because PostGIS needs them for coverage checks, so backups hold them. There is no retention or erasure rule and no per-account rate limit on the write routes. No screen uses the API yet.
+
 ## November 14 live merchant sign-in (U-07)
 
 - `DevelopmentSeeder` now also creates `demo-merchant@example.test`: an active owner (`merchant_staff`) of one active synthetic merchant, "Demo Merchant (synthetic)". Only when `DEMO_PASSWORD` is set, only in local and testing, idempotent, and it runs separately from the owner and customer seeding, so a database seeded earlier gets it on the next `db:seed`. No branch, menu, coordinates, phone number or order data was added; that is Phase 2.

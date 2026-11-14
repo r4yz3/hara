@@ -168,7 +168,8 @@ class ServiceabilityTest extends TestCase
     {
         DB::enableQueryLog();
 
-        foreach ([[91, 100], [-91, 100], [10, 181], [10, -181], ['abc', 100], [10, ''], ['10; DROP TABLE cities', 100], ['NaN', 100], ['1e999', 100], [[10], 100]] as [$latitude, $longitude]) {
+        // null used to pass the `present` rule and be read as 0 (latitude 0, longitude 0).
+        foreach ([[null, 100], [10, null], [null, null], [91, 100], [-91, 100], [10, 181], [10, -181], ['abc', 100], [10, ''], ['10; DROP TABLE cities', 100], ['NaN', 100], ['1e999', 100], [[10], 100]] as [$latitude, $longitude]) {
             $this->check($latitude, $longitude)->assertStatus(422)->assertJsonPath('error.code', 'VALIDATION_ERROR');
         }
         $this->postJson('/api/v1/locations/serviceability', [])->assertStatus(422)->assertJsonStructure(['error' => ['fields' => ['latitude', 'longitude']]]);
