@@ -155,6 +155,10 @@ class AuthController extends Controller
         RateLimiter::clear($throttleKey);
         $mfa->recordVerified($user->id, $method, $request->ip(), AssignRequestId::for($request));
 
+        if ($method === 'recovery_code') {
+            $mfa->alertRecoveryCodeUsed($user);
+        }
+
         $this->startSession($request, $user, $surface, ['mfa_verified' => true, 'mfa_factor' => $mfa->confirmedFactorId($user->id)]);
 
         return ApiResponse::data($request, (new CurrentUserResource($user, $surface))->toArray());

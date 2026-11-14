@@ -149,7 +149,7 @@ class AuditLogAndStatusTest extends AuthTestCase
             ->assertJsonPath('data.cities', ['draft' => 1, 'active' => 1, 'paused' => 0, 'archived' => 0])
             ->assertJsonPath('data.zones', ['draft' => 0, 'active' => 0, 'paused' => 0, 'archived' => 0])
             ->assertJsonPath('data.features.online_payments', false)
-            ->assertJsonPath('data.geometry_caps_approved', false);
+            ->assertJsonPath('data.geometry_caps_approved', true);
         $this->assertTrue($response->json('data.postgis'));
 
         $body = strtolower((string) $response->getContent());

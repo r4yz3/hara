@@ -4,14 +4,17 @@ namespace Tests\Feature\Auth;
 
 use App\Application\Commands\StaffMfa;
 use App\Domain\Identity\Totp;
+use App\Mail\RecoveryCodeUsed;
 use App\Models\User;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use PHPUnit\Framework\Attributes\TestWith;
+use RuntimeException;
 
 /**
  * Recovery for staff two-step sign-in (ADR-011, backlog B-09): the operator
@@ -407,6 +410,82 @@ class StaffMfaRecoveryTest extends AuthTestCase
             $this->assertStringNotContainsString($value, $seen);
             $this->assertStringNotContainsString(str_replace('-', '', $value), $seen);
         }
+    }
+
+    // --- Alert when a recovery code is used --------------------------------
+
+    public function test_using_a_recovery_code_emails_the_account_with_the_remaining_count_and_no_secret(): void
+    {
+        Mail::fake();
+        $staff = $this->staff('owner@example.com');
+        $this->login('admin', 'owner@example.com')->assertOk()->assertJsonPath('data.mfa_required', true);
+        $this->via('admin')->postJson('/api/v1/auth/mfa/verify', ['recovery_code' => $staff['recovery'][0]])->assertOk();
+
+        Mail::assertSentCount(1);
+        Mail::assertSent(RecoveryCodeUsed::class, function (RecoveryCodeUsed $mail) use ($staff): bool {
+            $this->assertTrue($mail->hasTo('owner@example.com'));
+            $this->assertSame(9, $mail->remaining);
+            $this->assertFalse($mail->isLow());
+
+            $body = $mail->render();
+            $this->assertStringContainsString('Recovery codes left: 9', $body);
+            $this->assertStringContainsString('If this was not you', $body);
+            $this->assertStringNotContainsString('running low', $body);
+            $this->assertStringNotContainsString('127.0.0.1', $body);
+            foreach ([...$staff['recovery'], $staff['secret']] as $value) {
+                $this->assertStringNotContainsString($value, $body);
+                $this->assertStringNotContainsString(str_replace('-', '', $value), $body);
+            }
+
+            return true;
+        });
+    }
+
+    public function test_the_mail_warns_when_two_or_fewer_codes_are_left(): void
+    {
+        Mail::fake();
+        $staff = $this->staff('owner@example.com');
+        DB::table('user_mfa_recovery_codes')->where('user_id', $staff['user']->id)->orderBy('id')->limit(7)->update(['used_at' => now()]);
+
+        $this->login('admin', 'owner@example.com')->assertOk();
+        $unused = array_values(array_filter($staff['recovery'], fn (string $code): bool => DB::table('user_mfa_recovery_codes')
+            ->where('user_id', $staff['user']->id)->whereNull('used_at')
+            ->where('code_hash', hash_hmac('sha256', str_replace('-', '', $code), (string) config('app.key')))->exists()));
+        $this->assertCount(3, $unused);
+        $this->via('admin')->postJson('/api/v1/auth/mfa/verify', ['recovery_code' => $unused[0]])->assertOk();
+
+        Mail::assertSent(RecoveryCodeUsed::class, function (RecoveryCodeUsed $mail): bool {
+            $this->assertSame(2, $mail->remaining);
+            $this->assertTrue($mail->isLow());
+            $this->assertStringContainsString('running low', $mail->render());
+
+            return true;
+        });
+    }
+
+    public function test_totp_sign_in_and_failed_attempts_send_no_recovery_mail(): void
+    {
+        Mail::fake();
+        $staff = $this->staff('owner@example.com');
+
+        $this->login('admin', 'owner@example.com')->assertOk();
+        $this->via('admin')->postJson('/api/v1/auth/mfa/verify', ['recovery_code' => '0000-0000-0000-0000'])->assertStatus(401);
+        $this->via('admin')->postJson('/api/v1/auth/mfa/verify', ['code' => '000000'])->assertStatus(401);
+        $this->via('admin')->postJson('/api/v1/auth/mfa/verify', ['code' => $this->codeAt($staff['secret'], 2)])->assertOk();
+
+        Mail::assertNothingSent();
+        $this->assertSame(10, DB::table('user_mfa_recovery_codes')->whereNull('used_at')->count());
+    }
+
+    public function test_a_mail_failure_does_not_block_a_recovery_code_sign_in(): void
+    {
+        $staff = $this->staff('owner@example.com');
+        Mail::shouldReceive('to')->once()->andThrow(new RuntimeException('mail down'));
+        $this->login('admin', 'owner@example.com')->assertOk();
+
+        $this->via('admin')->postJson('/api/v1/auth/mfa/verify', ['recovery_code' => $staff['recovery'][0]])->assertOk();
+
+        $this->assertContains('auth.mfa_verified', $this->auditActions());
     }
 
     // --- Regenerating recovery codes ---------------------------------------

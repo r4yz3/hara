@@ -28,7 +28,7 @@ class ZoneGeometryValidatorTest extends TestCase
         ];
     }
 
-    private function limits(int $maxVertices = 5000, float $maxExtentDegrees = 2.0): GeometryLimits
+    private function limits(int $maxVertices = 500, float $maxExtentDegrees = 2.0): GeometryLimits
     {
         return new GeometryLimits($maxVertices, $maxExtentDegrees);
     }

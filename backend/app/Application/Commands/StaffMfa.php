@@ -3,10 +3,14 @@
 namespace App\Application\Commands;
 
 use App\Domain\Identity\Totp;
+use App\Mail\RecoveryCodeUsed;
 use App\Models\User;
 use App\Models\UserMfaFactor;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * TOTP second factor for staff (backlog B-09, ADR-011): enrolment, the
@@ -189,6 +193,23 @@ class StaffMfa
     public function recordVerified(string $userId, string $method, ?string $ip, ?string $correlationId = null): void
     {
         $this->audit->record($userId, 'auth.mfa_verified', 'user', $userId, after: ['method' => $method], ip: $ip, correlationId: $correlationId);
+    }
+
+    /**
+     * Tells the account holder, by email, that a recovery code just signed in
+     * (ADR-011 review). The mail carries the time and the number of codes
+     * left, never a code or an address. A mail failure is logged and must not
+     * block a sign-in that already succeeded; the audit row stays the record.
+     */
+    public function alertRecoveryCodeUsed(User $user): void
+    {
+        $remaining = DB::table('user_mfa_recovery_codes')->where('user_id', $user->id)->whereNull('used_at')->count();
+
+        try {
+            Mail::to($user->email)->send(new RecoveryCodeUsed(now()->utc()->format('Y-m-d H:i').' UTC', $remaining));
+        } catch (Throwable $e) {
+            Log::warning('auth.mfa.recovery_alert_failed', ['user_id' => $user->id, 'exception' => $e::class]);
+        }
     }
 
     public function recordFailed(string $userId, string $stage, ?string $ip, ?string $correlationId = null): void

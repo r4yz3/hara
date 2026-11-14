@@ -70,3 +70,10 @@ Checked against the code (`StaffMfa`, `MfaController`):
 - Rate limiting: five failures per minute per account and address, then 429. Pass.
 - **Gap: no alert to the user when a recovery code is used.** Only the audit row `auth.mfa_verified` (method `recovery_code`) is written; no email or in-app notice is sent. Staging also needs a mail provider for it.
 - Not implemented here, by instruction. Verdict: **not passed until the alert exists**; every other point passes.
+
+### Recovery-code alert built (2026-11-14, follow-up to the review above)
+- **Alert.** After a recovery code signs a person in, `StaffMfa::alertRecoveryCodeUsed` sends the plain-text mail `App\Mail\RecoveryCodeUsed` to the account address. It states the time (UTC), how many unused codes are left, and what to do if it was not them (change the password, ask a platform owner for a reset). When two or fewer codes are left it also tells the person to generate a new set. It holds no code, no token, no link and no IP address. TOTP sign-ins and failed attempts send nothing.
+- **Delivery.** Sent synchronously like the other mail, because no queue workers exist yet (the mail moves to the queue with them). `MAIL_MAILER=log` on staging only writes the mail to the log; a real mail provider is still needed before the alert reaches a person. A mail failure is logged (user id and exception class only) and does not block the sign-in.
+- **Record.** The existing audit row `auth.mfa_verified` (method `recovery_code`) remains the in-app record. There is no in-app notice mechanism yet, so none was added.
+- **Tests.** `StaffMfaRecoveryTest`: mail on recovery-code use with the remaining count and no secret; low-count warning; none on TOTP or a failed attempt; a mail failure does not block sign-in.
+- **Still open for the reviewer:** acceptance of HMAC-SHA-256 (keyed with the application key) for recovery-code storage instead of Argon2 or bcrypt. Hashing is unchanged. The alert gap above is closed in code; the verdict stays with the reviewer, and real delivery depends on a mail provider.

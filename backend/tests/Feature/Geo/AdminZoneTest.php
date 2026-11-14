@@ -99,6 +99,39 @@ class AdminZoneTest extends AuthTestCase
         $this->assertSame(0, DB::table('delivery_zones')->count());
     }
 
+    /**
+     * A closed convex ring of exactly $vertices positions (the closing one counts).
+     *
+     * @return array<string, mixed>
+     */
+    private function ringOf(int $vertices): array
+    {
+        $ring = [];
+        for ($i = 0; $i < $vertices - 1; $i++) {
+            $angle = 2 * M_PI * $i / ($vertices - 1);
+            $ring[] = [round(100.0 + 0.01 * cos($angle), 7), round(10.0 + 0.01 * sin($angle), 7)];
+        }
+        $ring[] = $ring[0];
+
+        return ['type' => 'Polygon', 'coordinates' => [$ring]];
+    }
+
+    public function test_the_approved_cap_is_500_vertices_per_outline(): void
+    {
+        $this->assertSame(500, config('geo.zone_max_vertices'));
+        $this->staff('platform_owner');
+        $city = City::factory()->create();
+
+        $this->via('admin')->postJson("/api/v1/admin/cities/{$city->id}/zones", $this->valid(['geometry' => $this->ringOf(500)]))
+            ->assertStatus(201);
+
+        $this->via('admin')->postJson("/api/v1/admin/cities/{$city->id}/zones", $this->valid(['slug' => 'too-detailed', 'geometry' => $this->ringOf(501)]))
+            ->assertStatus(422)
+            ->assertJsonPath('error.code', 'VALIDATION_ERROR')
+            ->assertJsonStructure(['error' => ['fields' => ['geometry']]]);
+        $this->assertSame(1, DB::table('delivery_zones')->count());
+    }
+
     public function test_self_intersecting_geometry_is_rejected_by_postgis(): void
     {
         $this->staff('platform_owner');

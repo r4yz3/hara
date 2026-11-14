@@ -26,3 +26,6 @@ The spec requires vertex and area caps but gives no numbers. They are configurat
 
 ## Caps decision (2026-11-14, backlog C-13)
 Operator approved: at most about 500 vertices per zone outline, and no self-intersection. Self-intersection is already rejected (`ST_IsValid`). The proposal above and `backend/config/geo.php` say 5,000 vertices, so the approved cap is **stricter than the code default**. To apply it, set `GEO_ZONE_MAX_VERTICES=500` and `GEO_CAPS_APPROVED=true` (or change the default, with tests). Not changed in this edit. The 2-degree extent cap was not part of the decision and stays proposed. No real polygon was added.
+
+### Caps applied in code (2026-11-14)
+`backend/config/geo.php` now defaults `zone_max_vertices` to 500 and `caps_approved` to true; `.env.example` and `infra/staging/.env.example` set `GEO_ZONE_MAX_VERTICES=500` and `GEO_CAPS_APPROVED=true`. The count covers all rings of a submitted outline. Tests: 500 vertices pass and 501 give a 422 `VALIDATION_ERROR` on `geometry`. **The 2-degree extent cap was not approved and remains a proposed value**, although the single `caps_approved` flag (shown as "Geometry caps: Approved" in the admin system status) now reads true; a separate flag for the extent cap is a decision for the operator. The demo zone is a 0.02-degree synthetic square with 5 vertices.
