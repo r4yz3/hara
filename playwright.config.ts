@@ -39,5 +39,19 @@ export default defineConfig({
       timeout: 120_000,
       env: { API_URL: live ? "http://localhost:8000" : publicConfigUrl },
     },
+    // Production builds (own output folder, so they do not disturb the dev servers) for global-error.spec.ts:
+    // the root-layout error screen is not shown by `next dev`. NEXT_PUBLIC_TEST_FAULTS turns on the layout fault hook.
+    // Ports 4100 to 4102 are customer, merchant, admin.
+    ...(["customer", "merchant", "admin"] as const).map((app, index) => ({
+      command: `pnpm --filter ${app}-web exec next build && pnpm --filter ${app}-web exec next start --port ${4100 + index}`,
+      port: 4100 + index,
+      timeout: 300_000,
+      env: {
+        NODE_ENV: "production",
+        NEXT_DIST_DIR: ".next-fault",
+        NEXT_PUBLIC_TEST_FAULTS: "1",
+        API_URL: publicConfigUrl,
+      },
+    })),
   ],
 });
