@@ -681,7 +681,7 @@ Found on the host: empty `apps/*/public` folders are not tracked by git, so the 
 ## 14. Decisions and open items for the operator
 
 1. **First admin account.** Done on staging 2026-11-14 (operator-reported): `staff:bootstrap-owner` (ADR-018, section 9) ran on release `1cf50aa`, the invitation was accepted, and the platform owner signed in to the admin app. The ADR is still proposed and needs the operator's review. The command refuses while an active platform owner exists; invite others from the admin app.
-2. **Mail.** `MAIL_MAILER=log` writes messages, including any reset or invitation link, into the API container log. Choosing a provider (open since `budget-plan.md`) also needs outbound network access for `api`: add the `edge` network to the `api` service in `compose.yaml` (the `backend` network has no route out). Keep the provider's key out of git.
+2. **Mail.** Decided 2026-11-15: Resend over SMTP, sending domain `mail.haradelivery.com`, `api` on the new `egress` network. Set-up steps are in section 15; not yet run on the host. Until then `MAIL_MAILER=log` writes messages, including reset and invitation links, into the API container log. Keep the key out of git.
 3. **Demo/synthetic data on staging** (section 9).
 4. **Authenticated Origin Pulls** and Cloudflare WAF/rate-limit rules: optional hardening not done.
 5. **Backups:** done on staging on 2026-11-14 (section 11): a nightly encrypted copy to R2 and a restore drill that passed on the server. Still open: alerting on a failed run (item 10), repeating the drill at least monthly (11.6), and recording a real restore onto staging (11.7).
@@ -691,3 +691,68 @@ Found on the host: empty `apps/*/public` folders are not tracked by git, so the 
 9. **Image scan** for the three web images in `security.yml`.
 10. **Monitoring and alerting** (5xx rate, disk, database, backups): none; the compose healthchecks only restart nothing by themselves (`restart: unless-stopped` restarts a crashed container, not an unhealthy one).
 11. **Rider app** is out of scope here. **Map tiles:** the hosting plan (public R2 bucket, `tiles.haradelivery.com`, extract, style, `MAP_STYLE_URL`) is in `map-tiles.md`; written, not run. `MAP_STYLE_URL` stays empty until the operator has done it (ADR-015).
+
+## 15. Email through Resend (invitations, password resets, recovery-code alerts)
+
+Operator's choice on 2026-11-15. The API sends mail over Resend's SMTP service with Laravel's built-in `smtp` mailer, so there is no extra PHP package. Written, **not yet run on the host**. Budget: Resend's free tier. Its limits are estimates from memory, **verify them on resend.com/pricing before relying on them**: roughly 3,000 emails a month and 100 a day, one sending domain, short log retention. That is plenty for staging invitations and resets.
+
+How it fits together:
+
+| Piece | Choice |
+|---|---|
+| Host and port | `smtp.resend.com`, port `465` (implicit TLS). This Laravel version has no `MAIL_ENCRYPTION`: `MAIL_SCHEME=smtps` selects implicit TLS (port 465 also selects it when the scheme is empty). Port 587 with `MAIL_SCHEME=smtp` is STARTTLS that is negotiated only when offered, so prefer 465 |
+| Login | user name is the word `resend`, password is the API key |
+| Network | `api` joins a second network, `egress` (compose.yaml): not internal, no published port, not `edge`. Outbound connections are NAT-ed by Docker and nothing can connect in through it. `backend` stays internal, so PostgreSQL and Redis are still unreachable from outside and `TRUSTED_PROXIES=172.31.77.10` is unaffected. The only other way to give `api` internet access would be to put it on `edge`, which the web apps share, or to make `backend` non-internal, which would expose the database network to routing |
+| Firewall | The `ufw` default allows outbound traffic, and the Cloudflare script only filters inbound 80/443. If the host blocks outbound 465, use 587 with `MAIL_SCHEME=smtp` |
+| Sending domain | `mail.haradelivery.com`, a subdomain, so its reputation (and any future mailbox on the root domain) stays separate |
+
+### 15.1 Resend account and domain (operator, in the browser)
+
+1. Sign up at resend.com (free plan). Turn on two-step sign-in for the account.
+2. Domains > Add Domain: `mail.haradelivery.com`. Region: choose the one nearest the users if offered.
+3. Resend shows DNS records. Add exactly what it shows in the Cloudflare dashboard (DNS > Records), **DNS only (grey cloud)**, never proxied. Typically: a `TXT` for SPF and a `MX` for bounces on the `send.mail` name, a `TXT` for DKIM at `resend._domainkey.mail`. Copy the values from Resend, not from this document: the names and values are generated for you.
+4. Optional but recommended, once the above verifies: a DMARC record, type `TXT`, name `_dmarc.mail`, value `v=DMARC1; p=none; rua=mailto:<A_MAILBOX_YOU_READ>`, then tighten the policy later. `p=none` only reports. Do not use a mailbox that does not exist.
+5. In Resend, click Verify. DNS can take minutes to hours. Wait for the domain to show Verified.
+
+### 15.2 API key
+
+1. Resend > API Keys > Create API Key. Permission **Sending access**, domain restricted to `mail.haradelivery.com`. Name it `hara-staging`.
+2. Copy it into your password manager at once; Resend shows it once. Do not paste it into chat, a ticket or git.
+
+### 15.3 Put the key on the server (no echo)
+
+On the server, as `deploy`. The key is read without echo, so it is not in the shell history or the process list. This replaces the `MAIL_*` lines of `.env` (if your `.env` predates this section, first copy the new Mail block from `.env.example` into it):
+
+```bash
+cd /srv/hara/infra/staging && read -rsp 'Resend API key: ' RESEND_KEY && echo
+```
+
+```bash
+cd /srv/hara/infra/staging && sed -i -e "s|^MAIL_PASSWORD=.*|MAIL_PASSWORD=${RESEND_KEY}|" -e "s|^MAIL_MAILER=.*|MAIL_MAILER=smtp|" .env; unset RESEND_KEY
+```
+
+```bash
+cd /srv/hara/infra/staging && grep -E '^MAIL_(MAILER|HOST|PORT|SCHEME|USERNAME|FROM_ADDRESS|REQUIRE_REAL_TRANSPORT)=' .env
+```
+
+Do not print the `MAIL_PASSWORD` line. Recreate `api` so it picks up the new network and the new settings (a compose file change, so use `up`, not `restart`):
+
+```bash
+cd /srv/hara/infra/staging && docker compose up -d --wait api
+```
+
+### 15.4 Send a test email
+
+`mail:test` sends one fixed plain-text message, is rate limited to 5 an hour, has no route, and never prints the key:
+
+```bash
+cd /srv/hara/infra/staging && docker compose exec -T api php artisan mail:test <YOUR_ADDRESS>
+```
+
+Expect "Mailer: smtp (smtp.resend.com:465)" and "Handed to the mailer". Then check the inbox **and the spam folder**, and Resend > Emails for the delivery state (Delivered, Bounced, or an error). A failure prints the transport's message: "Connection could not be established" means the network or an outbound block (see the table); an authentication error means the key or the `resend` user name is wrong; a rejected sender means the domain is not verified or `MAIL_FROM_ADDRESS` is not on `mail.haradelivery.com`. On the free plan you can send only to addresses you own until the domain is verified.
+
+### 15.5 Then require it
+
+Once the test arrived and the invitation, reset and recovery-code mails are exercised, set `MAIL_REQUIRE_REAL_TRANSPORT=true` in `.env` and recreate `api`. `ProductionGuard` then refuses to start if the mailer is ever `log` or `array`, or the SMTP password is empty, so a later edit cannot silently stop mail. To go back to the log mailer, set `MAIL_REQUIRE_REAL_TRANSPORT=false` and `MAIL_MAILER=log` first.
+
+Rollback: set `MAIL_MAILER=log`, `MAIL_REQUIRE_REAL_TRANSPORT=false`, `docker compose up -d --wait api`. Revoke the API key in Resend if it may have leaked. The `egress` network can stay; it is harmless without a mailer that uses it, or remove it from the `api` service to restore the old isolation.

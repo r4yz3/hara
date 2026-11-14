@@ -63,6 +63,7 @@ final class ProductionGuard
         $key = $config->get('app.key');
         $demo = $config->get('demo.password');
         $databasePassword = $config->get('database.connections.pgsql.password');
+        $mailPassword = $config->get('mail.mailers.smtp.password');
 
         return [
             'app.debug' => $config->get('app.debug'),
@@ -79,6 +80,9 @@ final class ProductionGuard
             'database.password_is_real' => is_string($databasePassword)
                 && ! in_array(strtolower($databasePassword), self::PLACEHOLDER_SECRETS, true),
             'trustedproxy.proxies' => $config->get('trustedproxy.proxies'),
+            'mail.require_real_transport' => $config->get('mail.require_real_transport') === true,
+            'mail.default' => $config->get('mail.default'),
+            'mail.smtp_password_is_set' => is_string($mailPassword) && $mailPassword !== '',
         ];
     }
 
@@ -151,6 +155,17 @@ final class ProductionGuard
         $proxies = $facts['trustedproxy.proxies'] ?? null;
         if (! is_array($proxies) || array_filter($proxies, fn (mixed $proxy): bool => ! self::isProxyAddress($proxy)) !== []) {
             $problems[] = 'TRUSTED_PROXIES must list specific proxy IP addresses or ranges, never "*" or a range covering every address.';
+        }
+
+        // Opt-in (MAIL_REQUIRE_REAL_TRANSPORT): an absent fact means "not required".
+        if (($facts['mail.require_real_transport'] ?? false) === true) {
+            $mailer = $facts['mail.default'] ?? null;
+
+            if (! is_string($mailer) || in_array($mailer, ['log', 'array'], true)) {
+                $problems[] = 'MAIL_MAILER must be a real transport (not log or array) while MAIL_REQUIRE_REAL_TRANSPORT is true.';
+            } elseif ($mailer === 'smtp' && ($facts['mail.smtp_password_is_set'] ?? null) !== true) {
+                $problems[] = 'MAIL_PASSWORD must be set for the smtp mailer while MAIL_REQUIRE_REAL_TRANSPORT is true.';
+            }
         }
 
         return $problems;

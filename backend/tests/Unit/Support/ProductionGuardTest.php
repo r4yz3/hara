@@ -33,6 +33,9 @@ class ProductionGuardTest extends TestCase
             'demo.password_is_set' => false,
             'database.password_is_real' => true,
             'trustedproxy.proxies' => [],
+            'mail.require_real_transport' => false,
+            'mail.default' => 'log',
+            'mail.smtp_password_is_set' => false,
         ];
     }
 
@@ -92,7 +95,23 @@ class ProductionGuardTest extends TestCase
             'weak hashing' => [['hashing.driver' => 'bcrypt'], 'HASH_DRIVER'],
             'demo accounts enabled' => [['demo.password_is_set' => true], 'DEMO_PASSWORD'],
             'placeholder database password' => [['database.password_is_real' => false], 'DB_PASSWORD'],
+            'real mail required, log mailer' => [['mail.require_real_transport' => true, 'mail.default' => 'log'], 'MAIL_MAILER'],
+            'real mail required, array mailer' => [['mail.require_real_transport' => true, 'mail.default' => 'array'], 'MAIL_MAILER'],
+            'real mail required, mailer unset' => [['mail.require_real_transport' => true, 'mail.default' => null], 'MAIL_MAILER'],
+            'real mail required, smtp without password' => [['mail.require_real_transport' => true, 'mail.default' => 'smtp', 'mail.smtp_password_is_set' => false], 'MAIL_PASSWORD'],
         ];
+    }
+
+    public function test_the_log_mailer_is_allowed_unless_real_mail_is_required(): void
+    {
+        $this->assertSame([], ProductionGuard::violations(array_merge(self::safe(), ['mail.default' => 'log', 'mail.require_real_transport' => false])));
+    }
+
+    public function test_a_configured_smtp_mailer_satisfies_the_real_mail_rule(): void
+    {
+        $facts = array_merge(self::safe(), ['mail.require_real_transport' => true, 'mail.default' => 'smtp', 'mail.smtp_password_is_set' => true]);
+
+        $this->assertSame([], ProductionGuard::violations($facts));
     }
 
     public function test_an_empty_set_of_facts_fails_every_rule(): void

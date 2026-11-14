@@ -115,4 +115,19 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Require a real transport
+    |--------------------------------------------------------------------------
+    |
+    | When true, App\Support\ProductionGuard refuses to serve outside local and
+    | testing while the default mailer is "log" or "array" (messages, including
+    | reset links, would be written to the log or dropped), or while the smtp
+    | mailer has no password. Opt-in so an environment that deliberately uses
+    | the log mailer keeps working.
+    |
+    */
+
+    'require_real_transport' => (bool) env('MAIL_REQUIRE_REAL_TRANSPORT', false),
+
 ];

@@ -33,7 +33,9 @@ services:
     env_file: [.env]
     volumes:
       - ./fpm-pool.staging.conf:/usr/local/etc/php-fpm.d/zz-app.conf:ro
-    networks: [backend]
+    # `egress` is the api's only route to the internet (outbound SMTP to the mail
+    # provider). See the networks section.
+    networks: [backend, egress]
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -195,6 +197,12 @@ services:
       start_period: 5s
 
 networks:
+  # `egress` gives the api container outbound access and nothing else: only the
+  # api joins it, it publishes no port and it is not `edge`, so the fixed edge
+  # address and TRUSTED_PROXIES are unaffected. Docker NATs outbound traffic;
+  # nothing can open a connection into the container through it. Used for SMTP
+  # to Resend (staging-setup.md, section 15).
+  egress:
   # `backend` is internal: no route out and no published port, so PostgreSQL
   # and Redis are reachable from the api container only. `edge` carries the
   # proxy traffic and fixes the subnet so the edge can have a fixed address
