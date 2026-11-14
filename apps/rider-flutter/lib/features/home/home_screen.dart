@@ -188,7 +188,14 @@ class _Header extends StatelessWidget {
                     TextButton(
                       key: const Key('sign-out-button'),
                       onPressed: onSignOut,
-                      style: TextButton.styleFrom(foregroundColor: p.onHeader),
+                      style: TextButton.styleFrom(foregroundColor: p.onHeader)
+                          .copyWith(
+                            side: WidgetStateProperty.resolveWith(
+                              (states) => states.contains(WidgetState.focused)
+                                  ? BorderSide(color: p.onHeader, width: 2)
+                                  : null,
+                            ),
+                          ),
                       child: const Text('Sign out'),
                     ),
                 ],

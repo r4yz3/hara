@@ -17,7 +17,12 @@ class RiderApp extends StatefulWidget {
   @override
   State<RiderApp> createState() => _RiderAppState();
 
+  /// Every colour the Material widgets would otherwise derive from the seed is
+  /// set here to a pair listed in docs/ux/contrast-report.md.
   static ThemeData _theme(RiderPalette p, Brightness brightness) {
+    final danger = brightness == Brightness.dark
+        ? DarkTokens.danger
+        : LightTokens.danger;
     final scheme =
         ColorScheme.fromSeed(
           seedColor: p.brand,
@@ -25,19 +30,77 @@ class RiderApp extends StatefulWidget {
         ).copyWith(
           surface: p.canvas,
           onSurface: p.text,
+          onSurfaceVariant: p.textMuted,
           primary: p.brand,
-          error: brightness == Brightness.dark
-              ? DarkTokens.danger
-              : LightTokens.danger,
+          onPrimary: p.onBrand,
+          secondaryContainer: p.tint,
+          onSecondaryContainer: p.text,
+          outline: p.outline,
+          error: danger,
         );
+
+    BorderSide side(Color color, double width) =>
+        BorderSide(color: color, width: width);
+    OutlineInputBorder border(Color color, double width) =>
+        OutlineInputBorder(borderSide: side(color, width));
+    // Visible keyboard focus: a 2 px ring in the text colour (3:1 or more
+    // against the page in both themes).
+    final focusRing = WidgetStateProperty.resolveWith<BorderSide?>(
+      (states) => states.contains(WidgetState.focused) ? side(p.text, 2) : null,
+    );
 
     return ThemeData(
       colorScheme: scheme,
       scaffoldBackgroundColor: p.canvas,
       materialTapTargetSize: MaterialTapTargetSize.padded,
+      inputDecorationTheme: InputDecorationTheme(
+        border: border(p.outline, 1),
+        enabledBorder: border(p.outline, 1),
+        disabledBorder: border(p.outline, 1),
+        focusedBorder: border(p.brand, 2),
+        errorBorder: border(danger, 1.5),
+        focusedErrorBorder: border(danger, 2),
+        labelStyle: WidgetStateTextStyle.resolveWith((states) {
+          if (states.contains(WidgetState.error)) {
+            return TextStyle(color: danger);
+          }
+          if (states.contains(WidgetState.focused)) {
+            return TextStyle(color: p.brand);
+          }
+          return TextStyle(color: p.textMuted);
+        }),
+        errorStyle: TextStyle(color: danger),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: ButtonStyle(side: focusRing),
+      ),
+      iconButtonTheme: IconButtonThemeData(style: ButtonStyle(side: focusRing)),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: p.card,
+        indicatorColor: p.tint,
         height: 72,
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            color: states.contains(WidgetState.disabled)
+                ? p.textMuted.withValues(alpha: 0.6)
+                : states.contains(WidgetState.selected)
+                ? p.text
+                : p.textMuted,
+          ),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => TextStyle(
+            fontSize: 12,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w700
+                : FontWeight.w500,
+            color: states.contains(WidgetState.disabled)
+                ? p.textMuted.withValues(alpha: 0.6)
+                : states.contains(WidgetState.selected)
+                ? p.text
+                : p.textMuted,
+          ),
+        ),
       ),
     );
   }

@@ -22,6 +22,7 @@ class RiderPalette {
     required this.outline,
     required this.brand,
     required this.onBrand,
+    required this.tint,
   });
 
   final Color header;
@@ -37,6 +38,9 @@ class RiderPalette {
   final Color brand;
   final Color onBrand;
 
+  /// `brand-tint`: fill behind the selected navigation item, with [text].
+  final Color tint;
+
   static const light = RiderPalette._(
     header: LightTokens.nav,
     onHeader: LightTokens.onNav,
@@ -50,6 +54,7 @@ class RiderPalette {
     outline: LightTokens.borderStrong,
     brand: LightTokens.brand600,
     onBrand: LightTokens.onBrand,
+    tint: LightTokens.brandTint,
   );
 
   static const dark = RiderPalette._(
@@ -65,6 +70,7 @@ class RiderPalette {
     outline: DarkTokens.borderStrong,
     brand: DarkTokens.brand600,
     onBrand: DarkTokens.onBrand,
+    tint: DarkTokens.brandTint,
   );
 
   static RiderPalette of(BuildContext context) =>

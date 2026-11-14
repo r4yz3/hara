@@ -101,6 +101,18 @@ export const pairs = [
   { foreground: "action-bright", background: "nav", min: TEXT, use: "bright text and controls on the dark header" },
   { foreground: "text-primary", background: "brand-tint", min: TEXT, use: "text on tinted brand fill" },
   { foreground: "text-secondary", background: "brand-tint", min: TEXT, use: "secondary text on tinted brand fill" },
+  // Rider app (apps/rider-flutter). Light canvas is surface-2 and cards are
+  // surface; dark is the reverse, so both backgrounds are covered.
+  ...["surface", "surface-2"].flatMap((background) => [
+    { foreground: "danger", background, min: NON_TEXT, use: "error outline and icon" },
+    { foreground: "text-primary", background, min: NON_TEXT, use: "focus ring on filled controls" },
+    { foreground: "text-secondary", background, min: NON_TEXT, use: "secondary icons" },
+  ]),
+  { foreground: "text-primary", background: "brand-tint", min: NON_TEXT, use: "selected navigation icon" },
+  { foreground: "on-brand", background: "brand-600", min: NON_TEXT, use: "progress spinner on primary button" },
+  { foreground: "on-nav", background: "nav", min: NON_TEXT, use: "focus ring in the dark header" },
+  { foreground: "on-nav-muted", background: "nav", min: NON_TEXT, use: "outline of an unavailable control in the dark header" },
+  { foreground: "action-bright", background: "nav", min: NON_TEXT, use: "bright pill and icons on the dark header" },
   ...["warm-50", "warm-100"].flatMap((background) => [
     { foreground: "text-primary", background, min: TEXT, use: "text on warm surfaces" },
     { foreground: "text-secondary", background, min: TEXT, use: "secondary text on warm surfaces" },

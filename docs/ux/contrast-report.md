@@ -37,6 +37,17 @@ Ratios are WCAG 2.x contrast ratios for opaque colours. Thresholds: 4.5 for norm
 | light | `action-bright` | `nav` | bright text and controls on the dark header | 13.67 | 4.5 | pass |
 | light | `text-primary` | `brand-tint` | text on tinted brand fill | 15.84 | 4.5 | pass |
 | light | `text-secondary` | `brand-tint` | secondary text on tinted brand fill | 6.72 | 4.5 | pass |
+| light | `danger` | `surface` | error outline and icon | 6.47 | 3 | pass |
+| light | `text-primary` | `surface` | focus ring on filled controls | 17.85 | 3 | pass |
+| light | `text-secondary` | `surface` | secondary icons | 7.58 | 3 | pass |
+| light | `danger` | `surface-2` | error outline and icon | 6.18 | 3 | pass |
+| light | `text-primary` | `surface-2` | focus ring on filled controls | 17.06 | 3 | pass |
+| light | `text-secondary` | `surface-2` | secondary icons | 7.24 | 3 | pass |
+| light | `text-primary` | `brand-tint` | selected navigation icon | 15.84 | 3 | pass |
+| light | `on-brand` | `brand-600` | progress spinner on primary button | 5.47 | 3 | pass |
+| light | `on-nav` | `nav` | focus ring in the dark header | 14.48 | 3 | pass |
+| light | `on-nav-muted` | `nav` | outline of an unavailable control in the dark header | 8.21 | 3 | pass |
+| light | `action-bright` | `nav` | bright pill and icons on the dark header | 13.67 | 3 | pass |
 | light | `text-primary` | `warm-50` | text on warm surfaces | 16.81 | 4.5 | pass |
 | light | `text-secondary` | `warm-50` | secondary text on warm surfaces | 7.14 | 4.5 | pass |
 | light | `accent-text` | `warm-50` | accent text on warm surfaces | 4.88 | 4.5 | pass |
@@ -76,6 +87,17 @@ Ratios are WCAG 2.x contrast ratios for opaque colours. Thresholds: 4.5 for norm
 | dark | `action-bright` | `nav` | bright text and controls on the dark header | 14.33 | 4.5 | pass |
 | dark | `text-primary` | `brand-tint` | text on tinted brand fill | 9.07 | 4.5 | pass |
 | dark | `text-secondary` | `brand-tint` | secondary text on tinted brand fill | 6.38 | 4.5 | pass |
+| dark | `danger` | `surface` | error outline and icon | 6.41 | 3 | pass |
+| dark | `text-primary` | `surface` | focus ring on filled controls | 16.98 | 3 | pass |
+| dark | `text-secondary` | `surface` | secondary icons | 11.95 | 3 | pass |
+| dark | `danger` | `surface-2` | error outline and icon | 5.31 | 3 | pass |
+| dark | `text-primary` | `surface-2` | focus ring on filled controls | 14.05 | 3 | pass |
+| dark | `text-secondary` | `surface-2` | secondary icons | 9.89 | 3 | pass |
+| dark | `text-primary` | `brand-tint` | selected navigation icon | 9.07 | 3 | pass |
+| dark | `on-brand` | `brand-600` | progress spinner on primary button | 9.59 | 3 | pass |
+| dark | `on-nav` | `nav` | focus ring in the dark header | 15.19 | 3 | pass |
+| dark | `on-nav-muted` | `nav` | outline of an unavailable control in the dark header | 8.61 | 3 | pass |
+| dark | `action-bright` | `nav` | bright pill and icons on the dark header | 14.33 | 3 | pass |
 | dark | `text-primary` | `warm-50` | text on warm surfaces | 17.37 | 4.5 | pass |
 | dark | `text-secondary` | `warm-50` | secondary text on warm surfaces | 12.23 | 4.5 | pass |
 | dark | `accent-text` | `warm-50` | accent text on warm surfaces | 8.02 | 4.5 | pass |

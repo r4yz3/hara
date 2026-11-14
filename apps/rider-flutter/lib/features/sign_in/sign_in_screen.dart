@@ -171,6 +171,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     TextField(
                       key: const Key('email-field'),
                       controller: _email,
+                      style: TextStyle(color: p.text),
                       enabled: !_submitting,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
@@ -180,13 +181,13 @@ class _SignInScreenState extends State<SignInScreen> {
                       decoration: InputDecoration(
                         labelText: 'Email',
                         errorText: _field('email'),
-                        border: const OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 16),
                     TextField(
                       key: const Key('password-field'),
                       controller: _password,
+                      style: TextStyle(color: p.text),
                       enabled: !_submitting,
                       obscureText: !_showPassword,
                       textInputAction: TextInputAction.done,
@@ -197,7 +198,6 @@ class _SignInScreenState extends State<SignInScreen> {
                       decoration: InputDecoration(
                         labelText: 'Password',
                         errorText: _field('password'),
-                        border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
                           key: const Key('toggle-password'),
                           tooltip: _showPassword
@@ -207,6 +207,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             _showPassword
                                 ? Icons.visibility_off_outlined
                                 : Icons.visibility_outlined,
+                            color: p.textMuted,
                           ),
                           onPressed: () =>
                               setState(() => _showPassword = !_showPassword),
@@ -220,19 +221,22 @@ class _SignInScreenState extends State<SignInScreen> {
                       style: FilledButton.styleFrom(
                         backgroundColor: p.brand,
                         foregroundColor: p.onBrand,
-                        disabledBackgroundColor: p.outline,
-                        disabledForegroundColor: p.text,
+                        // While signing in the button keeps the listed brand
+                        // pair so "Signing in" stays readable.
+                        disabledBackgroundColor: p.brand,
+                        disabledForegroundColor: p.onBrand,
                         minimumSize: const Size.fromHeight(52),
                       ),
                       child: _submitting
                           ? Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const SizedBox(
+                                SizedBox(
                                   width: 18,
                                   height: 18,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
+                                    color: p.onBrand,
                                   ),
                                 ),
                                 const SizedBox(width: 12),
