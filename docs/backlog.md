@@ -41,7 +41,7 @@ Status key: `todo`, `blocked`, `done`.
 | D-04 | Spatial round-trip test | GeoJSON in equals normalized GeoJSON out | D-01 | done: Polygon in, MultiPolygon out, lon/lat order and SRID asserted |
 | D-05 | Factories and gated development seeder | Seeder refuses outside `local`/`testing`; demo city and zone are clearly labelled synthetic | D-01 | done: DevelopmentSeeder creates one labelled synthetic city and zone, is idempotent, and refuses to run in production (tested) |
 | D-06 | `Money` value object | CurrencyAmountTest; no float path | A-04 | done (CurrencyAmountTest, 41 cases incl. overflow and float-hostile values) |
-| D-07 | Confirm city status values (human) | ADR-000 item 8 closed | — | proceeding on the proposal (draft, active, paused, archived) as a provisional value; still needs approval |
+| D-07 | Confirm city status values (human) | ADR-000 item 8 closed | — | done: approved by the human operator on 2026-11-15 as draft, active, paused, archived (the values in use since Sprint 3). ADR-000 item 8 closed |
 
 ## Sprint 4 — authentication and RBAC (Slice B)
 
@@ -109,7 +109,7 @@ Status key: `todo`, `blocked`, `done`.
 
 | ID | Story | Acceptance | Status |
 |---|---|---|---|
-| X-01 | Run every check in `docs/qa/phase1-acceptance.md` | Real output recorded; no invented results | partial: local full check passed on 2026-11-14; also 2026-11-14: Playwright default (354 passed, 66 skipped at HEAD `c7e360f`; 267 in an earlier run) and live (1 passed), axe inside the default suite, clean-clone `setup` plus web and Flutter checks, hosted CI green on `61ccc84` (web, backend, security). text searches for hardcoded cities, coordinates, map centres, amounts, restaurant names and ETAs run (no problem found; `x01-2026-11-14-text-searches.txt`). Clean-clone `up`/`migrate`/`seed-demo`/backend tests done 2026-11-15 (`docs/qa/evidence/x01-2026-11-15-clean-clone-backend.txt`: 780 passed after the APP_KEY fix in `515e28c`; the fresh clone was given the key by hand, so the fixed setup is not yet re-run). Remaining: the whole `check` task and Makefile in a clean clone (`make` not installed), manual screen-reader and keyboard review, staging E-07 (deployed; see E-07). Evidence `docs/qa/evidence/x01-2026-11-14-*.txt` |
+| X-01 | Run every check in `docs/qa/phase1-acceptance.md` | Real output recorded; no invented results | partial: local full check passed on 2026-11-14; also 2026-11-14: Playwright default (354 passed, 66 skipped at HEAD `c7e360f`; 267 in an earlier run) and live (1 passed), axe inside the default suite, clean-clone `setup` plus web and Flutter checks, hosted CI green on `61ccc84` (web, backend, security). text searches for hardcoded cities, coordinates, map centres, amounts, restaurant names and ETAs run (no problem found; `x01-2026-11-14-text-searches.txt`). Clean-clone `up`/`migrate`/`seed-demo`/backend tests done 2026-11-15 (`docs/qa/evidence/x01-2026-11-15-clean-clone-backend.txt`: 780 passed after the APP_KEY fix in `515e28c`; the fresh clone was given the key by hand, so the fixed setup is not yet re-run). Remaining: the whole `check` task and Makefile in a clean clone (`make` not installed), manual screen-reader and keyboard review (checklist `docs/qa/accessibility-review-checklist.md`, evidence `docs/qa/evidence/a11y-manual-<date>.md`; not yet run), staging E-07 (deployed; see E-07). Evidence `docs/qa/evidence/x01-2026-11-14-*.txt` |
 | X-02 | Final `docs/PHASE1_STATUS.md` | Done, partial, blocked and future separated accurately | done 2026-11-14: "Phase 1 position" lists, definition-of-done verdicts and gate verdict (not passed) at the top of `docs/PHASE1_STATUS.md`; older dated sections kept as history. Document inconsistencies listed there |
 | X-03 | Phase 2 backlog | Merchant and catalogue stories with open decisions | drafted: `docs/phase2-backlog.md` (6 epics, 39 stories, 22 open decisions), awaiting product owner review |
 
@@ -117,7 +117,7 @@ Status key: `todo`, `blocked`, `done`.
 
 | # | Decision | Needed before | Reference |
 |---|---|---|---|
-| 2 | City status values | Sprint 3 | D-07 |
+| ~~2~~ | ~~City status values~~ | Sprint 3 | D-07 (approved 2026-11-15: draft, active, paused, archived; ADR-000 item 8 closed) |
 | 3 | Session separation and MFA factor | Sprint 4 | B-00, ADR-011 |
 | 4 | Permission matrix approval | Sprint 4 | B-01 |
 | 5 | Geometry caps | Sprint 5 | C-13 (closed: 500 vertices approved 2026-11-14, 2-degree extent approved 2026-11-15; ADR-002) |

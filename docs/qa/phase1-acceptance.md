@@ -74,6 +74,12 @@ The opt-in desktop run covers live admin sign-in, city creation and activation, 
 | Rider app requests no location permission | Android manifest review and Flutter test | partial: a grep of `apps/rider-flutter/android/app/src/main/AndroidManifest.xml` and `apps/rider-flutter/pubspec.yaml` found no permission entries (re-run at HEAD `c7e360f`; the saved result is the X-01 note in `docs/PHASE1_STATUS.md`, no grep output file). Not a full manifest review, and no Flutter test covers it |
 | Production config refuses seeders, debug and MFA-less privileged login | SchemaTest, ProductionGuardTest and SessionLoginTest | pass locally |
 
+## Manual review (spec section 15)
+
+| Check | Method | Result |
+|---|---|---|
+| Keyboard, screen reader semantics and colour contrast checked by hand (backlog X-01) | Manual NVDA and TalkBack walkthrough of the staging customer, merchant, admin and rider screens, with the steps in `docs/qa/accessibility-review-checklist.md`; record in `docs/qa/evidence/a11y-manual-<date>.md` | not run |
+
 ## Stop conditions
 
 Any failing security, authorization, geometry or migration test blocks the phase. A result is recorded only from real output.
