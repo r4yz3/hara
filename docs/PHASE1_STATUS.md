@@ -18,8 +18,7 @@ Last updated: 2026-11-14. **The Phase 1 gate is not passed.** Staging does not e
 - Tests: `tests/browser/account-delete.spec.ts` (8 x 3 viewports, with axe). 120 of 120 passed when repeated 5 times. The agent's run of the account-related suites passed 198.
 - Not done:
   - not run against the live API (deletion CSRF was checked live separately);
-  - `/account/deleted` is a static page, so it shows its message to anyone who opens it;
-  - no screenshot.
+  - (fixed the same day by a Haiku subagent: success now returns to the home page with a one-time "Your account was deleted." notice, passed in memory only and gone on reload; `/account/deleted` was removed; screenshots `screens/customer/account-delete-*.png`).
 
 ## November 14 delete my account (customer erasure, backend)
 

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
 
+import { announceAccountDeleted } from "@/components/account-deleted-notice";
 import { apiSend, describeFailure } from "@food-delivery/session";
 
 const button = "min-h-12 rounded-xl border border-border-strong bg-surface px-4 text-base font-semibold disabled:opacity-70";
@@ -51,7 +52,8 @@ export function DeleteAccountSection() {
       setPassword("");
 
       if (result.ok) {
-        router.replace("/account/deleted");
+        announceAccountDeleted();
+        router.replace("/");
         return;
       }
 

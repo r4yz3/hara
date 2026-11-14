@@ -141,7 +141,7 @@ test.describe("customer account: delete my account", () => {
     await expect(dialog(page).getByRole("alert")).toContainText("could not complete");
     await dialog(page).getByLabel("Current password").fill(secret);
     await dialog(page).getByRole("button", { name: "Try again" }).click();
-    await expect(page).toHaveURL(/\/account\/deleted$/);
+    await expect(page).toHaveURL(`${customer}/`);
     expect(deletes).toHaveLength(2);
   });
 
@@ -159,11 +159,11 @@ test.describe("customer account: delete my account", () => {
     await page.keyboard.press("Escape");
     await expect(dialog(page)).toBeVisible();
     hold.open();
-    await expect(page).toHaveURL(/\/account\/deleted$/);
+    await expect(page).toHaveURL(`${customer}/`);
     expect(deletes).toHaveLength(1);
   });
 
-  test("success leads to the deleted message; the body is only the password and the secret never leaks", async ({ page }) => {
+  test("success leads to the home page with the deleted notice, shown once; the body is only the password and the secret never leaks", async ({ page }) => {
     const consoleLines: string[] = [];
     const urls: string[] = [];
     page.on("console", (message) => consoleLines.push(message.text()));
@@ -172,10 +172,16 @@ test.describe("customer account: delete my account", () => {
     await openDialog(page);
     await confirmWith(page);
 
-    await expect(page).toHaveURL(`${customer}/account/deleted`);
-    await expect(page.getByRole("heading", { name: "Your account was deleted." })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Go to the home page" })).toHaveAttribute("href", "/");
+    // The notice is passed in memory, so it is shown once: a reload of "/" must not repeat it.
+    await expect(page).toHaveURL(`${customer}/`);
+    await expect(page.getByRole("status").filter({ hasText: "Your account was deleted." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Categories" })).toBeVisible();
     await assertAccessible(page);
+
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Categories" })).toBeVisible();
+    await expect(page.getByText("Your account was deleted.")).toHaveCount(0);
+    await expect(page).toHaveURL(`${customer}/`);
 
     expect(deletes).toHaveLength(1);
     expect(deletes[0].body).toEqual({ password: secret });

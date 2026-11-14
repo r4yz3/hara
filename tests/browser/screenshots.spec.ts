@@ -129,6 +129,17 @@ const shots: Shot[] = [
     },
   },
   {
+    app: "customer", name: "account-delete", url: "/account", wait: "Your details", signedIn: true, scrollTo: "Delete my account",
+    setup: async (page) => {
+      const customerUser = {
+        id: "01JTESTCUSTOMER0000000000", name: "Synthetic Customer", email: "customer@example.test",
+        email_verified: true, mfa_enabled: false, surface: "customer", grants: [],
+      };
+      await api(page, "/api/v1/me", (route) => route.fulfill({ json: { data: customerUser, meta: { request_id: "test" } } }));
+      await api(page, "/api/v1/me/addresses", (route) => route.fulfill({ json: { data: [], meta: { request_id: "test" } } }));
+    },
+  },
+  {
     app: "admin", name: "settings", url: "/settings", wait: "Service checks",
     setup: (page) => api(page, "/api/v1/admin/system/status", (route) => route.fulfill({ json: { data: systemStatus } })),
   },
