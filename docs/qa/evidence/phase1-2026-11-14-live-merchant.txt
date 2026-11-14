@@ -1,0 +1,8 @@
+# Live merchant sign-in, 2026-11-14 (local stack, synthetic demo data)
+# Command: BROWSER_LIVE=1 playwright test --project=desktop --workers=1 tests/browser/live-merchant.spec.ts (DEMO_PASSWORD from the environment, not recorded)
+
+Running 1 test using 1 worker
+
+  ok 1 [desktop] › tests\browser\live-merchant.spec.ts:21:1 › the demo merchant signs in on the merchant app only; others are refused; sign-out ends the session (11.3s)
+
+  1 passed (48.3s)

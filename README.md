@@ -42,6 +42,8 @@ For Chromium browser checks, run `pnpm exec playwright install chromium` once, t
 
 The optional live coverage test requires the local Laravel/PostGIS stack and seeded demo accounts. Set `BROWSER_LIVE=1` and supply the same local `DEMO_PASSWORD` in the test process environment. Run `pnpm test:browser --project=desktop --workers=1 tests/browser/live-coverage.spec.ts`. It writes synthetic records to the development database, then archives them through the API and retains the audit entries.
 
+The optional live merchant test checks merchant sign-in against the real API and merchant app. `dev.ps1 seed-demo` (with `DEMO_PASSWORD` set) creates the synthetic `demo-merchant@example.test`, an owner of a synthetic merchant with no branch. Run it with `BROWSER_LIVE=1` and the same `DEMO_PASSWORD` in the process environment: `pnpm exec playwright test --project=desktop --workers=1 tests/browser/live-merchant.spec.ts`. Without `BROWSER_LIVE` it is skipped.
+
 ## What has been verified
 
 | Command | State on 2026-11-13 |

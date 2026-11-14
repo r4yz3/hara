@@ -4,6 +4,7 @@ namespace Tests\Integration;
 
 use App\Models\City;
 use App\Models\User;
+use App\Support\Auth\SurfaceAccess;
 use Database\Seeders\DevelopmentSeeder;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -324,7 +325,7 @@ class SchemaTest extends TestCase
         $this->seed(DevelopmentSeeder::class);
 
         $this->assertEqualsCanonicalizing(
-            ['demo-owner@example.test', 'demo-customer@example.test'],
+            ['demo-owner@example.test', 'demo-customer@example.test', 'demo-merchant@example.test'],
             DB::table('users')->pluck('email')->all(),
         );
         $roles = DB::table('user_role_scopes')
@@ -334,6 +335,34 @@ class SchemaTest extends TestCase
         $this->assertSame(['demo-customer@example.test' => 'customer', 'demo-owner@example.test' => 'platform_owner'], $roles);
         $this->assertStringNotContainsString('a-local-demo-passphrase', (string) DB::table('users')->value('password'));
         $this->assertSame(1, DB::table('audit_logs')->where('action', 'demo.accounts_seeded')->count());
+    }
+
+    public function test_development_seeder_creates_one_demo_merchant_owner_idempotently(): void
+    {
+        config(['demo.password' => null]);
+        $this->seed(DevelopmentSeeder::class);
+        $this->assertSame(0, DB::table('merchants')->count());
+
+        config(['demo.password' => 'a-local-demo-passphrase']);
+        $this->seed(DevelopmentSeeder::class);
+        $this->seed(DevelopmentSeeder::class);
+
+        $this->assertSame(1, DB::table('merchants')->count());
+        $this->assertSame(1, DB::table('merchant_staff')->count());
+        $this->assertSame(0, DB::table('branches')->count());
+        $merchant = DB::table('merchants')->first();
+        $this->assertSame('active', $merchant->status);
+        $this->assertStringContainsString('synthetic', $merchant->display_name);
+
+        $userId = DB::table('users')->where('email', 'demo-merchant@example.test')->value('id');
+        $staff = DB::table('merchant_staff')->first();
+        $this->assertSame($userId, $staff->user_id);
+        $this->assertSame('owner', $staff->role);
+        $this->assertSame('active', $staff->status);
+        $access = app(SurfaceAccess::class);
+        $this->assertTrue($access->allows($userId, 'merchant'));
+        $this->assertFalse($access->allows(DB::table('users')->where('email', 'demo-customer@example.test')->value('id'), 'merchant'));
+        $this->assertSame(1, DB::table('audit_logs')->where('action', 'demo.merchant_seeded')->count());
     }
 
     public function test_development_seeder_refuses_to_run_in_production(): void
@@ -350,5 +379,6 @@ class SchemaTest extends TestCase
         }
 
         $this->assertSame(0, DB::table('cities')->count());
+        $this->assertSame(0, DB::table('merchants')->count());
     }
 }

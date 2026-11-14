@@ -27,6 +27,7 @@ class DevelopmentSeeder extends Seeder
 
         $this->call(RbacSeeder::class);
         $this->seedDemoAccounts();
+        $this->seedDemoMerchant();
 
         DB::transaction(function (): void {
             if (DB::table('cities')->where('slug', self::CITY_SLUG)->exists()) {
@@ -98,6 +99,55 @@ class DevelopmentSeeder extends Seeder
             }
 
             app(AuditLogger::class)->record(null, 'demo.accounts_seeded', 'system', after: ['accounts' => 2, 'environment' => app()->environment()]);
+        });
+    }
+
+    /**
+     * One synthetic merchant with one owner account, enough for the merchant
+     * app's sign-in check (an active merchant_staff row on a merchant that is
+     * not suspended). No branch, menu or order data: that is Phase 2. Runs
+     * independently of seedDemoAccounts() so a database seeded earlier gets
+     * the merchant account on the next run. Created only when DEMO_PASSWORD is set.
+     */
+    private function seedDemoMerchant(): void
+    {
+        $password = config('demo.password');
+        $email = 'demo-merchant@example.test';
+
+        if (! is_string($password) || $password === '' || DB::table('users')->where('email', $email)->exists()) {
+            return;
+        }
+
+        DB::transaction(function () use ($password, $email): void {
+            $merchantId = DB::table('merchants')->where('slug', 'demo-merchant')->value('id');
+
+            if ($merchantId === null) {
+                $merchantId = strtolower((string) Str::ulid());
+
+                DB::table('merchants')->insert([
+                    'id' => $merchantId,
+                    'legal_name' => 'Demo Merchant (synthetic, not a real business)',
+                    'display_name' => 'Demo Merchant (synthetic)',
+                    'slug' => 'demo-merchant',
+                    'status' => 'active',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            $user = User::create(['name' => 'Demo Merchant Owner (synthetic)', 'email' => $email, 'password' => $password]);
+
+            DB::table('merchant_staff')->insert([
+                'id' => strtolower((string) Str::ulid()),
+                'merchant_id' => $merchantId,
+                'user_id' => $user->id,
+                'role' => 'owner',
+                'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            app(AuditLogger::class)->record(null, 'demo.merchant_seeded', 'system', after: ['accounts' => 1, 'environment' => app()->environment()]);
         });
     }
 }

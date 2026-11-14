@@ -2,6 +2,15 @@
 
 Last updated: 2026-11-14. **The Phase 1 gate is not passed.** Staging does not exist (E-07, human), several decisions and document reviews are open, and the rider app has never run on a device. Nothing here is a production-readiness claim: everything built is local, mocked or sandbox-level unless a line says "hosted CI". The dated sections below the definition-of-done checklist are history and are kept unchanged; where they contradict this section, this section is newer.
 
+## November 14 live merchant sign-in (U-07)
+
+- `DevelopmentSeeder` now also creates `demo-merchant@example.test`: an active owner (`merchant_staff`) of one active synthetic merchant, "Demo Merchant (synthetic)". Only when `DEMO_PASSWORD` is set, only in local and testing, idempotent, and it runs separately from the owner and customer seeding, so a database seeded earlier gets it on the next `db:seed`. No branch, menu, coordinates, phone number or order data was added; that is Phase 2.
+- Backend: `docker exec food-delivery-api-1 php artisan test` 650 passed (one new test, two extended in `SchemaTest`: creation, idempotency, `SurfaceAccess` allows the merchant and refuses the customer, no branches, nothing created without a password or in production). Pint and PHPStan clean.
+- Seeded the development database twice: one user, one merchant, one staff row.
+- Live browser test `tests/browser/live-merchant.spec.ts` against the real API and merchant app, desktop only, passed: the merchant signs in and sees the overview with no currency amounts or order or sales counts (branch "None assigned", Pause store disabled, three empty lanes); cookie `fd_merchant_session` is HttpOnly and SameSite Lax, and no admin or customer cookie exists; the same session gets 401 from `/me` with the admin and customer origins, the admin app shows its sign-in link and the customer `/account` redirects to `/login`; demo customer and demo owner get the generic failure on the merchant app and hold no session; sign-out ends the session (401 afterwards). Evidence: `docs/qa/evidence/phase1-2026-11-14-live-merchant.txt`. The default run reports the spec as skipped.
+- Finding, not a bug: a refused sign-in still leaves an anonymous `fd_merchant_session` cookie (the guest session that carries the CSRF token). It holds no authenticated user.
+- Still not built: branches and branch data for a merchant (waits for its API), merchant menus, orders, payouts, merchant invitations, and a merchant API route that returns anything about the merchant. The overview remains a shell.
+
 ## November 14 account name screen and admin setup prompt
 
 - Built by a Sonnet subagent and reviewed. Its full browser run: 510 passed, 75 opt-in skips, 0 failed (57 new). I re-ran lint and type checks before commit.
