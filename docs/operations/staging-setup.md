@@ -413,7 +413,7 @@ cd /srv/hara/infra/staging && docker compose logs --tail 5 edge
 
 ## 11. Backup and restore
 
-What exists: a nightly job (`infra/staging/backup.sh`, run by `hara-backup.timer` as `deploy`) that dumps the database, checks the dump, encrypts it, signs the encrypted file, copies both to Cloudflare R2 and prunes old copies; and `infra/staging/restore-drill.sh`, which verifies the signature of the newest off-server copy, decrypts it and restores it in a throwaway container with no network. **Status: written, and run on the workstation against the development stack with stand-ins for `age` and `rclone` (neither is installed there; the `ssh-keygen` signing and the throwaway postgis container were real). It has not run on the server, with real `age`, or against R2.** Until section 11.6 has passed on the server, "staging database backup restored successfully" in the Phase 1 gate is **not met**.
+What exists: a nightly job (`infra/staging/backup.sh`, run by `hara-backup.timer` as `deploy`) that dumps the database, checks the dump, encrypts it, signs the encrypted file, copies both to Cloudflare R2 and prunes old copies; and `infra/staging/restore-drill.sh`, which verifies the signature of the newest off-server copy, decrypts it and restores it in a throwaway container with no network. **Status (2026-11-14): running on staging, release `001f8ee`.** The workstation checks used stand-ins for `age` and `rclone` (neither was installed there). On the server the operator created the R2 bucket, installed `rclone` and `age`, made the signing key, enabled the timer and uploaded a first backup, then passed the restore drill in 11.6. Evidence: `docs/qa/evidence/e07-2026-11-14-staging-deploy.txt`, section 8. The Phase 1 gate item "staging database backup restored successfully" is met by that drill. The evidence records no real restore (11.7), and nothing alerts on a failed run yet.
 
 Design, in short:
 
@@ -670,10 +670,12 @@ Found and fixed on the way: an API image built from an older commit lacked `conf
 | Headers | web: CSP baseline, X-Frame-Options DENY, nosniff, HSTS max-age=604800, `cf-cache-status` DYNAMIC on pages; API: HSTS max-age=31536000, deny-all CSP |
 | Redeploy to `1cf50aa` (2026-11-14, operator run) | API images rebuilt; web images re-tagged from `bce7e3f` (unchanged); migrate ran (`2026_11_14_000003`, expand-only) |
 | First platform owner (2026-11-14, operator run) | `staff:bootstrap-owner` run once on the server; invitation accepted in the browser; password and TOTP set; signed in to the staging admin app as platform owner (operator-reported, not checked from the workstation) |
+| Redeploy to `001f8ee` (2026-11-14, operator run) | All 8 services healthy. From the workstation: the three web hosts return 200 with no `x-powered-by` header; `/health/live` is ok |
+| Backups and restore drill (2026-11-14, operator run, release `001f8ee`) | `hara-backup.timer` enabled (next run 03:15 Asia/Manila); first manual backup uploaded to R2 with its `.sig`. Drill passed: signature verified, decrypted, restored into a throwaway no-network container as `drill_owner`, 35 tables, 13 migrations, latest `2026_11_14_000003`; container removed; private key shredded from `/dev/shm` |
 
 Found on the host: empty `apps/*/public` folders are not tracked by git, so the web image build failed; fixed in `bce7e3f`. Evidence: `docs/qa/evidence/e07-2026-11-14-staging-deploy.txt`.
 
-**Still not checked:** a reboot (systemd units start again); IPv6 reaching the host; memory under load (limits are ceilings, not measurements); a CI image scan of the web images; a restore drill on the server and a staging restore.
+**Still not checked:** a reboot (systemd units start again); IPv6 reaching the host; memory under load (limits are ceilings, not measurements); a CI image scan of the web images; a real restore onto staging (section 11.7). The restore drill on the server passed on 2026-11-14 (see the backups row above).
 
 ## 14. Decisions and open items for the operator
 
@@ -681,7 +683,7 @@ Found on the host: empty `apps/*/public` folders are not tracked by git, so the 
 2. **Mail.** `MAIL_MAILER=log` writes messages, including any reset or invitation link, into the API container log. Choosing a provider (open since `budget-plan.md`) also needs outbound network access for `api`: add the `edge` network to the `api` service in `compose.yaml` (the `backend` network has no route out). Keep the provider's key out of git.
 3. **Demo/synthetic data on staging** (section 9).
 4. **Authenticated Origin Pulls** and Cloudflare WAF/rate-limit rules: optional hardening not done.
-5. **Backups:** no schedule, no off-server copy, no server-side restore drill (E-03).
+5. **Backups:** done on staging on 2026-11-14 (section 11): a nightly encrypted copy to R2 and a restore drill that passed on the server. Still open: alerting on a failed run (item 10), repeating the drill at least monthly (11.6), and recording a real restore onto staging (11.7).
 6. **Origin certificate renewal:** manual; calendar the expiry date.
 7. **HSTS on the web hosts** is set at the edge to one week (`snippets/web-proxy.inc`); raise it when staging is stable. The API sends its own (one year, no `includeSubDomains`).
 8. **CSP:** the web apps still send only the static baseline CSP (the nonce trade-off is an open decision in the Phase 1 status).

@@ -66,6 +66,6 @@ A restore with a wrong checksum is refused.
 ## Known gaps
 
 - No monitoring or alerting (5xx rate, database down, backup failure, disk).
-- No scheduled or off-site backups (`backups.md`).
+- Off-site backups run only on staging: nightly, encrypted, to R2 (`staging-setup.md` section 11). Other backups are local and unscheduled (`backups.md`).
 - No queue worker or scheduler: Phase 1 has no queued jobs.
 - The web apps' deployment and rollback are in `staging-setup.md` (written, not run on a host). The rider app has no deployment procedure.

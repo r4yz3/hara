@@ -45,3 +45,20 @@
 - The platform owner signed in to https://staging-admin.haradelivery.com.
 - Operator-reported result. The workstation did not repeat the checks in sections 3 and 4 for this redeploy.
 - Section 6 records the state at `bce7e3f`; its first admin account item is now done.
+
+## 8. Redeploy to 001f8ee, nightly backups and restore drill, 2026-11-14 (operator-reported)
+- Redeployed staging to release `001f8ee`: all 8 services healthy.
+- From the workstation: staging, staging-merchant and staging-admin return 200 with no `x-powered-by` header; `https://staging-api.haradelivery.com/health/live` returns ok.
+- Backups (`docs/operations/staging-setup.md` section 11): Cloudflare R2 bucket `hara-staging-backups` (private, token scoped to that bucket); rclone and age installed; age public key on the server, private key kept off the server; signing key and `allowed_signers` in place; `hara-backup.timer` enabled, next run 03:15 Asia/Manila.
+- First manual backup uploaded: `hara-staging-20261114T141401Z-001f8ee.dump.age` and `hara-staging-20261114T141401Z-001f8ee.dump.age.sig`.
+- Restore drill output (real):
+  - signature verified against `/etc/hara/backup-signing/allowed_signers`
+  - decrypting
+  - throwaway container from `postgis/postgis:17-3.5-alpine`, `--network none`
+  - non-superuser role `drill_owner`
+  - restore time 1s
+  - tables in public: 35
+  - migrations recorded: 13; latest `2026_11_14_000003_allow_bootstrap_staff_invitations`
+  - RESTORE DRILL PASSED
+  - throwaway container removed; private key shredded from `/dev/shm` afterwards
+- Not covered by this record: a real restore onto staging (section 11.7), alerting on a failed run (none exists yet), and the next scheduled run.

@@ -1,6 +1,6 @@
 # Backups and restore
 
-Status on 2026-11-13: a manual backup and an automated restore drill exist and have been run against the **local development database only**. There is no scheduled backup, no off-machine copy, no encryption of backup files, no point-in-time recovery and no staging or production environment. The RPO and RTO in the master plan (15 minutes, 4 hours) are targets that nothing here meets yet.
+Status on 2026-11-14: staging has nightly encrypted, signed off-site backups to R2 with a passing restore drill (docs/operations/staging-setup.md section 11). For the development database, as of 2026-11-13: a manual backup and an automated restore drill exist and have been run against the **local development database only**. There is no scheduled backup, no off-machine copy, no encryption of backup files, no point-in-time recovery and no production environment. The RPO and RTO in the master plan (15 minutes, 4 hours) are targets that nothing here meets yet.
 
 ## What exists
 
