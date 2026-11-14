@@ -21,3 +21,10 @@
 
 ## Consequences
 - No provider lock-in or key rotation. We pay storage and egress, and we refresh the archive ourselves when OpenStreetMap data changes.
+
+
+## Hosting decided (2026-11-14)
+- Extract with `pmtiles extract --bbox` from a Protomaps build of OpenStreetMap data, and host the file on Cloudflare R2 with CORS (`GET`, `Range`, from the admin origin) and byte-range support, in the same Cloudflare account as staging (E-07).
+- Attribution "© OpenStreetMap contributors" and Protomaps stays in the style source.
+- Launch area: Magsaysay, Bansalan and Matanao, Davao del Sur. This is recorded in prose only. The bbox is computed at extract time and **no coordinates or bounding box are added to tracked files**; the style JSON stays outside the repository until the operator publishes it.
+- Still to do: create the R2 bucket, run the extract, publish the style JSON, set `MAP_STYLE_URL`, and add the R2 origin to `connect-src` through `tileOriginFrom`. Nothing was run here.

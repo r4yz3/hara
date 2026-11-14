@@ -22,3 +22,7 @@ The spec requires vertex and area caps but gives no numbers. They are configurat
 ## Consequences
 - No geometry is active without passing database `CHECK` constraints and application validation.
 - No city, coordinate or map centre appears in code or in non-test seed data.
+
+
+## Caps decision (2026-11-14, backlog C-13)
+Operator approved: at most about 500 vertices per zone outline, and no self-intersection. Self-intersection is already rejected (`ST_IsValid`). The proposal above and `backend/config/geo.php` say 5,000 vertices, so the approved cap is **stricter than the code default**. To apply it, set `GEO_ZONE_MAX_VERTICES=500` and `GEO_CAPS_APPROVED=true` (or change the default, with tests). Not changed in this edit. The 2-degree extent cap was not part of the decision and stays proposed. No real polygon was added.

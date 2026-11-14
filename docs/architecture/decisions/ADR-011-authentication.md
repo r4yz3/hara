@@ -47,3 +47,26 @@ Replaces the temporary gate that refused every deployed admin sign-in.
 
 ## Consequences
 Deployment domain layout is now a security requirement, recorded in the threat model.
+
+
+## Staging domain layout and recovery-code review (2026-11-14)
+
+### Staging domains (E-07)
+Operator decision: Contabo Cloud VPS Plus 4 in Asia (Japan), bought 2026-11-14 (about €21.20 a month, from the order screen), behind Cloudflare (free plan). The domain `haradelivery.com` was bought 2026-11-14. Hostnames are flat, one label below the domain, so Cloudflare's free `*.haradelivery.com` certificate covers them: `staging.haradelivery.com` (customer web), `staging-merchant.haradelivery.com` (merchant web), `staging-admin.haradelivery.com` (admin web), `staging-api.haradelivery.com` (API). Server bought but not set up yet (no OS or IP recorded).
+
+Checked against this ADR (cookie mode needs subdomains of one registrable domain; `CUSTOMER_APP_URL`, `MERCHANT_APP_URL` and `ADMIN_APP_URL` must be three distinct https origins; the session cookie name is chosen from the request Origin):
+- **Same site: satisfied.** All names sit under `haradelivery.com`, so `SameSite=Lax` works. Leave `SESSION_DOMAIN` empty (host-only cookie on the API host).
+- **Conflict 1: one web hostname is not enough.** The per-app cookie separation and the CORS allow-list need three origins. Resolved by the names above: customer, merchant and admin web apps each get their own host, and the API has its own host. Admin sign-in needs its own origin before staff testing; merchant can follow.
+- **Conflict 2: Cloudflare's free universal certificate** covers `haradelivery.com` and `*.haradelivery.com` only, not names two levels down such as `api.staging.haradelivery.com`. Resolved by flattening the names as above, so staging needs neither Advanced Certificate Manager nor an origin certificate. Do not use two-level names for staging.
+- **Cloudflare proxy:** the API must trust Cloudflare as the TLS proxy (`TRUSTED_PROXIES`, `X-Forwarded-Proto`), take client IPs from `CF-Connecting-IP`, and the origin should accept only Cloudflare ranges. Per-address throttles are wrong until that is set.
+
+### Recovery-code review result (B-09)
+Checked against the code (`StaffMfa`, `MfaController`):
+- Count: ten per enrolment. Pass (8 to 10).
+- Entropy: 64 random bits per code. Pass (at least 50).
+- Stored only hashed: HMAC-SHA-256 keyed with the application key, not Argon2 or bcrypt. Acceptable for 64-bit random values (a slow hash adds little) but it differs from the "argon2/bcrypt" wording; the reviewer should accept it or ask for a change.
+- Shown once: returned only by the confirm and regenerate responses. Pass.
+- Regeneration revokes all old codes: deletes them in the same transaction as issuing new ones. Pass.
+- Rate limiting: five failures per minute per account and address, then 429. Pass.
+- **Gap: no alert to the user when a recovery code is used.** Only the audit row `auth.mfa_verified` (method `recovery_code`) is written; no email or in-app notice is sent. Staging also needs a mail provider for it.
+- Not implemented here, by instruction. Verdict: **not passed until the alert exists**; every other point passes.
