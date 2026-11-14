@@ -51,6 +51,9 @@ Admin sign-in stays refused in production until two-step verification exists (B-
 2. **Migrate with the new release** while the old one still serves:
    `docker compose run --rm --no-deps api php artisan migrate --force`
    with `RELEASE=<new release>`. Migrations must be **expand-only**: add, never rename or drop, in the same release. The old code must keep working on the new schema. The rehearsal checked this: the old release served normally after the new migration.
+   Then **sync the role catalogue** with the new release:
+   `docker compose run --rm --no-deps api php artisan db:seed --class=RbacSeeder --force`.
+   Permissions and roles live in `config/rbac.php` and reach the database only through this seeder. It is safe to re-run, but it also removes permissions the new release no longer lists, so a release that drops a permission must wait until no running code checks it (the same expand-then-contract rule as migrations). Found in the live suspension run: without this step a new permission (`users.suspend`) never reached the database and the screen hid the action.
 3. **Switch traffic**: start `api` and `web` on the new release. `up -d --wait` returns only once `web` answers `/health/live`.
 4. **Check**: `/health/live` 200, `/health/ready` 200, a public read such as `/api/v1/public/config`, and the logs for 5xx `http.request` events.
 5. **Contract later**: remove old columns or tables in a later release, after the code that used them is gone everywhere.

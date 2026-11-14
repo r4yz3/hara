@@ -1,0 +1,10 @@
+Command: BROWSER_LIVE=1 pnpm exec playwright test --project=desktop --workers=1 --reporter=list tests/browser/live-suspension.spec.ts (DEMO_PASSWORD from .env via environment)
+Date: 2026-11-14. Final state: synthetic staff member reactivated.
+
+
+Running 1 test using 1 worker
+
+  ok 1 [desktop] › tests\browser\live-suspension.spec.ts:54:1 › staff suspension works end to end against the real API (16.5s)
+
+  1 passed (54.5s)
+exit 0
