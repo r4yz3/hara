@@ -281,9 +281,12 @@ class StaffAccessController extends Controller
             ->whereNull('g.revoked_at')->where('r.slug', 'platform_owner')->whereIn('g.user_id', $ids)
             ->pluck('g.user_id')->all();
 
+        $actorIsOwner = DB::table('user_role_scopes as g')->join('roles as r', 'r.id', '=', 'g.role_id')
+            ->whereNull('g.revoked_at')->where('r.slug', 'platform_owner')->where('g.user_id', $actor->getKey())->exists();
+
         $enrolled = DB::table('user_mfa_factors')->whereIn('user_id', $ids)->whereNotNull('confirmed_at')->pluck('user_id')->all();
 
-        return array_map(function (object $u) use ($grants, $enrolled, $actor, $full, $mayAct, $owners): array {
+        return array_map(function (object $u) use ($grants, $enrolled, $actor, $full, $mayAct, $owners, $actorIsOwner): array {
             $mine = $grants[(string) $u->id] ?? [];
             $isSelf = $u->id === $actor->getKey();
 
@@ -299,7 +302,7 @@ class StaffAccessController extends Controller
                 'mfa_enrolled' => in_array($u->id, $enrolled, true),
                 'is_self' => $isSelf,
                 'can_suspend' => $mayAct && ! $isSelf && $u->status === 'active' && ! in_array($u->id, $owners, true),
-                'can_reactivate' => $mayAct && ! $isSelf && $u->status === 'suspended',
+                'can_reactivate' => $mayAct && ! $isSelf && $u->status === 'suspended' && (! in_array($u->id, $owners, true) || $actorIsOwner),
                 'grants' => array_map(function (object $g) use ($u, $actor, $isSelf): array {
                     $scope = Scope::of($g->scope_type, $g->scope_id);
 

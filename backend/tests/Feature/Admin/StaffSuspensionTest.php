@@ -202,6 +202,22 @@ class StaffSuspensionTest extends AuthTestCase
         $this->assertSame(0, $this->auditCount());
     }
 
+    public function test_a_suspended_owner_can_be_reactivated_only_by_another_owner(): void
+    {
+        $owner = $this->person('owner2@example.com', 'platform_owner');
+        DB::table('users')->where('id', $owner->id)->update(['status' => 'suspended']);
+
+        $this->signedIn('platform_admin');
+        $this->reactivate($owner->id)->assertForbidden();
+        $this->assertSame('suspended', $this->statusOf($owner));
+        $this->assertSame(0, $this->auditCount());
+
+        $this->freshBrowser();
+        $this->signedIn('platform_owner', null, 'owner1@example.com');
+        $this->reactivate($owner->id)->assertNoContent();
+        $this->assertSame('active', $this->statusOf($owner));
+    }
+
     public function test_a_person_who_is_not_staff_or_does_not_exist_is_404(): void
     {
         $this->signedIn('platform_admin');

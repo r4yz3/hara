@@ -88,6 +88,10 @@ class StaffSuspension
             if ($this->lockAndCheck($actor, $targetUserId) !== 'suspended') {
                 throw AccessDenied::because(AccessDenied::NOT_SUSPENDED);
             }
+            // An owner suspended outside this API (console, operator) comes back only through another owner.
+            if ($this->isPlatformOwner($targetUserId) && ! $this->isPlatformOwner((string) $actor->getKey())) {
+                throw AccessDenied::because(AccessDenied::PROTECTED_TARGET);
+            }
 
             DB::table('users')->where('id', $targetUserId)->update(['status' => 'active', 'updated_at' => now()]);
 
