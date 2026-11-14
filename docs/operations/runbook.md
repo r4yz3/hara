@@ -68,4 +68,4 @@ A restore with a wrong checksum is refused.
 - No monitoring or alerting (5xx rate, database down, backup failure, disk).
 - No scheduled or off-site backups (`backups.md`).
 - No queue worker or scheduler: Phase 1 has no queued jobs.
-- No deployment procedure for the web apps or the rider app.
+- The web apps' deployment and rollback are in `staging-setup.md` (written, not run on a host). The rider app has no deployment procedure.

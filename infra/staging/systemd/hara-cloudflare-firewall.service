@@ -1,0 +1,25 @@
+# Re-applies the Cloudflare-only rules for Docker's published ports after every
+# boot and every Docker restart (iptables rules do not survive either).
+# Install: see docs/operations/staging-setup.md. The script is copied to
+# /usr/local/sbin so that a user who can edit the repository cannot change
+# what root runs.
+[Unit]
+Description=Allow Docker ports 80 and 443 from Cloudflare only
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+PartOf=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/hara-cloudflare-firewall apply
+ExecStop=/usr/local/sbin/hara-cloudflare-firewall remove
+# The range lists come from cloudflare.com; retry a few times at boot.
+Restart=on-failure
+RestartSec=20
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target

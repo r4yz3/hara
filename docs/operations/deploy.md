@@ -1,8 +1,8 @@
 # Deploying the API
 
-Status on 2026-11-13: there is **no staging or production environment** (E-07 is waiting on a hosting decision). Everything below has been run only on the authoring workstation, against the production-like rehearsal stack in `infra/rehearsal/`. It is a procedure that has been rehearsed, not one that has run on a real host.
+Status on 2026-11-14: there is **no staging or production environment** yet (E-07: Contabo Cloud VPS Plus 4 in Asia (Japan) bought 2026-11-14, behind Cloudflare with haradelivery.com; not set up yet: OS, DNS and deploy are still to do). Everything below has been run only on the authoring workstation, against the production-like rehearsal stack in `infra/rehearsal/`. It is a procedure that has been rehearsed, not one that has run on a real host.
 
-The web apps (customer, merchant, admin) and the rider app have no deployment procedure yet.
+The three web apps have a production Dockerfile (`infra/docker/prod/web.Dockerfile`) and, with the API, a single-host staging procedure in `staging-setup.md` (files in `infra/staging/`), written and checked on the workstation but not yet run on a host. The rider app has no deployment procedure.
 
 ## What a release is
 

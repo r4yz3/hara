@@ -1,0 +1,22 @@
+# Build context filter for web.Dockerfile only (BuildKit picks this file up
+# beside the Dockerfile). The API build keeps using the repository .dockerignore.
+.git
+.github
+.claude
+.agents
+.env
+.env.*
+**/.env
+**/.env.*
+**/node_modules
+**/.next
+**/.next-fault
+**/test-results
+**/playwright-report
+**/*.tsbuildinfo
+backend
+docs
+infra
+tests
+test-results
+apps/rider-flutter

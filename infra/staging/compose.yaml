@@ -1,0 +1,201 @@
+# Staging stack for one Ubuntu 24.04 VPS (backlog E-07): API (ADR-014 images),
+# PostGIS, Redis, the three Next.js apps and one nginx edge. Run from this
+# directory; the git-ignored .env beside it supplies every setting
+# (copy .env.example). Walk-through: docs/operations/staging-setup.md.
+#
+# Status: written and validated with `docker compose config` on the authoring
+# workstation. NOT yet run on the host.
+#
+# Only `edge` publishes ports (80 and 443). The database and Redis sit on an
+# internal-only network. The API has no queue worker or scheduler because
+# Phase 1 has no queued jobs and no scheduled tasks (runbook.md, "Known gaps");
+# add them here when that changes.
+#
+# Memory limits add up to about 4.5 GB of the 8 GB host (api 1.5G, postgres 1.5G,
+# 3 x 384M web apps, redis 160M, web 96M, edge 128M), leaving room for the OS,
+# Docker and swap. They are ceilings, not measurements: check `docker stats`
+# after the first deploy.
+
+name: food-delivery-staging
+
+x-hardened: &hardened
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "5" }
+
+services:
+  api:
+    <<: *hardened
+    image: food-delivery-api:${RELEASE:?Set RELEASE to the image tag to run}
+    env_file: [.env]
+    volumes:
+      - ./fpm-pool.staging.conf:/usr/local/etc/php-fpm.d/zz-app.conf:ro
+    networks: [backend]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    mem_limit: 1536m
+    pids_limit: 256
+    healthcheck:
+      # FPM speaks FastCGI, not HTTP: check that its port is open. End-to-end
+      # health is the `web` service below (/health/live).
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 9000"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 40s
+
+  web:
+    <<: *hardened
+    image: food-delivery-web:${RELEASE:?Set RELEASE to the image tag to run}
+    networks: [backend, edge]
+    depends_on:
+      api: { condition: service_healthy }
+    mem_limit: 96m
+    pids_limit: 64
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
+
+  customer:
+    <<: *hardened
+    image: food-delivery-customer-web:${RELEASE:?Set RELEASE to the image tag to run}
+    environment: &next-env
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      NODE_OPTIONS: --max-old-space-size=256
+    networks: [edge]
+    mem_limit: 384m
+    pids_limit: 128
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/favicon.ico"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  merchant:
+    <<: *hardened
+    image: food-delivery-merchant-web:${RELEASE:?Set RELEASE to the image tag to run}
+    environment:
+      <<: *next-env
+      PORT: "3001"
+    networks: [edge]
+    mem_limit: 384m
+    pids_limit: 128
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3001/favicon.ico"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  admin:
+    <<: *hardened
+    image: food-delivery-admin-web:${RELEASE:?Set RELEASE to the image tag to run}
+    environment:
+      <<: *next-env
+      PORT: "3002"
+    networks: [edge]
+    mem_limit: 384m
+    pids_limit: 128
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3002/favicon.ico"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  postgres:
+    <<: *hardened
+    # The image entrypoint must switch to the postgres user, so keep Docker's default capabilities.
+    cap_drop: []
+    image: postgis/postgis:17-3.5-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-food_delivery}
+      POSTGRES_USER: ${DB_USERNAME:-food_delivery}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    # Sized for a 1.5 GB container shared with the OS page cache.
+    command: ["postgres", "-c", "shared_buffers=384MB", "-c", "effective_cache_size=1GB", "-c", "work_mem=8MB", "-c", "max_connections=60"]
+    volumes:
+      - staging_postgres:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    networks: [backend]
+    mem_limit: 1536m
+    pids_limit: 256
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    <<: *hardened
+    image: redis:8.8.4-alpine
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
+    # Sessions, cache and throttling only; losing them signs people out, nothing more.
+    command: ["sh", "-c", "exec redis-server --requirepass \"$$REDIS_PASSWORD\" --save \"\" --appendonly no --maxmemory 128mb --maxmemory-policy volatile-lru"]
+    networks: [backend]
+    mem_limit: 160m
+    pids_limit: 32
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  edge:
+    <<: *hardened
+    image: nginxinc/nginx-unprivileged:1.29.8-alpine
+    # The only published ports. The image listens on 8080/8443 as an unprivileged user.
+    ports:
+      - "80:8080"
+      - "443:8443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      # Cloudflare Origin Certificate and key, created on the server (never in git).
+      - ${CERT_DIR:-/etc/hara/certs}:/etc/hara/certs:ro
+    read_only: true
+    tmpfs: ["/tmp:size=64m,mode=1777"]
+    networks: [edge]
+    depends_on:
+      web: { condition: service_healthy }
+      customer: { condition: service_healthy }
+      merchant: { condition: service_healthy }
+      admin: { condition: service_healthy }
+    mem_limit: 128m
+    pids_limit: 64
+    healthcheck:
+      # The plain-HTTP port on loopback; staging.conf answers 200 there.
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/nginx-health"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 5s
+
+networks:
+  # `backend` is internal: no route out and no published port, so PostgreSQL
+  # and Redis are reachable from the api container only. `edge` carries the
+  # proxy traffic and fixes the subnet so TRUSTED_PROXIES can name it (the API
+  # believes X-Forwarded-For only from there). If you change the subnet,
+  # change the gateway in update-cloudflare-ranges.sh and TRUSTED_PROXIES too.
+  backend:
+    internal: true
+  edge:
+    ipam:
+      config:
+        - subnet: 172.31.77.0/24
+          gateway: 172.31.77.1
+
+volumes:
+  staging_postgres:

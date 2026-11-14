@@ -1,0 +1,7 @@
+[Unit]
+Description=Refresh the Cloudflare ranges for the Docker firewall rules
+After=hara-cloudflare-firewall.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/hara-cloudflare-firewall apply
