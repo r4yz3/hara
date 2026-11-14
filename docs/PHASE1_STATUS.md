@@ -2,6 +2,13 @@
 
 Last updated: 2026-11-14. **The Phase 1 gate is not passed.** Staging does not exist (E-07, human), several decisions and document reviews are open, and the rider app has never run on a device. Nothing here is a production-readiness claim: everything built is local, mocked or sandbox-level unless a line says "hosted CI". The dated sections below the definition-of-done checklist are history and are kept unchanged; where they contradict this section, this section is newer.
 
+## November 14 product owner decisions
+
+- **Customer erasure:** build a delete-my-account flow (in progress), on top of the existing per-address delete.
+- **QR code:** add `qrcode-generator` 2.0.4 (no dependencies, MIT) to the admin app for the two-step setup screen (in progress).
+- **Toasts:** none. Inline success messages stay; they are announced to screen readers and stay visible. Closes state-matrix gap G3.
+- **Offline:** no offline cache in Phase 1, because staff share devices and cached admin data would outlive sign-out. Views keep what is on screen, say the connection is lost and offer retry. Revisit for the customer and rider apps in a later phase. Closes state-matrix gap G1 for Phase 1.
+
 ## November 14 saved addresses screen (U-06)
 
 - Built by a Sonnet subagent and reviewed. On `/account` below Sign out (kept there so the existing phone-size sign-out test still reaches the button).
@@ -111,7 +118,7 @@ How to read it: "evidence" names a file under `docs/qa/evidence/` or a test. Whe
 | Item | What is missing |
 |---|---|
 | U-02 `packages/ui`, Storybook | The backlog row says "done for web" and repeats the U-01 text. `packages/ui/src` holds `map-view`, `problem-page`, `fault` and `map-state` only. There is no Storybook (no `.storybook`) and no toast component; forms, tables and dialogs live in the apps. |
-| U-03 UI state matrix | 11 views by 9 states: 69 covered, 30 not applicable, 0 gaps in cells (`docs/qa/ui-state-matrix.md`). Open: offline cached reads (G1), toasts (G3), `global-error.tsx` built but not reached by a browser test (G4a). |
+| U-03 UI state matrix | 11 views by 9 states: 69 covered, 30 not applicable, 0 gaps in cells (`docs/qa/ui-state-matrix.md`). Open: offline cached reads (G1), toasts (G3), `global-error.tsx` built but not reached by a browser test (G4a). Decided by the product owner on 2026-11-14: no offline cache in Phase 1 (G1: views keep what is on screen, say the connection is lost and offer retry; revisit for the customer and rider apps later) and inline success messages instead of toasts (G3: they are announced to screen readers and stay visible). |
 | U-04 map component | Built in code: MapLibre 6.16.0 with self-hosted PMTiles (ADR-015), placeholder, fit-to-shape, attribution and map drawing (2026-11-14). No tile archive is hosted yet, so every environment shows the placeholder; the nonce CSP that would list the tile host is deferred (E-02). |
 | U-05 admin console | Map drawing is built (2026-11-14), but it needs hosted tiles before anyone can use it. Staff suspension is built (2026-11-14, global admins only); name or email editing is not built. |
 | U-06 customer | Home, `/login`, `/location`, `/account`. No map pin, address entry or saved addresses. The admin half of scenario 5 is `test.fixme` in `customer.spec.ts`; it is covered only by the opt-in live run. `/account` is not in the screenshot spec. |
@@ -142,8 +149,6 @@ How to read it: "evidence" names a file under `docs/qa/evidence/` or a test. Whe
 | E-02 CSP rendering trade-off | Deferred by the product owner on 2026-11-14: a nonce-based script and style CSP needs per-request rendering, which conflicts with `cacheComponents` in every web app. Decide between nonces (dynamic rendering) and keeping the baseline CSP. |
 | Sprint 1 documents review | Human review of versions, ADR-000 to ADR-011, threat model, permission matrix, phase boundaries and acceptance tests; open items are listed in the Sprint 1 section below. |
 | ADR-011 recovery-code review | Approve or change the recovery design: ten codes per enrolment, single use, keyed hashes (rotating `APP_KEY` invalidates unused codes). Email-verification timing is also still open in ADR-011. |
-| Service worker and offline | Whether to build a service worker or client cache for offline cached reads, given shared staff devices and cache invalidation after sign-out or a 403 (matrix gap G1). |
-| Toast design | Whether to build a toast component and what it looks like; success feedback is inline text today (G3). |
 | Support sees names | Whether `support` should see staff names and email addresses on `/access`. Built behaviour: addresses are masked (`j***@domain`) for support only. I found no written decision in the repository, so the question itself comes from the product owner's list and is unverified here. Permission-matrix question 4 (zone geometry) is a different question and is answered. |
 | Staff invite flow | Decided 2026-11-14 (ADR-016): email link to set a password (or enter the existing account's password), 72-hour single-use invitation, same grant rules as granting. An email-lookup grant endpoint was avoided because it would reveal which accounts exist. |
 
