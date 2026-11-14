@@ -50,6 +50,15 @@ fetch_list() {
   [ -n "$body" ] || return 1
   # Only plain CIDR lines; anything else means the answer is not what we expect.
   if printf '%s\n' "$body" | grep -Ev "$pattern" | grep -q .; then return 1; fi
+  # Bound each prefix (and IPv4 octets) so a broken or tampered answer can never
+  # widen the allow-list to most of the internet.
+  if ! printf '%s\n' "$body" | awk -F'[/.]' -v min="$3" -v max="$4" '
+      { p = $NF; if (p < min || p > max) bad = 1
+        if (NF == 5) for (i = 1; i <= 4; i++) if ($i > 255) bad = 1
+        if ($0 ~ /^(0\.0\.0\.0|::)\//) bad = 1 }
+      END { exit bad }'; then
+    return 1
+  fi
   printf '%s\n' "$body"
 }
 
@@ -99,9 +108,9 @@ case "$cmd" in
   apply)
     [ -n "$EXT_IF" ] || { echo "Cannot find the public interface; set EXT_IF=eth0 (or similar)." >&2; exit 1; }
     tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
-    fetch_list "$URL4" '^[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}$' > "$tmp/v4" \
+    fetch_list "$URL4" '^[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}$' 8 32 > "$tmp/v4" \
       || { echo "Could not fetch a valid IPv4 list from $URL4; nothing changed." >&2; exit 1; }
-    fetch_list "$URL6" '^[0-9a-fA-F:]+/[0-9]{1,3}$' > "$tmp/v6" \
+    fetch_list "$URL6" '^[0-9a-fA-F:]+/[0-9]{1,3}$' 16 128 > "$tmp/v6" \
       || { echo "Could not fetch a valid IPv6 list from $URL6; nothing changed." >&2; exit 1; }
     [ "$(wc -l < "$tmp/v4")" -ge 5 ] && [ "$(wc -l < "$tmp/v6")" -ge 3 ] \
       || { echo "The lists look too short; nothing changed." >&2; exit 1; }

@@ -29,11 +29,21 @@ fetch() {
     echo "Unexpected content from $url; not writing anything." >&2
     exit 1
   fi
+  # Bound each prefix (and IPv4 octets) so a broken or tampered answer can never
+  # widen the allow-list to most of the internet.
+  if ! printf '%s\n' "$body" | awk -F'[/.]' -v min="$3" -v max="$4" '
+      { p = $NF; if (p < min || p > max) bad = 1
+        if (NF == 5) for (i = 1; i <= 4; i++) if ($i > 255) bad = 1
+        if ($0 ~ /^(0\.0\.0\.0|::)\//) bad = 1 }
+      END { exit bad }'; then
+    echo "Range outside the expected size from $url; not writing anything." >&2
+    exit 1
+  fi
   printf '%s\n' "$body"
 }
 
-V4="$(fetch https://www.cloudflare.com/ips-v4 '^[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}$')"
-V6="$(fetch https://www.cloudflare.com/ips-v6 '^[0-9a-fA-F:]+/[0-9]{1,3}$')"
+V4="$(fetch https://www.cloudflare.com/ips-v4 '^[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}$' 8 32)"
+V6="$(fetch https://www.cloudflare.com/ips-v6 '^[0-9a-fA-F:]+/[0-9]{1,3}$' 16 128)"
 [ "$(printf '%s\n' "$V4" | wc -l)" -ge 5 ] || { echo "Too few IPv4 ranges; not writing anything." >&2; exit 1; }
 [ "$(printf '%s\n' "$V6" | wc -l)" -ge 3 ] || { echo "Too few IPv6 ranges; not writing anything." >&2; exit 1; }
 
