@@ -8,7 +8,8 @@
     "./map": "./src/map-view.tsx",
     "./map-state": "./src/map-state.ts",
     "./problem-page": "./src/problem-page.tsx",
-    "./fault": "./src/fault.tsx"
+    "./fault": "./src/fault.tsx",
+    "./offline-banner": "./src/offline-banner.tsx"
   },
   "scripts": {
     "test": "node --test"
