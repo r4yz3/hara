@@ -59,6 +59,9 @@ ENV NEXT_OUTPUT=standalone \
 # with an empty string, so it is removed from the build environment when empty.
 RUN if [ -z "${NEXT_PUBLIC_APP_NAME:-}" ]; then unset NEXT_PUBLIC_APP_NAME; fi; \
     pnpm --filter "${APP}" build
+# Git does not keep empty folders, so a fresh clone may have no public/; the
+# run stage copies it, so make sure it exists.
+RUN mkdir -p "apps/${APP}/public"
 
 FROM ${NODE_IMAGE} AS run
 RUN apk upgrade --no-cache
