@@ -1,6 +1,6 @@
 # Staging setup on one VPS (E-07)
 
-Status on 2026-11-14: **the files and this procedure are written and checked on the authoring workstation only. Nothing here has been run on the host.** The checks that did run are listed in section 13. The first real run will find problems; fix them here and record the result in `docs/PHASE1_STATUS.md`.
+Status on 2026-11-14: **deployed once on the host by the operator** (release `bce7e3f`). What ran on the host is in section 13; the open items are in section 14. Repeat the deploy and the reboot test before relying on this environment, and record each run in `docs/PHASE1_STATUS.md`.
 
 What you are setting up: one Ubuntu 24.04 VPS (4 vCPU, 8 GB RAM, 2 GB swap, Docker with the compose plugin, user `deploy`, `ufw` allowing SSH and Cloudflare to 80/443) running the whole stack in Docker, behind Cloudflare (SSL mode Full (strict)):
 
@@ -477,7 +477,19 @@ Run on Windows 11 with Docker Desktop:
 
 Found and fixed on the way: an API image built from an older commit lacked `config/trustedproxy.php`, so the API ignored `TRUSTED_PROXIES` and sent no HSTS. Build the release images from the commit you deploy.
 
-**Not checked:** anything on the real host; real Cloudflare (Origin CA certificate, Full (strict), the proxied path); the firewall with Docker's real iptables rules and with IPv6 reaching the host; a reboot (systemd units); memory under load (limits are ceilings, not measurements); a CI image scan of the web images; a restore drill on the server; a staging restore; an admin sign-in (there is no first admin account, below).
+### On the host (2026-11-14, operator run, release bce7e3f)
+
+| Check | Result |
+|---|---|
+| Compose stack | all 8 services healthy (admin, api, customer, merchant, edge, postgres, redis, web); migrate and `RbacSeeder` ran |
+| Cloudflare-only firewall | `hara-cloudflare-firewall status` shows DOCKER-USER jumps for 443 and 80 on eth0 to HARA-CF with Cloudflare RETURN rules; systemd unit and weekly timer enabled |
+| Through Cloudflare, from the workstation | staging, staging-merchant and staging-admin 200; staging-api `/` 404 (no route, expected); `/health/live` `{"status":"ok"}`; `/health/ready` 404 through the edge (hidden by design) |
+| Origin reachability | direct HTTPS to the origin address gets no response |
+| Headers | web: CSP baseline, X-Frame-Options DENY, nosniff, HSTS max-age=604800, `cf-cache-status` DYNAMIC on pages; API: HSTS max-age=31536000, deny-all CSP |
+
+Found on the host: empty `apps/*/public` folders are not tracked by git, so the web image build failed; fixed in `bce7e3f`. Evidence: `docs/qa/evidence/e07-2026-11-14-staging-deploy.txt`.
+
+**Still not checked:** a reboot (systemd units start again); IPv6 reaching the host; memory under load (limits are ceilings, not measurements); a CI image scan of the web images; a restore drill on the server and a staging restore; an admin sign-in (there is no first admin account, section 14).
 
 ## 14. Decisions and open items for the operator
 

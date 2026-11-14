@@ -1,6 +1,24 @@
 # Phase 1 status
 
-Last updated: 2026-11-14. **The Phase 1 gate is not passed.** Staging does not exist yet: the deploy files are ready but have not been run on the host (E-07, human), several decisions and document reviews are open, and the rider app has never run on a device. Nothing here is a production-readiness claim: everything built is local, mocked or sandbox-level unless a line says "hosted CI". The dated sections below the definition-of-done checklist are history and are kept unchanged; where they contradict this section, this section is newer.
+Last updated: 2026-11-14. **The Phase 1 gate is not passed.** Staging is live (E-07): the operator deployed release `bce7e3f` on 2026-11-14 and the four staging hosts answer through Cloudflare (see the staging deploy section below). Several decisions and document reviews are open, the first admin account does not exist yet, backups, monitoring and mail are not set up, and the rider app has never run on a device. Nothing here is a production-readiness claim: everything built is local, mocked, sandbox or staging-level unless a line says "hosted CI". The dated sections below the definition-of-done checklist are history and are kept unchanged; where they contradict this section, this section is newer.
+
+## November 14 staging deploy (E-07)
+
+Evidence: `docs/qa/evidence/e07-2026-11-14-staging-deploy.txt` (the operator's real output; no server address, no secrets). Procedure: `docs/operations/staging-setup.md`, section 13. Release: `bce7e3f`.
+
+- **Done:** Contabo VPS (Japan) behind Cloudflare; all 8 compose services healthy (admin, api, customer, merchant, edge, postgres, redis, web); migrations and `RbacSeeder` ran.
+- **Done:** Cloudflare-only firewall in `DOCKER-USER` for ports 80 and 443 on eth0, with its systemd unit and weekly timer enabled.
+- **Checked from the workstation through Cloudflare:** staging, staging-merchant and staging-admin return 200; staging-api `/health/live` returns `{"status":"ok"}`; `/health/ready` is 404 through the edge (hidden by design); direct HTTPS to the origin gets no response. Web apps send the CSP baseline, `X-Frame-Options: DENY`, `nosniff` and HSTS `max-age=604800`; the API sends HSTS `max-age=31536000` and a deny-all CSP. Pages show `cf-cache-status: DYNAMIC`.
+- **Found and fixed during the deploy:** empty `apps/*/public` folders are not tracked by git, so the web image build failed; fixed in `bce7e3f`.
+- **Not done:**
+  - first admin account (no bootstrap command; open decision, so nobody can sign in to the admin app on staging yet);
+  - reboot persistence test;
+  - backup schedule and off-server copy;
+  - monitoring and alerting;
+  - tile archive (ADR-015);
+  - real mail provider (`MAIL_MAILER=log`);
+  - the web apps send `x-powered-by: Next.js`.
+- Hosted CI was last verified at `61ccc84` and is unchanged by this deploy; the later commits, including `bce7e3f`, have no hosted CI result recorded here.
 
 ## November 14 operator decisions (hosting, tiles, caps, reviews)
 

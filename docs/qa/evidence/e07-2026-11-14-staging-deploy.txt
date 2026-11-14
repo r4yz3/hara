@@ -1,0 +1,39 @@
+# E-07 staging deploy on the Contabo VPS (Japan), 2026-11-14
+# Operator-run, following docs/operations/staging-setup.md. Release: bce7e3f.
+# Recorded from the operator's real output. No server address and no secrets are recorded here.
+
+## 1. Stack on the host
+- All 8 compose services healthy: admin, api, customer, merchant, edge, postgres, redis, web.
+- Migrations ran. RbacSeeder ran.
+
+## 2. Firewall (Docker DOCKER-USER)
+- `hara-cloudflare-firewall status`: DOCKER-USER jumps for 443 and 80 on eth0 to HARA-CF, with Cloudflare RETURN rules.
+- systemd unit and weekly timer enabled.
+
+## 3. From the workstation, through Cloudflare
+| Request | Result |
+|---|---|
+| https://staging.haradelivery.com | 200 |
+| https://staging-merchant.haradelivery.com | 200 |
+| https://staging-admin.haradelivery.com | 200 |
+| https://staging-api.haradelivery.com/ | 404 (no route; expected) |
+| https://staging-api.haradelivery.com/health/live | {"status":"ok"} |
+| https://staging-api.haradelivery.com/health/ready | 404 through the edge (hidden by design) |
+| Direct HTTPS to the origin address | no response (blocked) |
+
+## 4. Response headers
+- Web apps: CSP baseline, X-Frame-Options DENY, X-Content-Type-Options nosniff, Strict-Transport-Security max-age=604800. cf-cache-status DYNAMIC on pages.
+- API: Strict-Transport-Security max-age=31536000, deny-all Content-Security-Policy.
+- Open: the web apps send `x-powered-by: Next.js`.
+
+## 5. Issue found and fixed during the deploy
+- Empty apps/*/public folders are not tracked by git, so the web image build failed.
+- Fixed in bce7e3f: `fix(infra): create the empty public folder in the web image build`.
+
+## 6. Not yet checked or not yet done
+- First admin account (no bootstrap command; open decision).
+- Reboot persistence (systemd units).
+- Backup schedule and off-server copy.
+- Monitoring and alerting.
+- Tile archive (ADR-015).
+- Real mail provider (MAIL_MAILER=log).
