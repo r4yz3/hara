@@ -44,7 +44,7 @@ async function mock(page: Page, signedIn: boolean) {
   await page.route("**/api/v1/public/config", (route) => route.fulfill({ json: { data: { currency: "PHP" } } }));
 }
 
-type Shot = { app: App; name: string; url: string; setup?: (page: Page) => Promise<void>; signedIn?: boolean; wait?: string };
+type Shot = { app: App; name: string; url: string; setup?: (page: Page) => Promise<void>; signedIn?: boolean; wait?: string; scrollTo?: string };
 
 const shots: Shot[] = [
   { app: "customer", name: "home", url: "/" },
@@ -104,6 +104,31 @@ const shots: Shot[] = [
     })),
   },
   {
+    app: "customer", name: "account-addresses", url: "/account", wait: "Inside a delivery area", signedIn: true, scrollTo: "Delivery addresses",
+    setup: async (page) => {
+      const customerUser = {
+        id: "01JTESTCUSTOMER0000000000", name: "Synthetic Customer", email: "customer@example.test",
+        email_verified: true, mfa_enabled: false, surface: "customer", grants: [],
+      };
+      const testville = { id: "test-city-addresses", name: "Synthetic city" };
+      const address = (id: string, over: Record<string, unknown>) => ({
+        id, tag: null, address_line: "", landmark: "", latitude: 10.0123, longitude: 100.0456,
+        is_default: false, city: null, serviceable: false, created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z", ...over,
+      });
+      const saved = [
+        address("01JSYNTHADDR00000000000001", {
+          tag: "Home", address_line: "12 Synthetic Street, Block 1", landmark: "Blue gate", latitude: 10.0123, longitude: 100.0456,
+          is_default: true, city: testville, serviceable: true,
+        }),
+        address("01JSYNTHADDR00000000000002", {
+          tag: "Work", address_line: "45 Synthetic Avenue, Block 2", landmark: "Red roof", latitude: 10.0345, longitude: 100.0678,
+        }),
+      ];
+      await api(page, "/api/v1/me", (route) => route.fulfill({ json: { data: customerUser, meta: { request_id: "test" } } }));
+      await api(page, "/api/v1/me/addresses", (route) => route.fulfill({ json: { data: saved, meta: { request_id: "test" } } }));
+    },
+  },
+  {
     app: "admin", name: "settings", url: "/settings", wait: "Service checks",
     setup: (page) => api(page, "/api/v1/admin/system/status", (route) => route.fulfill({ json: { data: systemStatus } })),
   },
@@ -124,6 +149,7 @@ for (const shot of shots) {
       await page.goto(bases[shot.app] + shot.url);
       if (shot.wait) await page.getByText(shot.wait).first().waitFor();
       await page.waitForLoadState("networkidle");
+      if (shot.scrollTo) await page.getByRole("heading", { name: shot.scrollTo }).scrollIntoViewIfNeeded();
       // The dev-server badge ("Cache disabled") is not part of the app; keep it out of the evidence.
       await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
       await page.screenshot({ path: path.join(dir, `${shot.name}-${width}.png`) });

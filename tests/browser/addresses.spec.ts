@@ -269,6 +269,42 @@ test.describe("customer account: saved addresses", () => {
     await expect(rows(page)).toHaveCount(1);
   });
 
+  test("a 404 on edit means the address is gone: the form closes, the list reloads and says so", async ({ page }) => {
+    const api = await addressesApi(page, [home, work], (route, call) => {
+      if (call.method !== "PATCH") return false;
+      api.items = api.items.filter((item) => item.id !== work.id);
+      void reply(route, 404, failure("Not found."));
+      return true;
+    });
+    await page.goto(`${customer}/account`);
+    await rows(page).nth(1).getByRole("button", { name: /^Edit/ }).click();
+    await expect(page.getByLabel("Address", { exact: true })).toHaveValue(work.address_line);
+    await page.getByLabel("Landmark", { exact: true }).fill("Red roof");
+    await page.getByRole("button", { name: "Save changes" }).click();
+    await expect(section(page).getByRole("alert").filter({ hasText: "That address no longer exists." })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Save changes" })).toHaveCount(0);
+    await expect(rows(page)).toHaveCount(1);
+    await expect(rows(page).first()).toContainText("Home");
+    expect(api.calls.some((call) => call.method === "PATCH" && call.path === `/api/v1/me/addresses/${work.id}`)).toBe(true);
+  });
+
+  test("a 404 on Make default means the address is gone: the list reloads and says so", async ({ page }) => {
+    const api = await addressesApi(page, [home, work], (route, call) => {
+      if (call.method !== "POST" || !call.path.endsWith("/default")) return false;
+      api.items = api.items.filter((item) => item.id !== work.id);
+      void reply(route, 404, failure("Not found."));
+      return true;
+    });
+    await page.goto(`${customer}/account`);
+    await rows(page).nth(1).getByRole("button", { name: /Make default/ }).click();
+    await expect(section(page).getByRole("alert").filter({ hasText: "That address no longer exists." })).toBeVisible();
+    await expect(section(page).getByRole("status").filter({ hasText: "is now your default address." })).toHaveCount(0);
+    await expect(rows(page)).toHaveCount(1);
+    await expect(rows(page).first()).toContainText("Home");
+    await expect(rows(page).first()).toContainText("Default");
+    expect(api.calls.some((call) => call.method === "POST" && call.path === `/api/v1/me/addresses/${work.id}/default`)).toBe(true);
+  });
+
   test("a slow save disables the button and a second submit sends nothing", async ({ page }) => {
     const held = gate();
     const api = await addressesApi(page, [], async (route, call) => {
