@@ -413,27 +413,161 @@ cd /srv/hara/infra/staging && docker compose logs --tail 5 edge
 
 ## 11. Backup and restore
 
-The dump is plain output of `pg_dump` written by the host user into `/srv/hara-backups` (mode 0700). It holds personal data once real accounts exist: never commit or share it. There is no schedule and no off-server copy yet (E-03); copy backups off the server by hand until there is.
+What exists: a nightly job (`infra/staging/backup.sh`, run by `hara-backup.timer` as `deploy`) that dumps the database, checks the dump, encrypts it, copies it to Cloudflare R2 and prunes old copies; and `infra/staging/restore-drill.sh`, which restores the newest off-server copy into a scratch database. **Status: written, and run on the workstation against the development stack with stand-ins for `age` and `rclone` (neither is installed there). It has not run on the server, with real `age`, or against R2.** Until section 11.6 has passed on the server, "staging database backup restored successfully" in the Phase 1 gate is **not met**.
 
-Back up (always before a deploy that migrates):
+Design, in short:
+
+| Choice | Why |
+|---|---|
+| `pg_dump -Fc` through `docker compose exec -T postgres`, to `/srv/hara-backups/hara-staging-<UTC time>-<release>.dump` (mode 600) | Same Postgres 17 client as the server; the database password never leaves the container. Checked with `pg_restore --list` before anything else happens. |
+| Local retention: newest 7 | Fast restore without the network. |
+| Encryption: **age with a public key** (not gpg with a passphrase file) | The server holds only the public key, so someone who takes the server, or the R2 token, cannot read the backups. With gpg symmetric the passphrase would sit on the same server as the backups. The cost: you must keep the private key safe off the server; lose it and the off-server copies are unreadable. |
+| Off-server: rclone to a private R2 bucket, 30 days, pruned by the date in the file name | R2 has no egress fee and has a free tier. The newest 3 files are never pruned, and nothing is pruned if listing fails. |
+| Schedule: 03:15 Asia/Manila (`OnCalendar` names the timezone; the server clock is CET) | A quiet hour for the users; `Persistent=true` catches up after downtime. |
+
+The dump holds personal data once real accounts exist. Never commit or share it. No IP address, key or bucket secret belongs in the repository.
+
+### 11.1 Cloudflare: a private bucket and a token for that bucket only (dashboard)
+
+1. Cloudflare dashboard, **R2 object storage**, **Create bucket**. Name: `hara-staging-backups`. Leave **public access disabled** (no `r2.dev` URL, no custom domain). Location hint: Asia-Pacific if offered.
+2. **R2 object storage, Manage API tokens, Create API token**. Permission: **Object Read & Write**. Under **Specify bucket(s)**, pick `hara-staging-backups` only. Create.
+3. Copy the **Access Key ID**, **Secret Access Key** and the **S3 endpoint** (`https://<ACCOUNT_ID>.r2.cloudflarestorage.com`) into your password manager. The secret is shown once. Do not paste them into chat or a ticket.
+
+Free-tier limits (estimates from memory, **verify on the Cloudflare R2 pricing page before relying on them**): 10 GB-month of storage, 1 million Class A (write and list) and 10 million Class B (read) operations per month, no egress fee. One nightly run is a handful of operations. Storage: the development database dumps to about 0.1 MB. Even at 100 MB per dump, 30 copies are 3 GB. Check the size now and then (`rclone size`, section 11.5) and revisit when a dump passes about 300 MB.
+
+### 11.2 Server: tools, key and rclone remote
 
 ```bash
-cd /srv/hara/infra/staging && umask 077 && docker compose exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' > /srv/hara-backups/staging-$(date -u +%Y%m%d-%H%M%S).dump
+sudo apt-get update && sudo apt-get install -y rclone age
 ```
 
-Record its checksum:
+Ubuntu 24.04 ships rclone 1.60 and age 1.1.1 (R2 needs rclone 1.59 or later; confirm the versions). Check:
 
 ```bash
-cd /srv/hara-backups && ls -t staging-*.dump | head -n 1 | xargs -I{} sh -c 'sha256sum {} > {}.sha256 && cat {}.sha256'
+rclone version | head -n 1 && age --version
 ```
 
-Confirm it can be read (a table-of-contents listing; it does not restore):
+Create the key pair **on your own PC**, not on the server (Windows: `winget install FiloSottile.age`; macOS: `brew install age`):
 
 ```bash
-cd /srv/hara/infra/staging && docker compose exec -T postgres pg_restore -l < /srv/hara-backups/$(cd /srv/hara-backups && ls -t staging-*.dump | head -n 1) | head -n 5
+age-keygen -o hara-staging-backup.age.key
 ```
 
-A real restore drill on the server (restore into a scratch database, compare, drop it) is still open; `infra/scripts/db-restore-drill.sh` is written for the development stack and was not adapted. Until a drill has passed here, "staging database backup restored successfully" in the Phase 1 gate is **not met**.
+It prints `Public key: age1...`. Put the file `hara-staging-backup.age.key` (the private key) in your password manager and in a second safe place, then delete the loose copy. **If this key is lost, every off-server backup is unreadable.** Put only the public key on the server, root-owned and world-readable (it is public):
+
+```bash
+echo 'age1...paste-the-public-key...' | sudo tee /etc/hara/backup.age.pub >/dev/null && sudo chmod 0644 /etc/hara/backup.age.pub && cat /etc/hara/backup.age.pub
+```
+
+Write the rclone remote as `deploy`. The secret is read without echo, so it is not in the shell history or the process list:
+
+```bash
+umask 077 && mkdir -p ~/.config/rclone && read -rp 'R2 Access Key ID: ' R2_ID && read -rsp 'R2 Secret Access Key: ' R2_SECRET && echo && read -rp 'R2 endpoint (https://<ACCOUNT_ID>.r2.cloudflarestorage.com): ' R2_ENDPOINT
+```
+
+```bash
+cat > ~/.config/rclone/rclone.conf <<CONF
+[r2]
+type = s3
+provider = Cloudflare
+access_key_id = ${R2_ID}
+secret_access_key = ${R2_SECRET}
+endpoint = ${R2_ENDPOINT}
+acl = private
+no_check_bucket = true
+CONF
+unset R2_ID R2_SECRET R2_ENDPOINT; chmod 600 ~/.config/rclone/rclone.conf
+```
+
+Check that the token reaches the bucket, and only that bucket:
+
+```bash
+rclone lsf r2:hara-staging-backups && echo "bucket reachable"
+```
+
+An empty bucket prints only the second line. `rclone lsd r2:` (list all buckets) should fail, because the token is scoped to one bucket.
+
+### 11.3 Install the scripts and the timer
+
+The scripts run from the repository checkout, so they must be committed, pushed and pulled to `/srv/hara` first.
+
+```bash
+sudo cp /srv/hara/infra/staging/systemd/hara-backup.service /srv/hara/infra/staging/systemd/hara-backup.timer /etc/systemd/system/ && sudo systemctl daemon-reload
+```
+
+See what the timer means in server time (the server is on CET):
+
+```bash
+systemd-analyze calendar "*-*-* 03:15:00 Asia/Manila"
+```
+
+```bash
+sudo systemctl enable --now hara-backup.timer && systemctl list-timers hara-backup.timer
+```
+
+### 11.4 Run it once and check
+
+```bash
+sudo systemctl start hara-backup.service
+```
+
+It blocks until done. Then:
+
+```bash
+journalctl -u hara-backup.service -n 20 --no-pager
+```
+
+Expect "dump ok", "encrypted", "uploaded and listed" and "done". Then:
+
+```bash
+ls -l /srv/hara-backups && rclone lsl r2:hara-staging-backups
+```
+
+The local `.dump` must be mode `-rw-------`. The R2 file ends in `.dump.age`. A failure is non-zero: `systemctl is-failed hara-backup.service` prints `failed` and the journal has a `FAILED` line. Nothing alerts you yet (there is no monitoring), so look at the journal weekly until there is.
+
+Without an upload (for example before the bucket exists): `/srv/hara/infra/staging/backup.sh --no-upload`. It still dumps, verifies and encrypts, and prints "LOCAL ONLY".
+
+Before a deploy that migrates, run the same job by hand with `sudo systemctl start hara-backup.service`. The file name carries the release that was running when the dump was taken.
+
+### 11.5 Housekeeping
+
+```bash
+rclone size r2:hara-staging-backups
+```
+
+Local dumps are plaintext (mode 600 in a 0700 directory). The server's disk is not an off-server copy.
+
+### 11.6 Restore drill (the gate item)
+
+The drill restores into a scratch database named `hara_drill_<time>` inside the postgres container and drops it afterwards. It never touches the live database. It needs the **private** key for a few minutes. From your PC (fill in the server; no IP is stored in the repository):
+
+```bash
+scp hara-staging-backup.age.key deploy@<SERVER_IP>:/dev/shm/backup.age.key
+```
+
+On the server:
+
+```bash
+AGE_IDENTITY=/dev/shm/backup.age.key /srv/hara/infra/staging/restore-drill.sh
+```
+
+Expect "downloading", "decrypting", "restoring into scratch database", a table count above 0, a migration count above 0 with the latest migration name, "RESTORE DRILL PASSED" and "scratch database ... dropped". To restore a particular file instead of the newest, add `--file hara-staging-<time>-<release>.dump.age`. Then remove the key from the server, whether the drill passed or not:
+
+```bash
+shred -u /dev/shm/backup.age.key; ls /dev/shm/backup.age.key
+```
+
+`ls` must say the file does not exist (`/dev/shm` is memory, so it also does not survive a reboot). Confirm no scratch database remains:
+
+```bash
+cd /srv/hara/infra/staging && docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d postgres -tAc "select datname from pg_database"'
+```
+
+Record the date, the file name and the output in `docs/PHASE1_STATUS.md` once the drill has passed. Repeat it after any change to the scripts, the key or the Postgres version, and at least monthly.
+
+### 11.7 Restoring for real
+
+The drill restores into a scratch database. To replace the live database, follow section 12 and `runbook.md` (decrypt as in the drill, then restore into a freshly created database; do not use `pg_restore --clean` on a database that a newer release has touched, see the finding in `runbook.md`, C).
 
 ## 12. Rollback
 
@@ -503,14 +637,16 @@ Found and fixed on the way: an API image built from an older commit lacked `conf
 | Through Cloudflare, from the workstation | staging, staging-merchant and staging-admin 200; staging-api `/` 404 (no route, expected); `/health/live` `{"status":"ok"}`; `/health/ready` 404 through the edge (hidden by design) |
 | Origin reachability | direct HTTPS to the origin address gets no response |
 | Headers | web: CSP baseline, X-Frame-Options DENY, nosniff, HSTS max-age=604800, `cf-cache-status` DYNAMIC on pages; API: HSTS max-age=31536000, deny-all CSP |
+| Redeploy to `1cf50aa` (2026-11-14, operator run) | API images rebuilt; web images re-tagged from `bce7e3f` (unchanged); migrate ran (`2026_11_14_000003`, expand-only) |
+| First platform owner (2026-11-14, operator run) | `staff:bootstrap-owner` run once on the server; invitation accepted in the browser; password and TOTP set; signed in to the staging admin app as platform owner (operator-reported, not checked from the workstation) |
 
 Found on the host: empty `apps/*/public` folders are not tracked by git, so the web image build failed; fixed in `bce7e3f`. Evidence: `docs/qa/evidence/e07-2026-11-14-staging-deploy.txt`.
 
-**Still not checked:** a reboot (systemd units start again); IPv6 reaching the host; memory under load (limits are ceilings, not measurements); a CI image scan of the web images; a restore drill on the server and a staging restore; an admin sign-in (there is no first admin account, section 14).
+**Still not checked:** a reboot (systemd units start again); IPv6 reaching the host; memory under load (limits are ceilings, not measurements); a CI image scan of the web images; a restore drill on the server and a staging restore.
 
 ## 14. Decisions and open items for the operator
 
-1. **First admin account.** Built, not yet run on staging: `staff:bootstrap-owner` (ADR-018, section 9). Needs a redeploy of a release that contains it, then the one command. The ADR is proposed and needs the operator's review.
+1. **First admin account.** Done on staging 2026-11-14 (operator-reported): `staff:bootstrap-owner` (ADR-018, section 9) ran on release `1cf50aa`, the invitation was accepted, and the platform owner signed in to the admin app. The ADR is still proposed and needs the operator's review. The command refuses while an active platform owner exists; invite others from the admin app.
 2. **Mail.** `MAIL_MAILER=log` writes messages, including any reset or invitation link, into the API container log. Choosing a provider (open since `budget-plan.md`) also needs outbound network access for `api`: add the `edge` network to the `api` service in `compose.yaml` (the `backend` network has no route out). Keep the provider's key out of git.
 3. **Demo/synthetic data on staging** (section 9).
 4. **Authenticated Origin Pulls** and Cloudflare WAF/rate-limit rules: optional hardening not done.

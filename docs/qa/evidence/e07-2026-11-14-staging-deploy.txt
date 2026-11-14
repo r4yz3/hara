@@ -37,3 +37,11 @@
 - Monitoring and alerting.
 - Tile archive (ADR-015).
 - Real mail provider (MAIL_MAILER=log).
+
+## 7. Redeploy to 1cf50aa, migrate and first platform owner, 2026-11-14 (operator-reported)
+- Redeployed staging to release `1cf50aa`: API images rebuilt; web images re-tagged from `bce7e3f` (unchanged).
+- Migration `2026_11_14_000003` ran (expand-only).
+- `staff:bootstrap-owner` ran once on the server. The invitation was accepted in the browser; a password and TOTP were set.
+- The platform owner signed in to https://staging-admin.haradelivery.com.
+- Operator-reported result. The workstation did not repeat the checks in sections 3 and 4 for this redeploy.
+- Section 6 records the state at `bce7e3f`; its first admin account item is now done.

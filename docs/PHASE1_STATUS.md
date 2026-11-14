@@ -1,24 +1,25 @@
 # Phase 1 status
 
-Last updated: 2026-11-14. **The Phase 1 gate is not passed.** Staging is live (E-07): the operator deployed release `bce7e3f` on 2026-11-14 and the four staging hosts answer through Cloudflare (see the staging deploy section below). Several decisions and document reviews are open, the first admin account does not exist yet, backups, monitoring and mail are not set up, and the rider app has never run on a device. Nothing here is a production-readiness claim: everything built is local, mocked, sandbox or staging-level unless a line says "hosted CI". The dated sections below the definition-of-done checklist are history and are kept unchanged; where they contradict this section, this section is newer.
+Last updated: 2026-11-14. **The Phase 1 gate is not passed.** Staging is live (E-07): the operator deployed release `bce7e3f` on 2026-11-14, redeployed `1cf50aa` the same day, and the four staging hosts answer through Cloudflare; the first platform owner was created on staging (operator-reported, see the staging deploy section below). Several decisions and document reviews are open, backups, monitoring and mail are not set up, and the rider app has never run on a device. Nothing here is a production-readiness claim: everything built is local, mocked, sandbox or staging-level unless a line says "hosted CI". The dated sections below the definition-of-done checklist are history and are kept unchanged; where they contradict this section, this section is newer.
 
 ## November 14 staging deploy (E-07)
 
-Evidence: `docs/qa/evidence/e07-2026-11-14-staging-deploy.txt` (the operator's real output; no server address, no secrets). Procedure: `docs/operations/staging-setup.md`, section 13. Release: `bce7e3f`.
+Evidence: `docs/qa/evidence/e07-2026-11-14-staging-deploy.txt` (the operator's real output; no server address, no secrets). Procedure: `docs/operations/staging-setup.md`, section 13. Releases: `bce7e3f` (first deploy), then `1cf50aa` (redeploy the same day; API images rebuilt, web images re-tagged from `bce7e3f`, unchanged).
 
 - **Done:** Contabo VPS (Japan) behind Cloudflare; all 8 compose services healthy (admin, api, customer, merchant, edge, postgres, redis, web); migrations and `RbacSeeder` ran.
 - **Done:** Cloudflare-only firewall in `DOCKER-USER` for ports 80 and 443 on eth0, with its systemd unit and weekly timer enabled.
 - **Checked from the workstation through Cloudflare:** staging, staging-merchant and staging-admin return 200; staging-api `/health/live` returns `{"status":"ok"}`; `/health/ready` is 404 through the edge (hidden by design); direct HTTPS to the origin gets no response. Web apps send the CSP baseline, `X-Frame-Options: DENY`, `nosniff` and HSTS `max-age=604800`; the API sends HSTS `max-age=31536000` and a deny-all CSP. Pages show `cf-cache-status: DYNAMIC`.
 - **Found and fixed during the deploy:** empty `apps/*/public` folders are not tracked by git, so the web image build failed; fixed in `bce7e3f`.
+- **Done (operator-reported 2026-11-14, not checked from the workstation):** redeploy to `1cf50aa`; migration `2026_11_14_000003` ran; `php artisan staff:bootstrap-owner` ran on the server; the invitation was accepted in the browser, a password and TOTP were set, and the platform owner signed in at the staging admin app.
 - **Not done:**
-  - first admin account: `php artisan staff:bootstrap-owner` is built and tested locally (ADR-018, proposed; 20 tests, full suite 775 passed), but staging runs `bce7e3f`, which does not contain it. Redeploy, migrate, then run it once (`docs/operations/staging-setup.md` section 9). Rollback: revert the commit; migration `2026_11_14_000003` is expand-only and its `down` removes the column;
+  - first platform owner: done on staging (operator-reported 2026-11-14) with `php artisan staff:bootstrap-owner` on release `1cf50aa`. ADR-018 is still proposed and awaits the operator's approval. Rollback of the code: revert the commit; migration `2026_11_14_000003` is expand-only and its `down` removes the column;
   - reboot persistence test;
   - backup schedule and off-server copy;
   - monitoring and alerting;
   - tile archive (ADR-015);
   - real mail provider (`MAIL_MAILER=log`);
   - the web apps send `x-powered-by: Next.js`.
-- Hosted CI was last verified at `61ccc84` and is unchanged by this deploy; the later commits, including `bce7e3f`, have no hosted CI result recorded here.
+- Hosted CI was last verified at `61ccc84` and is unchanged by this deploy; the later commits, including `bce7e3f` and `1cf50aa`, have no hosted CI result recorded here.
 
 ## November 14 operator decisions (hosting, tiles, caps, reviews)
 
