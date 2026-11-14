@@ -1,0 +1,36 @@
+﻿X-01 clean clone re-check after fix 515e28c: setup, up, migrate, seed-demo, check (no manual step)
+Date: 2026-11-15. Commit cloned: d493db5 (HEAD of main; contains 515e28c). Windows 11, PowerShell 5.1, Docker Desktop.
+Clone: git clone F:\PROJECTS\hara %TEMP%\hara-clean2.
+
+Isolation
+- Root .env from .env.example with COMPOSE_PROJECT_NAME=hara-cleanclone2 (replacing the commented line), API_HOST_PORT=18000,
+  POSTGRES_HOST_PORT=18432, REDIS_HOST_PORT=16379, MAILPIT_UI_HOST_PORT=18025, MAILPIT_SMTP_HOST_PORT=11025,
+  DEMO_PASSWORD random 24 characters (never printed). APP_KEY left empty in the clone's .env, exactly as .env.example ships it.
+- `docker compose config` reported name: hara-cleanclone2. dev.ps1 builds its compose arguments from the clone's own infra\compose.yaml and .env,
+  so every `check` step used the hara-cleanclone2 project; the running food-delivery stack was not addressed.
+  `docker compose ls` showed both projects side by side.
+
+Commands (run from the clone root, exactly as documented, no manual key fix)
+1. .\infra\scripts\dev.ps1 setup       exit 0, 69 s. Output: "Generated a new APP_KEY", "Set APP_KEY in .env", "Set APP_KEY in backend\.env".
+2. .\infra\scripts\dev.ps1 up          exit 0, 33 s, four services healthy.
+3. .\infra\scripts\dev.ps1 migrate     exit 0, 1 s.
+4. .\infra\scripts\dev.ps1 seed-demo   exit 0, 3 s.
+5. .\infra\scripts\dev.ps1 check       exit 0, 249 s, "All checks passed.":
+   web lint, web typecheck, web tests (config 17, design-tokens 8, ui 11, api-client 3 passing; 0 failures), web build: pass
+   backend format (pint --test): PASS 186 files
+   backend static analysis (phpstan): [OK] No errors
+   backend tests (api container): 800 passed (37674 assertions), 143 s, 0 failed
+   flutter analyze: No issues found
+   flutter test: +47 passed, 4 skipped (~4), All tests passed
+Result: the fresh clone passed with no manual step. F1 (empty APP_KEY in the root .env, 450 failures before) is confirmed fixed.
+
+Teardown
+- docker compose -p hara-cleanclone2 down -v: removed 4 containers, volumes hara-cleanclone2_postgres_data and hara-cleanclone2_backend_vendor, network.
+- Scratch folder deleted (robocopy /MIR from an empty folder, then Remove-Item); Test-Path returns False.
+- The food-delivery stack (api, redis, postgres, mailpit) stayed Up 28 hours and healthy; its volumes food-delivery_postgres_data and
+  food-delivery_backend_vendor are intact.
+
+Findings
+- None blocking. Minor: the console shows mojibake for check marks (UTF-8 output read as a legacy code page) in the captured log; cosmetic.
+- Not covered: Makefile targets (make not installed), Playwright.
+Secrets: none recorded. DEMO_PASSWORD and APP_KEY were never printed.
