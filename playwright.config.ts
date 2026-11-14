@@ -30,7 +30,8 @@ export default defineConfig({
       command: "pnpm dev:customer",
       port: 3000,
       timeout: 120_000,
-      env: { API_URL: live ? "http://localhost:8000" : publicConfigUrl },
+      // 0 turns off the banner's answer cache, so each test sees the stand-in's current answer.
+      env: { API_URL: live ? "http://localhost:8000" : publicConfigUrl, SERVICE_STATE_CACHE_SECONDS: "0" },
     },
     { command: "pnpm dev:merchant", port: 3001, timeout: 120_000 },
     {

@@ -9,11 +9,27 @@ const apiUrl = process.env.API_URL ?? "http://localhost:8000";
 type ServiceState = "open" | "closed" | "unknown";
 
 /**
- * Asks the API, from the server, on every request, whether any delivery
- * area is open. The banner never claims the service is open unless the API
- * said so; if the API cannot be reached it says that instead.
+ * How long a successful answer is reused, in ms. Every page render on this
+ * server asks the API, and all of those calls share one client IP, which the
+ * API rate-limits (public-config, 120/min per IP). Reusing a recent answer
+ * keeps normal traffic under that limit. SERVICE_STATE_CACHE_SECONDS sets it
+ * (default 30; 0 turns the cache off). Anything that is not a non-negative
+ * integer falls back to the default.
  */
-async function serviceState(): Promise<ServiceState> {
+const DEFAULT_SERVICE_STATE_CACHE_SECONDS = 30;
+
+function cacheTtlMs(raw: string | undefined): number {
+  const value = raw?.trim() ?? "";
+  const seconds = /^\d+$/.test(value) ? Number(value) : DEFAULT_SERVICE_STATE_CACHE_SECONDS;
+  return seconds * 1000;
+}
+
+const SERVICE_STATE_TTL_MS = cacheTtlMs(process.env.SERVICE_STATE_CACHE_SECONDS);
+
+let cached: { state: "open" | "closed"; expiresAt: number } | undefined;
+let inFlight: Promise<ServiceState> | undefined;
+
+async function askApi(): Promise<ServiceState> {
   try {
     const response = await fetch(`${apiUrl}/api/v1/public/config`, {
       cache: "no-store",
@@ -27,6 +43,33 @@ async function serviceState(): Promise<ServiceState> {
   } catch {
     return "unknown";
   }
+}
+
+/**
+ * Asks the API, from the server, whether any delivery area is open. The
+ * answer may be up to 30 s old by default (see SERVICE_STATE_CACHE_SECONDS):
+ * the last successful answer ("open" or "closed") is kept in memory for
+ * SERVICE_STATE_TTL_MS, and concurrent
+ * renders share one in-flight request. A failed or unreadable answer is
+ * never cached, so the next render asks again. The banner never claims the
+ * service is open unless the API said so; if the API cannot be reached it
+ * says that instead.
+ */
+async function serviceState(): Promise<ServiceState> {
+  if (cached && cached.expiresAt > Date.now()) return cached.state;
+
+  inFlight ??= askApi()
+    .then((state) => {
+      if (state !== "unknown" && SERVICE_STATE_TTL_MS > 0) {
+        cached = { state, expiresAt: Date.now() + SERVICE_STATE_TTL_MS };
+      }
+      return state;
+    })
+    .finally(() => {
+      inFlight = undefined;
+    });
+
+  return inFlight;
 }
 
 function Frame({ badge, title, children }: { badge: ReactNode; title: string; children: ReactNode }) {
