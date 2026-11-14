@@ -218,8 +218,8 @@ class _SignInScreenState extends State<SignInScreen> {
                       key: const Key('sign-in-button'),
                       onPressed: _submitting ? null : _submit,
                       style: FilledButton.styleFrom(
-                        backgroundColor: p.header,
-                        foregroundColor: p.onHeader,
+                        backgroundColor: p.brand,
+                        foregroundColor: p.onBrand,
                         disabledBackgroundColor: p.outline,
                         disabledForegroundColor: p.text,
                         minimumSize: const Size.fromHeight(52),

@@ -6,7 +6,8 @@ import 'tokens.g.dart';
 ///
 /// Only pairs listed in docs/ux/contrast-report.md are approved: for example
 /// [onHeader] and [action] on [header], [onAction] on [action], and
-/// [text] / [textMuted] on [canvas] or [card].
+/// [text] / [textMuted] on [canvas] or [card], and [onBrand] on [brand] for
+/// filled buttons ([brand] against [canvas] is the 3:1 control boundary).
 class RiderPalette {
   const RiderPalette._({
     required this.header,
@@ -20,6 +21,7 @@ class RiderPalette {
     required this.textMuted,
     required this.outline,
     required this.brand,
+    required this.onBrand,
   });
 
   final Color header;
@@ -33,6 +35,7 @@ class RiderPalette {
   final Color textMuted;
   final Color outline;
   final Color brand;
+  final Color onBrand;
 
   static const light = RiderPalette._(
     header: LightTokens.nav,
@@ -46,6 +49,7 @@ class RiderPalette {
     textMuted: LightTokens.textSecondary,
     outline: LightTokens.borderStrong,
     brand: LightTokens.brand600,
+    onBrand: LightTokens.onBrand,
   );
 
   static const dark = RiderPalette._(
@@ -60,6 +64,7 @@ class RiderPalette {
     textMuted: DarkTokens.textSecondary,
     outline: DarkTokens.borderStrong,
     brand: DarkTokens.brand600,
+    onBrand: DarkTokens.onBrand,
   );
 
   static RiderPalette of(BuildContext context) =>
