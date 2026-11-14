@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
   // Do not send `X-Powered-By: Next.js` (Next 16 poweredByHeader option).
   poweredByHeader: false,
   async headers() {
-    return securityHeaders({ geolocation: true, baselineCsp: false });
+    return securityHeaders({ geolocation: true, baselineCsp: false, staticFloorCsp: true });
   },
   transpilePackages: ["@food-delivery/session", "@food-delivery/ui"],
   turbopack: {

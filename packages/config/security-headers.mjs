@@ -7,13 +7,28 @@
 
 const BASE_CSP = "frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'";
 
+// Fail-closed floor for the paths each app's proxy.ts skips (static assets only). Blocks inline script,
+// framing, plugins and base/form hijacking; the nonce policy from the proxy is the real policy for everything else.
+const FLOOR_CSP = "script-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'self'";
+
 /**
- * @param {{ geolocation?: boolean, baselineCsp?: boolean }} [options] geolocation: allow this app's
+ * The only request paths the apps' proxy.ts does not run on (static assets, which carry no HTML).
+ * proxy.ts's matcher must be exactly the complement of these; a test in packages/config compares them.
+ * `:path*` matches zero or more segments, so `/_next/static/:path*` does not match `/_next/staticX`.
+ */
+export const PROXY_SKIPPED_SOURCES = ["/_next/static/:path*", "/_next/image", "/favicon.ico"];
+
+/** The matcher string every proxy.ts must use: everything except PROXY_SKIPPED_SOURCES, anchored. */
+export const PROXY_MATCHER = "/((?!_next/static/|_next/image$|favicon\\.ico$).*)";
+
+/**
+ * @param {{ geolocation?: boolean, baselineCsp?: boolean, staticFloorCsp?: boolean }} [options] geolocation: allow this app's
  *   own pages to ask for the device position (the customer app only). baselineCsp: send the static
  *   frame/base/form/object CSP. The apps turn it off because a header set in next.config replaces the
  *   proxy's per-request one (it would also hide the nonce from Next), so the proxy sends the whole policy.
+ *   staticFloorCsp: with baselineCsp off, send a fail-closed floor CSP on the paths the proxy skips (static assets).
  */
-export function securityHeaders({ geolocation = false, baselineCsp = true } = {}) {
+export function securityHeaders({ geolocation = false, baselineCsp = true, staticFloorCsp = false } = {}) {
   return [
     {
       source: "/:path*",
@@ -28,6 +43,11 @@ export function securityHeaders({ geolocation = false, baselineCsp = true } = {}
         ...(baselineCsp ? [{ key: "Content-Security-Policy", value: BASE_CSP }] : []),
       ],
     },
+    // A header set here replaces the proxy's, so the floor is attached only to the paths the proxy never
+    // runs on (PROXY_SKIPPED_SOURCES). Everything else gets the proxy's nonce policy.
+    ...(staticFloorCsp
+      ? PROXY_SKIPPED_SOURCES.map((source) => ({ source, headers: [{ key: "Content-Security-Policy", value: FLOOR_CSP }] }))
+      : []),
   ];
 }
 

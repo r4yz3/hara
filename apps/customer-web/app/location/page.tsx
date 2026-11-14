@@ -26,7 +26,7 @@ export default function LocationPage() {
           Not built yet
         </h2>
         <ul className="mt-2 list-disc pl-5 text-sm text-text-secondary">
-          <li>Typing an address or dropping a pin on a map. No map or address-lookup provider has been chosen.</li>
+          <li>Typing an address or dropping a pin on a map. No address-lookup provider has been chosen, and the customer map is not built.</li>
           <li>Saving an address with a landmark to your account.</li>
           <li>Checking that a rider can actually reach the spot by road. This check uses the area&apos;s outline only.</li>
         </ul>

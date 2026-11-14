@@ -22,13 +22,9 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    {
-      // Page requests only: not static assets, and not link prefetches (they carry no HTML).
-      source: "/((?!_next/static|_next/image|favicon.ico).*)",
-      missing: [
-        { type: "header", key: "next-router-prefetch" },
-        { type: "header", key: "purpose", value: "prefetch" },
-      ],
-    },
+    // Every request except the three static asset classes, anchored so that look-alike paths (`/favicon.icoX`,
+    // `/_next/staticX`) still pass through here. Prefetches are included on purpose: they must carry the policy too (ADR-020).
+    // Keep in step with PROXY_SKIPPED_SOURCES in packages/config/security-headers.mjs (a unit test compares them).
+    "/((?!_next/static/|_next/image$|favicon\\.ico$).*)",
   ],
 };

@@ -114,3 +114,43 @@ test("images and workers need no extra sources: MapLibre fetches sprites and til
   assert.match(policy, /img-src 'self';/);
   assert.match(policy, /worker-src 'self';/);
 });
+
+import { readFileSync } from "node:fs";
+import { PROXY_MATCHER, PROXY_SKIPPED_SOURCES } from "../security-headers.mjs";
+
+test("proxy matcher: anchored, so only the real static assets skip the proxy (ADR-020)", () => {
+  // Next compiles the matcher with path-to-regexp; the group is a plain regular expression anchored to the whole path.
+  const runs = (path) => new RegExp(`^${PROXY_MATCHER}$`).test(path);
+  for (const path of ["/", "/login", "/does-not-exist", "/favicon.icoX", "/favicon-ico", "/xfavicon.ico", "/_next/staticX", "/_next/static", "/_next/imageX", "/_next/image/x", "/a/_next/static/x.js", "/_next/data/x.json"]) {
+    assert.equal(runs(path), true, `${path} must reach the proxy`);
+  }
+  for (const path of ["/_next/static/chunks/a.js", "/_next/static/", "/_next/image", "/favicon.ico"]) {
+    assert.equal(runs(path), false, `${path} is a static asset`);
+  }
+});
+
+test("every app's proxy.ts uses exactly PROXY_MATCHER, with no prefetch exclusion", () => {
+  for (const app of ["customer", "merchant", "admin"]) {
+    const source = readFileSync(new URL(`../../../apps/${app}-web/proxy.ts`, import.meta.url), "utf8");
+    assert.ok(source.includes(JSON.stringify(PROXY_MATCHER)), `${app}: matcher differs from PROXY_MATCHER`);
+    assert.doesNotMatch(source, /missing:|has:/,`${app}: the matcher must not skip any request by header`);
+    assert.equal((source.match(/matcher:/g) ?? []).length, 1);
+  }
+});
+
+test("static floor: a fail-closed CSP on exactly the paths the proxy skips, and nowhere else", () => {
+  const rules = securityHeaders({ baselineCsp: false, staticFloorCsp: true });
+  assert.deepEqual(rules.slice(1).map((r) => r.source), PROXY_SKIPPED_SOURCES);
+  assert.equal(rules[0].source, "/:path*");
+  assert.equal(byKey([rules[0]])["Content-Security-Policy"], undefined, "the catch-all must not carry a CSP: it would replace the proxy's");
+  for (const rule of rules.slice(1)) {
+    const csp = Object.fromEntries(rule.headers.map((h) => [h.key, h.value]))["Content-Security-Policy"];
+    assert.match(csp, /script-src 'self'(;|$)/);
+    assert.match(csp, /frame-ancestors 'none'/);
+    assert.match(csp, /object-src 'none'/);
+    assert.match(csp, /base-uri 'none'/);
+    assert.match(csp, /form-action 'self'/);
+    assert.doesNotMatch(csp, /unsafe-|\*/);
+  }
+  assert.equal(securityHeaders({ baselineCsp: false }).length, 1);
+});

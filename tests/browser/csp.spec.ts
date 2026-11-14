@@ -188,3 +188,72 @@ test("csp: the policy is enforced, not just present (an inline handler and a for
   expect(seen).toMatch(/script-src/);
   expect(seen).toMatch(/connect-src/);
 });
+
+// Every response class that can carry HTML or script must carry a CSP (ADR-020). The proxy matcher is anchored, so look-alike
+// paths of the skipped static assets still get the nonce policy; prefetch requests are not skipped either.
+const policyOf = (headers: Record<string, string>) => headers["content-security-policy"] ?? "";
+const nonceOf = (csp: string) => /'nonce-([^']+)'/.exec(csp)?.[1];
+
+test("csp: the nonce policy is on pages, 404s, look-alike static paths and prefetch requests, in all three apps", async ({ request }) => {
+  const cases: { name: string; path: string; headers?: Record<string, string>; status?: number }[] = [
+    { name: "page", path: "/" },
+    { name: "login", path: "/login" },
+    { name: "404", path: "/does-not-exist", status: 404 },
+    { name: "favicon look-alike", path: "/favicon.icoX", status: 404 },
+    { name: "static look-alike", path: "/_next/staticX", status: 404 },
+    { name: "static look-alike with slash", path: "/_next/staticX/chunks/a.js", status: 404 },
+    { name: "image look-alike", path: "/_next/imageX", status: 404 },
+    { name: "next-router-prefetch", path: "/login", headers: { "next-router-prefetch": "1" } },
+    { name: "purpose: prefetch", path: "/login", headers: { purpose: "prefetch" } },
+    { name: "RSC prefetch", path: "/login", headers: { rsc: "1", "next-router-prefetch": "1" } },
+    { name: "prefetch on a 404", path: "/does-not-exist", headers: { "next-router-prefetch": "1" }, status: 404 },
+    { name: "error page (layout fault; status is whatever Next sends once streaming has begun)", path: "/test-faults/layout" },
+  ];
+  for (const [app, base] of Object.entries(apps)) {
+    for (const { name, path, headers, status } of cases) {
+      const response = await request.get(`${base}${path}`, { headers, failOnStatusCode: false });
+      const label = `${app} ${name} ${path}`;
+      if (status) expect(response.status(), label).toBe(status);
+      const csp = policyOf(response.headers());
+      expect(csp, label).toMatch(/script-src 'self' 'nonce-[^']+' 'strict-dynamic'/);
+      expect(csp, label).toMatch(/frame-ancestors 'none'/);
+      expect(csp, label).not.toMatch(/unsafe-/);
+      // An HTML body must use the nonce of this response's own header.
+      if ((response.headers()["content-type"] ?? "").includes("text/html")) {
+        const html = await response.text();
+        const bare = [...html.matchAll(/<(script|style)\b([^>]*)>/g)].filter((m) => !m[2].includes(`nonce="${nonceOf(csp)}"`));
+        expect(bare.map((m) => m[0]), label).toEqual([]);
+      }
+    }
+  }
+});
+
+test("csp: the paths the proxy skips (static assets) still carry the fail-closed floor, never an inline-script allowance", async ({ request }) => {
+  for (const base of Object.values(apps)) {
+    for (const path of ["/favicon.ico", "/_next/static/missing.js", "/_next/image"]) {
+      const response = await request.get(`${base}${path}`, { failOnStatusCode: false });
+      const csp = policyOf(response.headers());
+      expect(csp, `${base}${path}`).toMatch(/script-src 'self'(;|$)/);
+      expect(csp, `${base}${path}`).toMatch(/frame-ancestors 'none'/);
+      expect(csp, `${base}${path}`).toMatch(/object-src 'none'/);
+      expect(csp, `${base}${path}`).not.toMatch(/unsafe-|nonce-/);
+    }
+  }
+});
+
+test("csp: client-side navigation (RSC fetches, prefetches included) works under the policy with no violations", async ({ page }) => {
+  await mock(page);
+  const watcher = await watch(page);
+  await page.goto(`${apps.customer}/`);
+  await heading(page);
+  const requests: string[] = [];
+  page.on("request", (r) => { if (r.headers()["rsc"]) requests.push(r.url()); });
+  // Soft navigation to the sign-in page through a real link, so Next fetches the RSC payload.
+  const link = page.getByRole("link", { name: /sign in|log in/i }).first();
+  if (await link.count()) {
+    await link.click();
+    await signIn(page);
+  }
+  await page.waitForLoadState("networkidle");
+  expect(await watcher.violations()).toEqual([]);
+});
