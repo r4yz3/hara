@@ -613,7 +613,7 @@ function CreateZone({ cityId, onCreated }: { cityId: string; onCreated: () => Pr
       </h2>
       <Panel dashed>
         <p className="text-sm text-text-secondary">
-          Map drawing is not built yet and no map provider is chosen, so the shape is entered as GeoJSON; the map beside it only previews the shape once a style is configured. The server checks
+          Draw the shape on the map with a pointer, or type or paste GeoJSON, which also works with the keyboard alone. The map, and with it the draw button, appears only when a map style is configured for this deployment; without one, enter GeoJSON. The server checks
           it and stores its own normalised copy.
         </p>
         <form onSubmit={onSubmit} noValidate className="grid gap-4 sm:grid-cols-3">
