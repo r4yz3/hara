@@ -1,0 +1,250 @@
+E-03 restore drill fault injection, 2026-11-15
+==============================================
+Subject:  infra/staging/restore-drill.sh (unchanged by this work)
+Test:     infra/staging/tests/restore-drill-faults.sh (bash), run on the workstation
+          through infra/staging/tests/restore-drill-faults.ps1 (Git Bash).
+Host:     Windows 11, Docker Desktop, image postgis/postgis:17-3.5-alpine (the one the stack runs).
+Stand-ins: `age` and `rclone` are NOT installed on this workstation, so the test supplies
+          stand-ins that implement only the calls the drill makes: age --decrypt --identity F
+          --output OUT IN (openssl AES-256-CBC, the identity file is the passphrase) and
+          rclone lsf / copyto against a local directory. Signing is REAL (ssh-keygen -Y sign
+          and -Y verify, namespace hara-backup, throwaway ed25519 keys made per run).
+          The drill script itself runs unmodified. A run with real age: USE_REAL_AGE=1 (not run here).
+Isolation: the fixture database is built in its own container hara-fixture-<pid> (--network none),
+          not from the dev database. The dev stack's containers and volumes are not used; the
+          test records every docker call the drill makes and asserts each names a hara-drill-*
+          container only, and that the container list is the same before and after.
+
+Command:
+  .\infra\staging\tests\restore-drill-faults.ps1 -Evidence <file>
+  (equivalent: bash infra/staging/tests/restore-drill-faults.sh)
+
+Result: exit 0, 163 checks passed, 0 failed, 106 s.
+
+Cases (every refusal case asserts: exit non-zero, expected message, no "RESTORE DRILL PASSED",
+no role/database creation and no pg_restore, no hara-drill-* container left, no hara-drill.*
+temp directory left, only hara-drill-* docker targets; "early" cases also assert docker was
+never called and nothing was decrypted):
+  good backup, remote and --local ............ PASSES (exit 0, 2 tables, 2 migrations, non-superuser restore)
+  tampered .age (byte appended; byte flipped)  refused: "signature check FAILED"       (early, remote and local)
+  .sig from a different key ................... refused: "signature check FAILED"       (early, remote and local)
+  wrong signature namespace (-n file) ......... refused: "signature check FAILED"       (early, remote and local)
+  empty .sig .................................. refused: "signature file ... is missing" (early, remote and local)
+  missing .sig ................................ refused: "could not be downloaded; refusing an unsigned backup" (remote)
+                                                refused: "signature file ... is missing; refusing an unsigned backup" (local)
+  dump cut to 64 bytes (signed, decrypts) ..... refused: "pg_restore --list could not read the archive" (late: container started, then removed)
+  dump with first 5 bytes overwritten ......... refused: "pg_restore --list could not read the archive" (late)
+  archive with extension hstore ............... refused: "extension other than postgis/plpgsql; refusing" (late)
+  extra: wrong age identity ................... refused at decryption, exit non-zero, no restore
+  extra: dump body cut in half (TOC readable) . restore starts, pg_restore --exit-on-error stops it, exit non-zero, container removed
+Note: "late" cases pass the signature check because they are validly signed; the drill starts the
+throwaway container (no network) and refuses before creating the role or restoring.
+
+Mutation check (proves the test can fail): a copy of restore-drill.sh with the signature check
+replaced by `if true; then` (DRILL=<copy> bash infra/staging/tests/restore-drill-faults.sh):
+  RESULT: 135 passed, 28 failed  -> the signature cases are detected. The real script was not modified.
+
+----- raw output of the run (PowerShell runner, -Evidence) -----
+﻿age: stand-in
+building fixture dumps in hara-fixture-1991 (--network none)
+fixture dump: 13575 bytes (good), 13988 bytes (hstore)
+--- good [remote]: must PASS
+  PASS  exit status 0 (got 0)
+  PASS  signature verified
+  PASS  RESTORE DRILL PASSED
+  PASS  restore ran as non-superuser drill_owner
+  PASS  2 tables restored, 2 migrations recorded
+  PASS  throwaway container removed
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+--- good [local]: must PASS
+  PASS  exit status 0 (got 0)
+  PASS  signature verified
+  PASS  RESTORE DRILL PASSED
+  PASS  restore ran as non-superuser drill_owner
+  PASS  2 tables restored, 2 migrations recorded
+  PASS  throwaway container removed
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+--- tampered-append [remote]: must be refused (early)
+  PASS  exit status non-zero (got 1)
+  PASS  refusal message matches /signature check FAILED/
+  PASS  never prints RESTORE DRILL PASSED
+  PASS  no restore started (no role/database creation, no pg_restore)
+  PASS  no container started (docker never called)
+  PASS  nothing decrypted
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+        last lines: drill: FAILED: signature check FAILED for hara-staging-20261115T000000Z-faulttest.dump.age; refusing to decrypt or restore it|drill: DRILL FAILED (exit 1)|
+--- tampered-flip [remote]: must be refused (early)
+  PASS  exit status non-zero (got 1)
+  PASS  refusal message matches /signature check FAILED/
+  PASS  never prints RESTORE DRILL PASSED
+  PASS  no restore started (no role/database creation, no pg_restore)
+  PASS  no container started (docker never called)
+  PASS  nothing decrypted
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+        last lines: drill: FAILED: signature check FAILED for hara-staging-20261115T000000Z-faulttest.dump.age; refusing to decrypt or restore it|drill: DRILL FAILED (exit 1)|
+--- other-key [remote]: must be refused (early)
+  PASS  exit status non-zero (got 1)
+  PASS  refusal message matches /signature check FAILED/
+  PASS  never prints RESTORE DRILL PASSED
+  PASS  no restore started (no role/database creation, no pg_restore)
+  PASS  no container started (docker never called)
+  PASS  nothing decrypted
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+        last lines: drill: FAILED: signature check FAILED for hara-staging-20261115T000000Z-faulttest.dump.age; refusing to decrypt or restore it|drill: DRILL FAILED (exit 1)|
+--- wrong-namespace [remote]: must be refused (early)
+  PASS  exit status non-zero (got 1)
+  PASS  refusal message matches /signature check FAILED/
+  PASS  never prints RESTORE DRILL PASSED
+  PASS  no restore started (no role/database creation, no pg_restore)
+  PASS  no container started (docker never called)
+  PASS  nothing decrypted
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+        last lines: drill: FAILED: signature check FAILED for hara-staging-20261115T000000Z-faulttest.dump.age; refusing to decrypt or restore it|drill: DRILL FAILED (exit 1)|
+--- empty-sig [remote]: must be refused (early)
+  PASS  exit status non-zero (got 1)
+  PASS  refusal message matches /signature file .* is missing|signature check FAILED|could not be downloaded/
+  PASS  never prints RESTORE DRILL PASSED
+  PASS  no restore started (no role/database creation, no pg_restore)
+  PASS  no container started (docker never called)
+  PASS  nothing decrypted
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+        last lines: drill: FAILED: signature file <tmp>/hara-faults.Hpx07I/tmp/hara-drill.XR58tg/in.age.sig is missing; refusing an unsigned backup|drill: DRILL FAILED (exit 1)|
+--- tampered-append [local]: must be refused (early)
+  PASS  exit status non-zero (got 1)
+  PASS  refusal message matches /signature check FAILED/
+  PASS  never prints RESTORE DRILL PASSED
+  PASS  no restore started (no role/database creation, no pg_restore)
+  PASS  no container started (docker never called)
+  PASS  nothing decrypted
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+        last lines: drill: FAILED: signature check FAILED for <tmp>/hara-faults.Hpx07I/cases/tampered-append/hara-staging-20261115T000000Z-faulttest.dump.age; refusing to decrypt or restore it|drill: DRILL FAILED (exit 1)|
+--- tampered-flip [local]: must be refused (early)
+  PASS  exit status non-zero (got 1)
+  PASS  refusal message matches /signature check FAILED/
+  PASS  never prints RESTORE DRILL PASSED
+  PASS  no restore started (no role/database creation, no pg_restore)
+  PASS  no container started (docker never called)
+  PASS  nothing decrypted
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+        last lines: drill: FAILED: signature check FAILED for <tmp>/hara-faults.Hpx07I/cases/tampered-flip/hara-staging-20261115T000000Z-faulttest.dump.age; refusing to decrypt or restore it|drill: DRILL FAILED (exit 1)|
+--- other-key [local]: must be refused (early)
+  PASS  exit status non-zero (got 1)
+  PASS  refusal message matches /signature check FAILED/
+  PASS  never prints RESTORE DRILL PASSED
+  PASS  no restore started (no role/database creation, no pg_restore)
+  PASS  no container started (docker never called)
+  PASS  nothing decrypted
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+        last lines: drill: FAILED: signature check FAILED for <tmp>/hara-faults.Hpx07I/cases/other-key/hara-staging-20261115T000000Z-faulttest.dump.age; refusing to decrypt or restore it|drill: DRILL FAILED (exit 1)|
+--- wrong-namespace [local]: must be refused (early)
+  PASS  exit status non-zero (got 1)
+  PASS  refusal message matches /signature check FAILED/
+  PASS  never prints RESTORE DRILL PASSED
+  PASS  no restore started (no role/database creation, no pg_restore)
+  PASS  no container started (docker never called)
+  PASS  nothing decrypted
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+        last lines: drill: FAILED: signature check FAILED for <tmp>/hara-faults.Hpx07I/cases/wrong-namespace/hara-staging-20261115T000000Z-faulttest.dump.age; refusing to decrypt or restore it|drill: DRILL FAILED (exit 1)|
+--- empty-sig [local]: must be refused (early)
+  PASS  exit status non-zero (got 1)
+  PASS  refusal message matches /signature file .* is missing|signature check FAILED|could not be downloaded/
+  PASS  never prints RESTORE DRILL PASSED
+  PASS  no restore started (no role/database creation, no pg_restore)
+  PASS  no container started (docker never called)
+  PASS  nothing decrypted
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+        last lines: drill: FAILED: signature file <tmp>/hara-faults.Hpx07I/cases/empty-sig/hara-staging-20261115T000000Z-faulttest.dump.age.sig is missing; refusing an unsigned backup|drill: DRILL FAILED (exit 1)|
+--- no-sig [remote]: must be refused (early)
+  PASS  exit status non-zero (got 1)
+  PASS  refusal message matches /could not be downloaded; refusing an unsigned backup/
+  PASS  never prints RESTORE DRILL PASSED
+  PASS  no restore started (no role/database creation, no pg_restore)
+  PASS  no container started (docker never called)
+  PASS  nothing decrypted
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+        last lines: drill: FAILED: signature hara-staging-20261115T000000Z-faulttest.dump.age.sig could not be downloaded; refusing an unsigned backup|drill: DRILL FAILED (exit 1)|
+--- no-sig [local]: must be refused (early)
+  PASS  exit status non-zero (got 1)
+  PASS  refusal message matches /signature file .* is missing; refusing an unsigned backup|not found/
+  PASS  never prints RESTORE DRILL PASSED
+  PASS  no restore started (no role/database creation, no pg_restore)
+  PASS  no container started (docker never called)
+  PASS  nothing decrypted
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+        last lines: drill: FAILED: signature file <tmp>/hara-faults.Hpx07I/cases/no-sig/hara-staging-20261115T000000Z-faulttest.dump.age.sig is missing; refusing an unsigned backup|drill: DRILL FAILED (exit 1)|
+--- trunc-head [remote]: must be refused (late)
+  PASS  exit status non-zero (got 1)
+  PASS  refusal message matches /pg_restore --list could not read the archive/
+  PASS  never prints RESTORE DRILL PASSED
+  PASS  no restore started (no role/database creation, no pg_restore)
+  PASS  throwaway container was started, then removed
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+        last lines: drill: throwaway container hara-drill-20261114205752-2809 removed|drill: DRILL FAILED (exit 1)|
+--- corrupt-magic [remote]: must be refused (late)
+  PASS  exit status non-zero (got 1)
+  PASS  refusal message matches /pg_restore --list could not read the archive/
+  PASS  never prints RESTORE DRILL PASSED
+  PASS  no restore started (no role/database creation, no pg_restore)
+  PASS  throwaway container was started, then removed
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+        last lines: drill: throwaway container hara-drill-20261114205804-2909 removed|drill: DRILL FAILED (exit 1)|
+--- bad-extension [remote]: must be refused (late)
+  PASS  exit status non-zero (got 1)
+  PASS  refusal message matches /extension other than postgis/plpgsql; refusing/
+  PASS  never prints RESTORE DRILL PASSED
+  PASS  no restore started (no role/database creation, no pg_restore)
+  PASS  throwaway container was started, then removed
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+        last lines: drill: throwaway container hara-drill-20261114205815-3009 removed|drill: DRILL FAILED (exit 1)|
+--- wrong-identity [remote]: must be refused at decryption
+  PASS  exit status non-zero (got 1)
+  PASS  never prints RESTORE DRILL PASSED
+  PASS  no restore started
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+--- trunc-half [remote]: must fail during the restore, never pass
+  PASS  exit status non-zero (got 1)
+  PASS  never prints RESTORE DRILL PASSED
+  PASS  throwaway container removed
+  PASS  no hara-drill-* container left
+  PASS  no hara-drill.* temp directory left
+  PASS  every docker call names a hara-drill-* container only
+--- the rest of the machine
+  PASS  container list (names, running or not) is unchanged by the whole run
+
+RESULT: 163 passed, 0 failed (age: stand-in, image: postgis/postgis:17-3.5-alpine)
