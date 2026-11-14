@@ -5,7 +5,8 @@
 #
 # Steps: pg_dump (custom format) -> verify with pg_restore --list -> encrypt
 # with age (public key only; the private key is never on this server) ->
-# upload with rclone -> verify the upload -> prune off-server copies older than
+# sign the encrypted file with a dedicated SSH signing key (ssh-keygen -Y sign,
+# namespace hara-backup) -> upload file and .sig with rclone -> verify the upload -> prune off-server copies older than
 # 30 days (by the date in the file name) -> keep the newest 7 dumps locally.
 #
 # Usage: backup.sh [--no-upload]
@@ -17,6 +18,8 @@
 #   COMPOSE_DIR        /srv/hara/infra/staging     directory with compose.yaml and .env
 #   BACKUP_DIR         /srv/hara-backups           local copies (must exist, mode 0700)
 #   AGE_RECIPIENT_FILE /etc/hara/backup.age.pub    age public key (one line, age1...)
+#   SIGNING_KEY        /etc/hara/backup-signing/id_ed25519  signing key (owner deploy, 0600,
+#                      no passphrase). Without it the restore drill refuses the backup.
 #   RCLONE_REMOTE      r2:hara-staging-backups     rclone remote:bucket[/path]
 #   KEEP_LOCAL         7                           local dumps to keep
 #   KEEP_REMOTE_DAYS   30                          days to keep off-server
@@ -27,6 +30,8 @@ umask 077
 COMPOSE_DIR=${COMPOSE_DIR:-/srv/hara/infra/staging}
 BACKUP_DIR=${BACKUP_DIR:-/srv/hara-backups}
 AGE_RECIPIENT_FILE=${AGE_RECIPIENT_FILE:-/etc/hara/backup.age.pub}
+SIGNING_KEY=${SIGNING_KEY:-/etc/hara/backup-signing/id_ed25519}
+SIGN_NAMESPACE=hara-backup
 RCLONE_REMOTE=${RCLONE_REMOTE:-r2:hara-staging-backups}
 KEEP_LOCAL=${KEEP_LOCAL:-7}
 KEEP_REMOTE_DAYS=${KEEP_REMOTE_DAYS:-30}
@@ -55,6 +60,7 @@ done
 
 command -v docker >/dev/null || die "docker not found"
 command -v flock >/dev/null || die "flock not found (util-linux)"
+command -v ssh-keygen >/dev/null || die "ssh-keygen not found (sudo apt install openssh-client)"
 command -v "$AGE" >/dev/null || die "age not found (sudo apt install age)"
 if [ "$UPLOAD" -eq 1 ]; then
     command -v "$RCLONE" >/dev/null || die "rclone not found (sudo apt install rclone)"
@@ -63,6 +69,12 @@ fi
 [ -s "$AGE_RECIPIENT_FILE" ] || die "age public key $AGE_RECIPIENT_FILE is missing or empty"
 if grep -q 'AGE-SECRET-KEY' "$AGE_RECIPIENT_FILE"; then die "$AGE_RECIPIENT_FILE holds a PRIVATE key. Remove it from the server."; fi
 grep -q '^age1' "$AGE_RECIPIENT_FILE" || die "$AGE_RECIPIENT_FILE does not hold an age public key (it must start with age1)"
+
+[ -r "$SIGNING_KEY" ] || die "signing key $SIGNING_KEY is missing or unreadable (staging-setup.md, section 11.2a)"
+case "$(stat -c %a -- "$SIGNING_KEY")" in
+    400 | 600) ;;
+    *) die "$SIGNING_KEY must be mode 0600 or 0400" ;;
+esac
 
 # One run at a time.
 exec 9>"$BACKUP_DIR/.backup.lock"
@@ -113,19 +125,32 @@ mv -- "$ENCRYPTING" "$FINAL.age"
 ENCRYPTING=""
 log "encrypted: $NAME.age"
 
+# Sign the ENCRYPTED file: the restore drill verifies this before it decrypts
+# or restores anything, so an upload made with the R2 token alone is refused.
+rm -f -- "$FINAL.age.sig"
+ssh-keygen -Y sign -q -f "$SIGNING_KEY" -n "$SIGN_NAMESPACE" "$FINAL.age" </dev/null
+[ -s "$FINAL.age.sig" ] || die "signing produced no signature"
+log "signed: $NAME.age.sig"
+
 if [ "$UPLOAD" -eq 0 ]; then
     log "--no-upload: skipping the off-server copy and its pruning"
     prune_local 'hara-staging-*.dump'
     prune_local 'hara-staging-*.dump.age'
+    prune_local 'hara-staging-*.dump.age.sig'
     log "done (LOCAL ONLY: no off-server copy was made)"
     exit 0
 fi
 
+# Signature first: the drill picks the newest .dump.age, so the signature must
+# already be there when the file appears.
+"$RCLONE" copyto "$FINAL.age.sig" "$RCLONE_REMOTE/$NAME.age.sig" --s3-no-check-bucket
 "$RCLONE" copyto "$FINAL.age" "$RCLONE_REMOTE/$NAME.age" --s3-no-check-bucket
-# copyto compares size and checksum; also confirm the name is listed.
-"$RCLONE" lsf --files-only "$RCLONE_REMOTE" | grep -Fxq "$NAME.age" || die "uploaded file not found in $RCLONE_REMOTE"
-log "uploaded and listed: $NAME.age"
-rm -f -- "$FINAL.age"
+# copyto compares size and checksum; also confirm both names are listed.
+UPLOADED=$("$RCLONE" lsf --files-only "$RCLONE_REMOTE")
+printf '%s\n' "$UPLOADED" | grep -Fxq "$NAME.age" || die "uploaded file not found in $RCLONE_REMOTE"
+printf '%s\n' "$UPLOADED" | grep -Fxq "$NAME.age.sig" || die "uploaded signature not found in $RCLONE_REMOTE"
+log "uploaded and listed: $NAME.age and $NAME.age.sig"
+rm -f -- "$FINAL.age" "$FINAL.age.sig"
 
 # Off-server retention by the date in the name. Never prune when the listing
 # fails, and always leave the 3 newest files whatever their age.
@@ -136,6 +161,10 @@ printf '%s\n' "$LISTING" | { grep -E '^hara-staging-[0-9]{8}T[0-9]{6}Z-.*\.dump\
     d=${d%%T*}
     if [ "$d" -lt "$CUTOFF" ]; then
         "$RCLONE" deletefile "$RCLONE_REMOTE/$f" && log "removed off-server $f (older than ${KEEP_REMOTE_DAYS} days)"
+        # The signature goes with its file (it may be absent for pre-signing backups).
+        if printf '%s\n' "$LISTING" | grep -Fxq "$f.sig"; then
+            "$RCLONE" deletefile "$RCLONE_REMOTE/$f.sig" && log "removed off-server $f.sig"
+        fi
     fi
 done
 

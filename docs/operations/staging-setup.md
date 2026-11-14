@@ -413,7 +413,7 @@ cd /srv/hara/infra/staging && docker compose logs --tail 5 edge
 
 ## 11. Backup and restore
 
-What exists: a nightly job (`infra/staging/backup.sh`, run by `hara-backup.timer` as `deploy`) that dumps the database, checks the dump, encrypts it, copies it to Cloudflare R2 and prunes old copies; and `infra/staging/restore-drill.sh`, which restores the newest off-server copy into a scratch database. **Status: written, and run on the workstation against the development stack with stand-ins for `age` and `rclone` (neither is installed there). It has not run on the server, with real `age`, or against R2.** Until section 11.6 has passed on the server, "staging database backup restored successfully" in the Phase 1 gate is **not met**.
+What exists: a nightly job (`infra/staging/backup.sh`, run by `hara-backup.timer` as `deploy`) that dumps the database, checks the dump, encrypts it, signs the encrypted file, copies both to Cloudflare R2 and prunes old copies; and `infra/staging/restore-drill.sh`, which verifies the signature of the newest off-server copy, decrypts it and restores it in a throwaway container with no network. **Status: written, and run on the workstation against the development stack with stand-ins for `age` and `rclone` (neither is installed there; the `ssh-keygen` signing and the throwaway postgis container were real). It has not run on the server, with real `age`, or against R2.** Until section 11.6 has passed on the server, "staging database backup restored successfully" in the Phase 1 gate is **not met**.
 
 Design, in short:
 
@@ -423,6 +423,8 @@ Design, in short:
 | Local retention: newest 7 | Fast restore without the network. |
 | Encryption: **age with a public key** (not gpg with a passphrase file) | The server holds only the public key, so someone who takes the server, or the R2 token, cannot read the backups. With gpg symmetric the passphrase would sit on the same server as the backups. The cost: you must keep the private key safe off the server; lose it and the off-server copies are unreadable. |
 | Off-server: rclone to a private R2 bucket, 30 days, pruned by the date in the file name | R2 has no egress fee and has a free tier. The newest 3 files are never pruned, and nothing is pruned if listing fails. |
+| Signature: `ssh-keygen -Y sign -n hara-backup` over the **encrypted** file, uploaded as `<name>.dump.age.sig` (uploaded first, so a file never appears without it) | The R2 token sits on the server and the age recipient is public, so whoever obtains the token alone could upload a crafted archive that a restore would then run. The drill and a real restore verify the signature against `allowed_signers` **before decrypting** and refuse a missing or invalid one. Threat model: this protects against an attacker who has only the R2 token (or the bucket). An attacker with access to the server can read the signing key and sign; that is accepted, which is why the drill is also isolated (next row). |
+| The drill restores in a throwaway `postgis/postgis` container (same tag as `compose.yaml`), `--network none`, as a non-superuser | A hostile archive restored as superuser could run `COPY ... FROM PROGRAM` and similar. The drill never touches the live container, its volume or its network. The postgis extension needs a superuser, so the drill creates it first in the empty database (no dump content involved), leaves the archive's `EXTENSION` entries and postgis's own `spatial_ref_sys` rows out with `pg_restore -L`, refuses an archive that asks for any other extension, and restores as the role `drill_owner` (NOSUPERUSER) with `--no-owner --no-privileges --exit-on-error`. |
 | Schedule: 03:15 Asia/Manila (`OnCalendar` names the timezone; the server clock is CET) | A quiet hour for the users; `Persistent=true` catches up after downtime. |
 
 The dump holds personal data once real accounts exist. Never commit or share it. No IP address, key or bucket secret belongs in the repository.
@@ -487,6 +489,22 @@ rclone lsf r2:hara-staging-backups && echo "bucket reachable"
 
 An empty bucket prints only the second line. `rclone lsd r2:` (list all buckets) should fail, because the token is scoped to one bucket.
 
+### 11.2a Signing key for the backups (once)
+
+On the server, as `deploy`. The private key never leaves the server and has no passphrase (the timer must run unattended); the directory is `deploy`-owned, the key mode 0600:
+
+```bash
+sudo install -d -m 0750 -o deploy -g deploy /etc/hara/backup-signing && ssh-keygen -q -t ed25519 -N '' -C hara-backup-signing -f /etc/hara/backup-signing/id_ed25519 && chmod 600 /etc/hara/backup-signing/id_ed25519
+```
+
+Create `allowed_signers` (public key only; identity and namespace are both `hara-backup`, which the scripts use):
+
+```bash
+echo "hara-backup namespaces=\"hara-backup\" $(cut -d' ' -f1,2 /etc/hara/backup-signing/id_ed25519.pub)" > /etc/hara/backup-signing/allowed_signers && cat /etc/hara/backup-signing/allowed_signers
+```
+
+Copy that one public line into your password manager as well: if the server is lost, it is what lets you verify the off-server backups on a new machine (`ALLOWED_SIGNERS=<file>`). On a rotation, make a new key and **add** its line to `allowed_signers`; keep the old line for as long as backups signed with it exist. `backup.sh` refuses to run without a readable key of mode 0600 or 0400, so a missing key shows up as a failed unit rather than as unsigned backups.
+
 ### 11.3 Install the scripts and the timer
 
 The scripts run from the repository checkout, so they must be committed, pushed and pulled to `/srv/hara` first.
@@ -517,15 +535,15 @@ It blocks until done. Then:
 journalctl -u hara-backup.service -n 20 --no-pager
 ```
 
-Expect "dump ok", "encrypted", "uploaded and listed" and "done". Then:
+Expect "dump ok", "encrypted", "signed", "uploaded and listed" (the file and its `.sig`) and "done". Then:
 
 ```bash
 ls -l /srv/hara-backups && rclone lsl r2:hara-staging-backups
 ```
 
-The local `.dump` must be mode `-rw-------`. The R2 file ends in `.dump.age`. A failure is non-zero: `systemctl is-failed hara-backup.service` prints `failed` and the journal has a `FAILED` line. Nothing alerts you yet (there is no monitoring), so look at the journal weekly until there is.
+The local `.dump` must be mode `-rw-------`. The R2 files end in `.dump.age` and `.dump.age.sig`. A failure is non-zero: `systemctl is-failed hara-backup.service` prints `failed` and the journal has a `FAILED` line. Nothing alerts you yet (there is no monitoring), so look at the journal weekly until there is.
 
-Without an upload (for example before the bucket exists): `/srv/hara/infra/staging/backup.sh --no-upload`. It still dumps, verifies and encrypts, and prints "LOCAL ONLY".
+Without an upload (for example before the bucket exists): `/srv/hara/infra/staging/backup.sh --no-upload`. It still dumps, verifies, encrypts and signs, and prints "LOCAL ONLY".
 
 Before a deploy that migrates, run the same job by hand with `sudo systemctl start hara-backup.service`. The file name carries the release that was running when the dump was taken.
 
@@ -539,7 +557,7 @@ Local dumps are plaintext (mode 600 in a 0700 directory). The server's disk is n
 
 ### 11.6 Restore drill (the gate item)
 
-The drill restores into a scratch database named `hara_drill_<time>` inside the postgres container and drops it afterwards. It never touches the live database. It needs the **private** key for a few minutes. From your PC (fill in the server; no IP is stored in the repository):
+The drill downloads the newest `.dump.age` and its `.sig`, **verifies the signature against `/etc/hara/backup-signing/allowed_signers` before decrypting** (a missing or invalid signature, or a missing `allowed_signers`, stops it), decrypts, then starts a throwaway container `hara-drill-<time>` from the postgis image named in `compose.yaml` (`docker run --rm -d --network none`, random password, no volume you keep), restores into it as the non-superuser `drill_owner`, runs the sanity queries and removes the container (also on failure). It never touches the live postgres container, volume or network. It needs the **private** age key for a few minutes. From your PC (fill in the server; no IP is stored in the repository):
 
 ```bash
 scp hara-staging-backup.age.key deploy@<SERVER_IP>:/dev/shm/backup.age.key
@@ -551,23 +569,36 @@ On the server:
 AGE_IDENTITY=/dev/shm/backup.age.key /srv/hara/infra/staging/restore-drill.sh
 ```
 
-Expect "downloading", "decrypting", "restoring into scratch database", a table count above 0, a migration count above 0 with the latest migration name, "RESTORE DRILL PASSED" and "scratch database ... dropped". To restore a particular file instead of the newest, add `--file hara-staging-<time>-<release>.dump.age`. Then remove the key from the server, whether the drill passed or not:
+Expect "downloading", "signature verified", "decrypting", "starting throwaway container", "restoring as drill_owner (no superuser)", a table count above 0, a migration count above 0 with the latest migration name, "RESTORE DRILL PASSED" and "throwaway container ... removed". To restore a particular file instead of the newest, add `--file hara-staging-<time>-<release>.dump.age`. The postgis image is already on the server because the live database runs it (the container has no network, so it could not pull it). Then remove the key from the server, whether the drill passed or not:
 
 ```bash
 shred -u /dev/shm/backup.age.key; ls /dev/shm/backup.age.key
 ```
 
-`ls` must say the file does not exist (`/dev/shm` is memory, so it also does not survive a reboot). Confirm no scratch database remains:
+`ls` must say the file does not exist (`/dev/shm` is memory, so it also does not survive a reboot). Confirm no drill container remains:
 
 ```bash
-cd /srv/hara/infra/staging && docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d postgres -tAc "select datname from pg_database"'
+docker ps -a --filter name=hara-drill- --format '{{.Names}}'
 ```
 
-Record the date, the file name and the output in `docs/PHASE1_STATUS.md` once the drill has passed. Repeat it after any change to the scripts, the key or the Postgres version, and at least monthly.
+It must print nothing. Check once, on the server, that the signature check bites: copy a `.dump.age` and its `.sig` into a temp directory, append a byte to the `.age` copy and run `restore-drill.sh --local <copy>.dump.age`; it must stop with "signature check FAILED" and never print "decrypting".
+
+Record the date, the file name and the output in `docs/PHASE1_STATUS.md` once the drill has passed. Repeat it after any change to the scripts, the keys or the Postgres version, and at least monthly.
 
 ### 11.7 Restoring for real
 
-The drill restores into a scratch database. To replace the live database, follow section 12 and `runbook.md` (decrypt as in the drill, then restore into a freshly created database; do not use `pg_restore --clean` on a database that a newer release has touched, see the finding in `runbook.md`, C).
+The drill's isolation does not apply here: this restores into the live database, so **authenticity is the control**. Never restore a file whose signature you have not verified.
+
+1. Download the file **and** its `.sig` (`rclone copyto r2:hara-staging-backups/<name>.dump.age <name>.dump.age`, and the same for `<name>.dump.age.sig`).
+2. Verify, using the `allowed_signers` from the server or from your password manager (section 11.2a), before anything else:
+
+   ```bash
+   ssh-keygen -Y verify -f allowed_signers -I hara-backup -n hara-backup -s <name>.dump.age.sig < <name>.dump.age
+   ```
+
+   It must print `Good "hara-backup" signature`. Anything else: stop, do not decrypt, and treat the bucket as compromised (rotate the R2 token).
+3. Only then decrypt (`age --decrypt --identity <key> --output <name>.dump <name>.dump.age`). If you have any doubt about the file, restore it into a throwaway container first with `restore-drill.sh --local <name>.dump.age` (it verifies the signature itself).
+4. Follow section 12 and `runbook.md` to restore into a freshly created database; do not use `pg_restore --clean` on a database that a newer release has touched, see the finding in `runbook.md`, C.
 
 ## 12. Rollback
 
