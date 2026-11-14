@@ -1,6 +1,6 @@
 # Staging setup on one VPS (E-07)
 
-Status on 2026-11-14: **deployed once on the host by the operator** (release `bce7e3f`). What ran on the host is in section 13; the open items are in section 14. Repeat the deploy and the reboot test before relying on this environment, and record each run in `docs/PHASE1_STATUS.md`.
+Status on 2026-11-14: **deployed once on the host by the operator** (release `bce7e3f`). What ran on the host is in section 13; the open items are in section 14. Repeat the deploy before relying on this environment (the reboot test passed on 2026-11-14, see section 13), and record each run in `docs/PHASE1_STATUS.md`.
 
 What you are setting up: one Ubuntu 24.04 VPS (4 vCPU, 8 GB RAM, 2 GB swap, Docker with the compose plugin, user `deploy`, `ufw` allowing SSH and Cloudflare to 80/443) running the whole stack in Docker, behind Cloudflare (SSL mode Full (strict)):
 
@@ -672,10 +672,11 @@ Found and fixed on the way: an API image built from an older commit lacked `conf
 | First platform owner (2026-11-14, operator run) | `staff:bootstrap-owner` run once on the server; invitation accepted in the browser; password and TOTP set; signed in to the staging admin app as platform owner (operator-reported, not checked from the workstation) |
 | Redeploy to `001f8ee` (2026-11-14, operator run) | All 8 services healthy. From the workstation: the three web hosts return 200 with no `x-powered-by` header; `/health/live` is ok |
 | Backups and restore drill (2026-11-14, operator run, release `001f8ee`) | `hara-backup.timer` enabled (next run 03:15 Asia/Manila); first manual backup uploaded to R2 with its `.sig`. Drill passed: signature verified, decrypted, restored into a throwaway no-network container as `drill_owner`, 35 tables, 13 migrations, latest `2026_11_14_000003`; container removed; private key shredded from `/dev/shm` |
+| Reboot persistence (2026-11-14, operator run, release `001f8ee`) | Server rebooted at 15:19:12 (server time CET, `uptime -s`). About a minute later all 8 services were Up (healthy) with no manual action. `hara-cloudflare-firewall status` showed the DOCKER-USER jumps for 443 and 80 on eth0 to HARA-CF with 15 IPv4 and 7 IPv6 Cloudflare RETURN rules ending in DROP, so the firewall unit re-applied at boot. `/dev/shm` was empty |
 
 Found on the host: empty `apps/*/public` folders are not tracked by git, so the web image build failed; fixed in `bce7e3f`. Evidence: `docs/qa/evidence/e07-2026-11-14-staging-deploy.txt`.
 
-**Still not checked:** a reboot (systemd units start again); IPv6 reaching the host; memory under load (limits are ceilings, not measurements); a CI image scan of the web images; a real restore onto staging (section 11.7). The restore drill on the server passed on 2026-11-14 (see the backups row above).
+**Still not checked:** IPv6 reaching the host; the public hosts from the workstation after the reboot (not recorded for that boot); the next scheduled backup and firewall-timer run after the reboot; memory under load (limits are ceilings, not measurements); a CI image scan of the web images; a real restore onto staging (section 11.7). The restore drill on the server passed on 2026-11-14 (see the backups row above).
 
 ## 14. Decisions and open items for the operator
 

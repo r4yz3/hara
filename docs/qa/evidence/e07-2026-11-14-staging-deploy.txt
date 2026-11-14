@@ -62,3 +62,10 @@
   - RESTORE DRILL PASSED
   - throwaway container removed; private key shredded from `/dev/shm` afterwards
 - Not covered by this record: a real restore onto staging (section 11.7), alerting on a failed run (none exists yet), and the next scheduled run.
+
+## 9. Reboot persistence, 2026-11-14 (operator-reported, release 001f8ee)
+- The server was rebooted. `uptime -s` reports the last boot at 2026-11-14 15:19:12 (server time CET).
+- About a minute after boot, all 8 compose services (admin, api, customer, edge, merchant, postgres, redis, web) were Up (healthy), with no manual action.
+- `sudo hara-cloudflare-firewall status`: DOCKER-USER jumps for 443 and 80 on eth0 to HARA-CF, with 15 IPv4 and 7 IPv6 Cloudflare RETURN rules ending in DROP. The firewall unit re-applied its rules at boot.
+- `/dev/shm` was empty (no leftover drill key).
+- Not recorded for this boot: workstation checks of the public hosts, the next scheduled backup run, and the weekly firewall timer.

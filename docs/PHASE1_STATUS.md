@@ -12,9 +12,9 @@ Evidence: `docs/qa/evidence/e07-2026-11-14-staging-deploy.txt` (the operator's r
 - **Found and fixed during the deploy:** empty `apps/*/public` folders are not tracked by git, so the web image build failed; fixed in `bce7e3f`.
 - **Done (operator-reported 2026-11-14, not checked from the workstation):** redeploy to `1cf50aa`; migration `2026_11_14_000003` ran; `php artisan staff:bootstrap-owner` ran on the server; the invitation was accepted in the browser, a password and TOTP were set, and the platform owner signed in at the staging admin app.
 - **Done (2026-11-14, operator-reported, release `001f8ee`):** nightly encrypted off-site backup to a private Cloudflare R2 bucket by `hara-backup.timer` (03:15 Asia/Manila), each copy signed. The restore drill passed on the server: signature verified before decrypting, restored into a throwaway no-network container as a non-superuser, 35 tables, 13 migrations, latest `2026_11_14_000003`. Gate item "staging database backup restored successfully" is met by this drill. Evidence: `docs/qa/evidence/e07-2026-11-14-staging-deploy.txt`, section 8. Checked from the workstation after the redeploy: the three web hosts return 200 with no `x-powered-by` header, and `/health/live` is ok.
+- **Done (2026-11-14, operator-reported, release `001f8ee`):** reboot persistence. The server rebooted at 15:19:12 (server time CET); about a minute later all 8 compose services were Up (healthy) without manual action, and the Cloudflare-only firewall rules were back in DOCKER-USER (15 IPv4 and 7 IPv6 ranges ending in DROP), so the firewall unit re-applied at boot. Evidence: `docs/qa/evidence/e07-2026-11-14-staging-deploy.txt`, section 9.
 - **Not done:**
   - first platform owner: done on staging (operator-reported 2026-11-14) with `php artisan staff:bootstrap-owner` on release `1cf50aa`. ADR-018 is still proposed and awaits the operator's approval. Rollback of the code: revert the commit; migration `2026_11_14_000003` is expand-only and its `down` removes the column;
-  - reboot persistence test;
   - monitoring and alerting;
   - tile archive (ADR-015);
   - real mail provider (`MAIL_MAILER=log`).
