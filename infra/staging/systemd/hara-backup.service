@@ -1,0 +1,18 @@
+# Nightly staging database backup (docs/operations/staging-setup.md, section 11).
+# Runs as deploy from the repository checkout; output goes to the journal
+# (journalctl -u hara-backup.service).
+[Unit]
+Description=Back up the staging database and copy it off the server
+After=docker.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=deploy
+Group=deploy
+WorkingDirectory=/srv/hara/infra/staging
+ExecStart=/usr/bin/bash /srv/hara/infra/staging/backup.sh
+TimeoutStartSec=30min
+Nice=10
+IOSchedulingClass=idle

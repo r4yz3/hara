@@ -1,0 +1,13 @@
+# Daily at 03:15 Manila time. The server clock is CET; the explicit timezone
+# makes systemd convert. Check: systemd-analyze calendar "*-*-* 03:15:00 Asia/Manila"
+[Unit]
+Description=Nightly staging database backup
+
+[Timer]
+OnCalendar=*-*-* 03:15:00 Asia/Manila
+RandomizedDelaySec=5min
+Persistent=true
+Unit=hara-backup.service
+
+[Install]
+WantedBy=timers.target
