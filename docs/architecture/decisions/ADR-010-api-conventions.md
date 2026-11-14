@@ -14,6 +14,7 @@
 - **One source of truth for the contract:** `backend/openapi/openapi.yaml` (OpenAPI 3.1) is written by hand first. Contract tests validate real responses against it, and CI fails on an unreviewed diff. The TypeScript client is generated from it.
 - Future endpoints are documented under a clearly marked planned section and are not registered as routes. They never return 200 with empty mock data.
 - Public endpoints are rate limited; serviceability has its own limiter.
+- Each throttled route has its own named limiter in `AppServiceProvider` (same limits as before, keyed by limiter name and address; the signed-in invite route by account). An inline `throttle:N,M` is not allowed: for signed-out requests Laravel keys it by domain and IP only, so every such route shared one bucket and csrf or sign-in calls could lock out a valid emailed invitation link with 429. `RateLimitBucketsTest` proves the buckets are independent and fails on any inline numeric throttle.
 
 ## Consequences
 The contract is reviewed before the code. A route that exists without a spec entry, or the reverse, fails CI.

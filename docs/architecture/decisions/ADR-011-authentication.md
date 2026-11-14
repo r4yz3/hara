@@ -11,6 +11,7 @@ The spec requires "an explicitly selected secure auth design" (1.3), cookie sess
 - This mode needs the API and the apps on the same registrable domain. Locally that is `localhost` on different ports. Deployed environments must use subdomains of one domain. If that cannot be guaranteed, the fallback is a backend-for-frontend session broker in each Next.js app, with its own threat analysis, before any deployment.
 - **Rider app:** Sanctum personal access tokens with a restricted ability list, a short expiry, storage in the platform keystore, rotation on refresh and revocation per device. `POST /api/v1/auth/mobile/token` issues tokens only to approved riders on a registered device.
 - Passwords use the framework hasher configured for Argon2id. Login and recovery are throttled. Login errors and recovery responses are identical whether or not the account exists.
+  Per-account limiting (email plus address hash) lives in the controllers; the route-level limiters are per address only and one per route, see ADR-010.
 - Registration is open only when `FEATURE_PUBLIC_REGISTRATION` is on, always creates a `customer`, and ignores any role or scope in the request.
 - The first owner account is created by a console command that runs only in `local` and `testing`. Production owner provisioning is a separate audited procedure, not yet defined.
 

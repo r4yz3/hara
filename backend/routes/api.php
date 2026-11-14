@@ -25,25 +25,25 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Public, unauthenticated.
-Route::get('/public/config', [PublicGeoController::class, 'config'])->middleware('throttle:120,1')->name('public.config');
-Route::get('/public/cities', [PublicGeoController::class, 'cities'])->middleware('throttle:120,1')->name('public.cities');
+Route::get('/public/config', [PublicGeoController::class, 'config'])->middleware('throttle:public-config')->name('public.config');
+Route::get('/public/cities', [PublicGeoController::class, 'cities'])->middleware('throttle:public-cities')->name('public.cities');
 // POST on purpose: the position travels in the body, never in the URL (ADR-013).
-Route::post('/locations/serviceability', [PublicGeoController::class, 'serviceability'])->middleware('throttle:60,1')->name('locations.serviceability');
+Route::post('/locations/serviceability', [PublicGeoController::class, 'serviceability'])->middleware('throttle:locations-serviceability')->name('locations.serviceability');
 
 // Sign-in.
-Route::get('/auth/csrf', [AuthController::class, 'csrf'])->middleware('throttle:60,1')->name('auth.csrf');
-Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:10,1')->name('auth.register');
+Route::get('/auth/csrf', [AuthController::class, 'csrf'])->middleware('throttle:auth-csrf')->name('auth.csrf');
+Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:auth-register')->name('auth.register');
 // Per-account limiting happens in the controller; this caps one address overall.
-Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:30,1')->name('auth.login');
-Route::post('/auth/mfa/verify', [AuthController::class, 'verifyMfa'])->middleware('throttle:30,1')->name('auth.mfa.verify');
-Route::post('/auth/password/forgot', [AuthController::class, 'forgotPassword'])->middleware('throttle:10,1')->name('auth.password.forgot');
-Route::post('/auth/password/reset', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1')->name('auth.password.reset');
+Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:auth-login')->name('auth.login');
+Route::post('/auth/mfa/verify', [AuthController::class, 'verifyMfa'])->middleware('throttle:auth-mfa-verify')->name('auth.mfa.verify');
+Route::post('/auth/password/forgot', [AuthController::class, 'forgotPassword'])->middleware('throttle:auth-password-forgot')->name('auth.password.forgot');
+Route::post('/auth/password/reset', [AuthController::class, 'resetPassword'])->middleware('throttle:auth-password-reset')->name('auth.password.reset');
 // The invitee holds only the emailed token, sent in the body (never a URL). Failures all answer alike.
 Route::post('/auth/invitations/inspect', [StaffInvitationAcceptController::class, 'inspect'])->middleware('throttle:invitation-inspect')->name('auth.invitations.inspect');
 Route::post('/auth/invitations/accept', [StaffInvitationAcceptController::class, 'accept'])->middleware('throttle:invitation-accept')->name('auth.invitations.accept');
 
 // Rider app: bearer tokens, not cookies. Per-account limiting is in the controller.
-Route::post('/auth/mobile/token', [RiderAuthController::class, 'issue'])->middleware('throttle:30,1')->name('auth.mobile.token');
+Route::post('/auth/mobile/token', [RiderAuthController::class, 'issue'])->middleware('throttle:auth-mobile-token')->name('auth.mobile.token');
 
 Route::middleware(EnsureRiderToken::class)->group(function (): void {
     Route::post('/auth/mobile/token/refresh', [RiderAuthController::class, 'refresh'])->name('auth.mobile.refresh');
@@ -80,7 +80,7 @@ Route::middleware(EnsureSurfaceSession::class)->group(function (): void {
         Route::delete('/users/{user}/roles/{grant}', [StaffAccessController::class, 'revoke'])->name('admin.users.roles.destroy');
         Route::post('/users/{user}/mfa/reset', [MfaController::class, 'reset'])->name('admin.users.mfa.reset');
         Route::get('/invitations', [StaffInvitationController::class, 'index'])->name('admin.invitations.index');
-        Route::post('/invitations', [StaffInvitationController::class, 'store'])->middleware('throttle:20,1')->name('admin.invitations.store');
+        Route::post('/invitations', [StaffInvitationController::class, 'store'])->middleware('throttle:admin-invitations-store')->name('admin.invitations.store');
         Route::delete('/invitations/{invitation}', [StaffInvitationController::class, 'destroy'])->name('admin.invitations.destroy');
         Route::get('/audit-logs', [OversightController::class, 'auditLogs'])->name('admin.audit-logs.index');
         Route::get('/system/status', [OversightController::class, 'systemStatus'])->name('admin.system.status');

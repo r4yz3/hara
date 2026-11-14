@@ -10,6 +10,22 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
+    /** Limiter name => requests per minute per address, for the signed-out routes. */
+    public const PUBLIC_LIMITS = [
+        'public-config' => 120,
+        'public-cities' => 120,
+        'locations-serviceability' => 60,
+        'auth-csrf' => 60,
+        'auth-register' => 10,
+        'auth-login' => 30,
+        'auth-mfa-verify' => 30,
+        'auth-password-forgot' => 10,
+        'auth-password-reset' => 10,
+        'invitation-inspect' => 10,
+        'invitation-accept' => 10,
+        'auth-mobile-token' => 30,
+    ];
+
     public function register(): void
     {
         //
@@ -19,9 +35,14 @@ class AppServiceProvider extends ServiceProvider
     {
         // An inline throttle:N,M gives every signed-out route the same bucket per address (the key is domain and
         // IP only), so csrf and sign-in calls used up the invitation budget and a valid emailed link answered 429.
-        // Each invitation route gets its own bucket, same limit as before.
-        RateLimiter::for('invitation-inspect', fn (Request $request): Limit => Limit::perMinute(10)->by('invitation-inspect|'.$request->ip()));
-        RateLimiter::for('invitation-accept', fn (Request $request): Limit => Limit::perMinute(10)->by('invitation-accept|'.$request->ip()));
+        // Every throttled route therefore has its own named limiter (same limits as the old inline ones), keyed by
+        // its own name and the address. RateLimitBucketsTest fails if a route goes back to throttle:N,M.
+        foreach (self::PUBLIC_LIMITS as $name => $perMinute) {
+            RateLimiter::for($name, fn (Request $request): Limit => Limit::perMinute($perMinute)->by($name.'|'.$request->ip()));
+        }
+
+        // Signed in: one bucket per account, as the inline throttle did for authenticated requests.
+        RateLimiter::for('admin-invitations-store', fn (Request $request): Limit => Limit::perMinute(20)->by('admin-invitations-store|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
 
         // Deny by default: anything that is not local development or the
         // test suite must pass the guard, whatever the environment is called
