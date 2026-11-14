@@ -30,13 +30,13 @@ Commands and results (run from the clone root)
    are Up and healthy (25 hours uptime, unchanged); volumes food-delivery_postgres_data and food-delivery_backend_vendor are intact.
 
 Findings (docs/scripts that did not work as written on a clean clone)
-F1. APP_KEY (blocking for the backend tests on a clean clone). `dev.ps1 setup` copies .env.example to .env and to backend\.env and
+F1. APP_KEY (blocking for the backend tests on a clean clone). FIXED in `515e28c` (2026-11-15): setup now fills the root .env too and never overwrites a set key. A fresh clone of `515e28c` has not been re-run; the 780 result above used the key copied by hand. `dev.ps1 setup` copies .env.example to .env and to backend\.env and
     runs `php artisan key:generate`, which writes the key only into backend\.env. The api container reads the root .env
     through env_file, where APP_KEY is empty (.env.example line is `APP_KEY=   # generated locally...`), and that value wins over
     backend\.env. Result: 450 of 780 tests fail with "Unsupported cipher". The setup step and the docs do not say to put the key
     into the root .env. Suggested fix: have `setup` (and the Makefile target) copy the generated key into the root .env, or
     document it, or let the api container not receive an empty APP_KEY.
-F2. COMPOSE_PROJECT_NAME is not listed in .env.example. Compose.yaml sets `name: food-delivery`, so a second checkout on the same
+F2. COMPOSE_PROJECT_NAME is not listed in .env.example. FIXED in `515e28c`: `.env.example` now has comment lines that name it (lines 3 and 4). Compose.yaml sets `name: food-delivery`, so a second checkout on the same
     machine would share the project name with a running stack unless COMPOSE_PROJECT_NAME is set (it does override the name).
     Worth one comment line in .env.example.
 F3. Deleting the scratch clone with Remove-Item -Recurse fails on pnpm's deep node_modules paths (Windows long paths); an

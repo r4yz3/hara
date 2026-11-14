@@ -81,3 +81,15 @@
 - Not seen: the map rendering in a browser over a real zone (no city or zone created yet).
 - The upload token should be deleted by the operator.
 - Fix `733fd4d`: the staging web apps had no `API_URL`, so server-side calls (admin API status card, customer service banner) went to localhost:8000. Now `API_URL=http://web:8080`; deployed. The customer banner renders "We are not delivering anywhere yet", so the API is reached.
+
+## 11. Mail through Resend and redeploy to 515e28c, 2026-11-15 (operator-reported)
+- Procedure: `docs/operations/staging-setup.md`, section 15. Release `515e28c`, which includes the Resend mail change (`a1d1b91`).
+- Redeployed staging to `515e28c`: API images rebuilt; web images re-tagged. All 9 compose services healthy.
+- Resend sending domain `mail.haradelivery.com` verified. Its DNS records are in Cloudflare, DNS only (not proxied).
+- Mail block copied into the server `.env`: `MAIL_MAILER=smtp`, host `smtp.resend.com`, port 465, `MAIL_SCHEME=smtps`, user name `resend`, from address on `mail.haradelivery.com`. The key was entered without echo and is not recorded here.
+- New `egress` network created; `api` joined it. All 9 services healthy.
+- `php artisan mail:test <operator address>` printed `Mailer: smtp (smtp.resend.com:465)` and `Handed to the mailer`. The message "Test email from Food Delivery" arrived in the operator's inbox, not spam, from the no-reply sender on `mail.haradelivery.com`.
+- `MAIL_REQUIRE_REAL_TRANSPORT=true` set on the server and `api` recreated; it came back healthy ("Up 5 seconds (healthy)"). Operator-reported.
+- Not yet verified on staging: an invitation, password-reset or recovery-code email end to end.
+- Done: the R2 tiles upload token was deleted on 2026-11-15 (operator-reported).
+- Action item, not done as far as this record shows: a Resend onboarding API key was shown in a chat screenshot on 2026-11-15, and the operator was told to revoke it. Whether it is the same key as the one on the server is not recorded.

@@ -1,6 +1,6 @@
 # Phase 1 acceptance tests
 
-Updated 2026-11-14. Each row maps a definition-of-done item (spec 1.3) or human checklist item (spec 15) to its evidence. Local backend results come from `docs/qa/evidence/phase1-2026-11-14-check.txt`.
+Updated 2026-11-15. Each row maps a definition-of-done item (spec 1.3) or human checklist item (spec 15) to its evidence. Local backend results come from `docs/qa/evidence/phase1-2026-11-14-check.txt`.
 
 Result key: `not run`, `pass`, `fail`, `blocked`.
 
@@ -8,7 +8,7 @@ Result key: `not run`, `pass`, `fail`, `blocked`.
 
 | # | Criterion | Evidence | Result |
 |---|---|---|---|
-| 1 | `setup`, `up`, `migrate`, `seed-demo`, `check` work through Make and PowerShell | `docs/qa/evidence/x01-2026-11-14-clean-clone.txt` | partial: `setup` passes in a fresh clone; `up`, `migrate`, `seed-demo`, `check` not run there (would reuse the running stack); Makefile not run (`make` missing) |
+| 1 | `setup`, `up`, `migrate`, `seed-demo`, `check` work through Make and PowerShell | `docs/qa/evidence/x01-2026-11-14-clean-clone.txt`; `docs/qa/evidence/x01-2026-11-15-clean-clone-backend.txt` | partial: in a fresh clone on 2026-11-15, `setup`, `up`, `migrate`, `seed-demo` and the backend checks (pint, phpstan, 780 tests) pass, with the APP_KEY copied by hand (the setup fix in `515e28c` is not yet re-run from a fresh clone); web and Flutter checks in a clone on 2026-11-14; the `check` task as a whole and the Makefile not run (`make` missing) |
 | 2 | API boots with isolated databases; fresh migrate and rollback verified | Healthy Compose stack and MigrationRollbackTest in the isolated test database | pass locally |
 | 3 | Register, login, logout, current user | Feature tests B-02 | pass locally |
 | 4 | Admin creates and disables a city, creates and disables a polygon zone; no assumed coordinates or timezone | Feature tests C-02, C-04, C-05 and local live Chromium run with synthetic GeoJSON | City and zone lifecycle verified locally; map drawing is built (2026-11-14), but it needs hosted tiles before anyone can use it. The repository-wide hardcoded-coordinate review was done by text search (`docs/qa/evidence/x01-2026-11-14-text-searches.txt`) |

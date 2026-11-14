@@ -673,6 +673,8 @@ Found and fixed on the way: an API image built from an older commit lacked `conf
 | Redeploy to `001f8ee` (2026-11-14, operator run) | All 8 services healthy. From the workstation: the three web hosts return 200 with no `x-powered-by` header; `/health/live` is ok |
 | Backups and restore drill (2026-11-14, operator run, release `001f8ee`) | `hara-backup.timer` enabled (next run 03:15 Asia/Manila); first manual backup uploaded to R2 with its `.sig`. Drill passed: signature verified, decrypted, restored into a throwaway no-network container as `drill_owner`, 35 tables, 13 migrations, latest `2026_11_14_000003`; container removed; private key shredded from `/dev/shm` |
 | Reboot persistence (2026-11-14, operator run, release `001f8ee`) | Server rebooted at 15:19:12 (server time CET, `uptime -s`). About a minute later all 8 services were Up (healthy) with no manual action. `hara-cloudflare-firewall status` showed the DOCKER-USER jumps for 443 and 80 on eth0 to HARA-CF with 15 IPv4 and 7 IPv6 Cloudflare RETURN rules ending in DROP, so the firewall unit re-applied at boot. `/dev/shm` was empty |
+| Redeploy to `515e28c` (2026-11-15, operator run) | API images rebuilt; web images re-tagged. All 9 compose services healthy; new `egress` network for `api` (section 15) |
+| Mail through Resend (2026-11-15, operator run) | `mail:test` printed `Mailer: smtp (smtp.resend.com:465)` and `Handed to the mailer`; the test message arrived in the operator's inbox, not spam. `MAIL_REQUIRE_REAL_TRANSPORT=true` set and `api` healthy. Invitation, reset and recovery-code mails not yet checked |
 
 Found on the host: empty `apps/*/public` folders are not tracked by git, so the web image build failed; fixed in `bce7e3f`. Evidence: `docs/qa/evidence/e07-2026-11-14-staging-deploy.txt`.
 
@@ -681,7 +683,7 @@ Found on the host: empty `apps/*/public` folders are not tracked by git, so the 
 ## 14. Decisions and open items for the operator
 
 1. **First admin account.** Done on staging 2026-11-14 (operator-reported): `staff:bootstrap-owner` (ADR-018, section 9) ran on release `1cf50aa`, the invitation was accepted, and the platform owner signed in to the admin app. The ADR is still proposed and needs the operator's review. The command refuses while an active platform owner exists; invite others from the admin app.
-2. **Mail.** Decided 2026-11-15: Resend over SMTP, sending domain `mail.haradelivery.com`, `api` on the new `egress` network. Set-up steps are in section 15; not yet run on the host. Until then `MAIL_MAILER=log` writes messages, including reset and invitation links, into the API container log. Keep the key out of git.
+2. **Mail.** Decided 2026-11-15: Resend over SMTP, sending domain `mail.haradelivery.com`, `api` on the new `egress` network. Set-up steps are in section 15; run on the host on 2026-11-15 (test message delivered and `MAIL_REQUIRE_REAL_TRANSPORT=true` set, section 13). Before that, `MAIL_MAILER=log` wrote messages, including reset and invitation links, into the API container log. Keep the key out of git.
 3. **Demo/synthetic data on staging** (section 9).
 4. **Authenticated Origin Pulls** and Cloudflare WAF/rate-limit rules: optional hardening not done.
 5. **Backups:** done on staging on 2026-11-14 (section 11): a nightly encrypted copy to R2 and a restore drill that passed on the server. Still open: alerting on a failed run (item 10), repeating the drill at least monthly (11.6), and recording a real restore onto staging (11.7).
@@ -694,7 +696,7 @@ Found on the host: empty `apps/*/public` folders are not tracked by git, so the 
 
 ## 15. Email through Resend (invitations, password resets, recovery-code alerts)
 
-Operator's choice on 2026-11-15. The API sends mail over Resend's SMTP service with Laravel's built-in `smtp` mailer, so there is no extra PHP package. Written, **not yet run on the host**. Budget: Resend's free tier. Its limits are estimates from memory, **verify them on resend.com/pricing before relying on them**: roughly 3,000 emails a month and 100 a day, one sending domain, short log retention. That is plenty for staging invitations and resets.
+Operator's choice on 2026-11-15. The API sends mail over Resend's SMTP service with Laravel's built-in `smtp` mailer, so there is no extra PHP package. Run on the host on 2026-11-15: test message delivered (15.4), and `MAIL_REQUIRE_REAL_TRANSPORT=true` set with `api` healthy (15.5; evidence `docs/qa/evidence/e07-2026-11-14-staging-deploy.txt`, section 11). Not yet checked: invitation, reset and recovery-code mails end to end. Budget: Resend's free tier. Its limits are estimates from memory, **verify them on resend.com/pricing before relying on them**: roughly 3,000 emails a month and 100 a day, one sending domain, short log retention. That is plenty for staging invitations and resets.
 
 How it fits together:
 
