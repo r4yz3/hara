@@ -116,7 +116,7 @@ Statuses are copied from `docs/backlog.md`. Only items that are partial, blocked
 |---|---|---|---|
 | U-03 | todo | UI state matrix is not built; every M2 screen needs it | M2-25, M2-39 |
 | U-04 | todo | Map component needed for branch pins and the admin branch check | M2-08, M2-38 |
-| U-05 | partial | Admin console lacks map drawing and users; Merchants section extends it | M2-39 |
+| U-05 | partial | Admin console has map drawing built (2026-11-14), but it needs hosted tiles before anyone can use it; Roles and access (users) built 2026-11-14; Merchants section extends it | M2-39 |
 | U-07 | partial | Merchant shell has no merchant account to sign in with and no branch data | M2-25, M2-35 |
 | U-09 | todo | Screenshots from running apps are the Phase 2 gate evidence (AGENTS rule 11) | M2-25, M2-39 |
 | U-10 | blocked (human) | Tile provider not chosen (ADR-007) | M2-08, M2-38 |

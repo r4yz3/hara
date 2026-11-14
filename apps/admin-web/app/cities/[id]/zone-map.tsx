@@ -34,7 +34,14 @@ function parse(text: string): unknown {
 }
 
 /** Map beside a GeoJSON field. The text stays the source of truth; invalid text simply draws no shape. */
-export function ZoneMap({ shapeText }: { shapeText: string }) {
+export function ZoneMap({ shapeText, onDraw }: { shapeText: string; onDraw?: (text: string) => void }) {
   const styleUrl = useMapStyleUrl();
-  return <MapView label="Zone map" styleUrl={styleUrl} geometry={parse(shapeText)} />;
+  return (
+    <MapView
+      label="Zone map"
+      styleUrl={styleUrl}
+      geometry={parse(shapeText)}
+      onDraw={onDraw === undefined ? undefined : (polygon) => onDraw(JSON.stringify(polygon))}
+    />
+  );
 }

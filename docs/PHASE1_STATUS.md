@@ -23,7 +23,7 @@ How to read it: "evidence" names a file under `docs/qa/evidence/` or a test. Whe
 | Zone geometry validator and seeded fuzz tests (C-03) | `sprint5-geometry-fuzz-check.txt` |
 | Cross-tenant suite for city scope (C-12) | `sprint5-cross-tenant-check.txt` |
 | Staff access API and `/access` screen (users part of U-05) | Screenshots `screens/admin/access-*.png`; backend check at HEAD `c7e360f`: 523 tests passed (`x01-2026-11-14-full-check-HEAD.txt`) |
-| Admin cities, zones, exclusions, status dialogs, settings and audit screens (U-05 except map drawing) | `sprint6-admin-cities-browser.txt`, `phase1-2026-11-14-zone-edit.txt`, `phase1-2026-11-14-zone-exclusions.txt`, `phase1-2026-11-14-city-dialog.txt`, `phase1-2026-11-14-admin-settings.txt`, `phase1-2026-11-14-live-coverage.txt` |
+| Admin cities, zones, exclusions, status dialogs, settings and audit screens (U-05; map drawing is built (2026-11-14), but it needs hosted tiles before anyone can use it) | `sprint6-admin-cities-browser.txt`, `phase1-2026-11-14-zone-edit.txt`, `phase1-2026-11-14-zone-exclusions.txt`, `phase1-2026-11-14-city-dialog.txt`, `phase1-2026-11-14-admin-settings.txt`, `phase1-2026-11-14-live-coverage.txt` |
 | Customer home banner and `/location` delivery-area check by POST (ADR-013) | `sprint6-customer-location-browser.txt`, `phase1-2026-11-14-closed-coverage.txt` |
 | Structured logs, request ids, named events (E-01 except the gaps below) | `sprint7-structured-logs-check.txt` |
 | Production guard (E-06) | `sprint7-ops-check.txt`; ProductionGuardTest |
@@ -43,8 +43,8 @@ How to read it: "evidence" names a file under `docs/qa/evidence/` or a test. Whe
 |---|---|
 | U-02 `packages/ui`, Storybook | The backlog row says "done for web" and repeats the U-01 text. `packages/ui/src` holds `map-view`, `problem-page`, `fault` and `map-state` only. There is no Storybook (no `.storybook`) and no toast component; forms, tables and dialogs live in the apps. |
 | U-03 UI state matrix | 11 views by 9 states: 69 covered, 30 not applicable, 0 gaps in cells (`docs/qa/ui-state-matrix.md`). Open: offline cached reads (G1), toasts (G3), `global-error.tsx` built but not reached by a browser test (G4a). |
-| U-04 map component | Placeholder, fit-to-shape and attribution only. `maplibre-gl` is not installed, no tile was ever rendered, no drawing, no CSP change for a style host. |
-| U-05 admin console | No map drawing. Staff invitation, suspension, and name or email editing are not built. |
+| U-04 map component | Built in code: MapLibre 6.16.0 with self-hosted PMTiles (ADR-015), placeholder, fit-to-shape, attribution and map drawing (2026-11-14). No tile archive is hosted yet, so every environment shows the placeholder; the nonce CSP that would list the tile host is deferred (E-02). |
+| U-05 admin console | Map drawing is built (2026-11-14), but it needs hosted tiles before anyone can use it. Staff invitation, suspension, and name or email editing are not built. |
 | U-06 customer | Home, `/login`, `/location`, `/account`. No map pin, address entry or saved addresses. The admin half of scenario 5 is `test.fixme` in `customer.spec.ts`; it is covered only by the opt-in live run. `/account` is not in the screenshot spec. |
 | U-07 merchant shell | Overview and `/login` only. No merchant account exists, so sign-in and the merchant cookie have never been exercised live. |
 | U-08 rider shell | Sign-in, sign-out and home built; 47 Flutter tests. Never run on a device or against the real API; token in memory only; no Android SDK or JDK on this workstation. |
@@ -91,7 +91,7 @@ Not built and not exposed as working routes (the route and OpenAPI tests fail if
 | 1 | `setup`, `up`, `migrate`, `seed-demo`, `check` through Make and PowerShell | Partial | All nine `dev.ps1` tasks ran (`a10-dev-tasks-check.txt`); `setup` ran in a clean clone (`x01-2026-11-14-clean-clone.txt`). Makefile never run; `up`, `migrate`, `seed-demo` not run in the clone. |
 | 2 | API boots with isolated databases, Redis, PostGIS; fresh migrate and rollback | Met (local) | `sprint3-check.txt`, MigrationRollbackTest, `food_delivery_test` forced by `tests/bootstrap.php`. |
 | 3 | Register, login, logout, current user under a selected secure design | Met (local) | `sprint4-auth-check.txt`, `sprint4-auth-smoke.txt`; ADR-011 accepted 2026-11-13. |
-| 4 | Admin creates and disables a city, draws and creates and disables a zone; no assumed coordinates or timezone | Partial | City and zone lifecycle met through the API and GeoJSON screens, live run `phase1-2026-11-14-live-coverage.txt`. "Draw" is not met: the map now renders (ADR-015, U-10 code done) but no tiles are hosted and drawing on the map is not built. Text searches found no hardcoded city or centre; the only place name is the `Asia/Manila` display timezone default (ADR-004). |
+| 4 | Admin creates and disables a city, draws and creates and disables a zone; no assumed coordinates or timezone | Partial | City and zone lifecycle met through the API and GeoJSON screens, live run `phase1-2026-11-14-live-coverage.txt`. "Draw" is built (2026-11-14: pointer drawing on the zone create and edit forms, ADR-015) but needs hosted tiles to be usable; no tiles are hosted yet, so the map shows the placeholder. Text searches found no hardcoded city or centre; the only place name is the `Asia/Manila` display timezone default (ADR-004). |
 | 5 | Serviceability reliable inside and outside; useful not-configured answer | Met (local) | ServiceabilityTest, `sprint5-config-plan-check.txt` (GiST plan). Geometry caps are unapproved (C-13). |
 | 6 | Cross-tenant access denied for guessed IDs | Met for city scope | `sprint5-cross-tenant-check.txt`. Merchant scope cannot be tested yet (no merchant endpoints). |
 | 7 | Four shells work at narrow and wide viewports; placeholders disabled and labelled | Partial | Web: Chromium at 375, 768 and 1440 with axe (`x01-2026-11-14-playwright-default.txt`). Rider: widget tests only, never on a device. Merchant has no account. Screen reader and dark theme not checked. |
@@ -618,6 +618,12 @@ What the tests cover: liveness body; readiness hidden from public addresses and 
 - **Commands run:** `pnpm install --offline` (workspace link and lockfile entry only); `pnpm lint` exit 0; `pnpm typecheck` exit 0; `pnpm test` exit 0 (ui 6 pass); `pnpm --filter admin-web build` exit 0; `npx playwright test tests/browser/map.spec.ts tests/browser/state-matrix.spec.ts` 114 passed. The first state-matrix run failed because the placeholder had `role="status"` and clashed with existing `getByRole("status")` checks; the role was removed.
 - **Files:** `packages/ui/{package.json,src/map-state.ts,src/map-view.tsx,test/map-state.test.mjs}`, `apps/admin-web/{package.json,next.config.ts,app/cities/[id]/city-screen.tsx,app/cities/[id]/zone-map.tsx}`, `tests/browser/map.spec.ts`, `pnpm-lock.yaml`, `docs/backlog.md`, this file.
 - **Rollback:** revert those files and run `pnpm install`; no backend or API change.
+
+## 2026-11-14 map drawing (U-04, U-05)
+
+- **Built:** admins can draw a zone polygon on the map in the zone create and edit forms: "Draw shape on map", click corners, "Use this shape" (needs 3 or more), "Remove last corner", "Cancel drawing". The drawn polygon replaces the GeoJSON field text; nothing is saved until the form is submitted.
+- **Limits:** drawing needs a pointer; the GeoJSON field remains the keyboard-accessible path. No tile archive is hosted, so every environment shows "Map not configured" until `MAP_STYLE_URL` is set, and drawing appears only when a style loads.
+- **Not done:** hosted tiles (needs the launch city and E-07). Browser coverage for drawing with a real style is not recorded here (unverified).
 
 ## November 14 X-01 acceptance run (local)
 

@@ -9,6 +9,7 @@
 - `MAP_STYLE_URL` stays the only switch. It points at a style JSON on our tile host whose vector source is `pmtiles://https://<tile host>/<file>.pmtiles`. Empty still means the labelled placeholder (ADR-007).
 - MapLibre's worker is emitted by the bundler as an asset and set with `setWorkerUrl`, so the map works from the built app without a CDN.
 - The CSP helper takes the tile host's origin (`tileOriginFrom`) and adds it to `connect-src` only, plus `worker-src 'self'` (the worker is a same-origin asset, so no `blob:`). The per-request policy is still unwired (E-02 deferred); the baseline CSP does not restrict connections.
+- Zone drawing on the map (admin create and edit forms, built 2026-11-14) is pointer-only: click corners, then use the shape. The GeoJSON field is the keyboard-accessible equivalent and remains the source of truth; nothing is saved until the form is submitted.
 
 ## Hosting requirements (operator)
 - The host must support HTTP Range requests and return CORS headers allowing `GET` and `Range` from the admin origin.
@@ -17,7 +18,6 @@
 
 ## Not done here
 - No PMTiles archive, style JSON or tile host exists yet; every environment still shows the placeholder until the operator sets `MAP_STYLE_URL`.
-- Drawing zones on the map (as opposed to viewing them) is not built; GeoJSON editing remains the complete path.
 
 ## Consequences
 - No provider lock-in or key rotation. We pay storage and egress, and we refresh the archive ourselves when OpenStreetMap data changes.

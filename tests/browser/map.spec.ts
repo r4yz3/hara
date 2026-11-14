@@ -104,3 +104,82 @@ test("the map area has no accessibility violations", async ({ page }) => {
     .analyze();
   expect(violations.map(({ id }) => id)).toEqual([]);
 });
+
+// Drawing a shape on the map (synthetic, background-only style; no real places).
+async function readyMap(page: Page) {
+  await page.route("https://styles.example.test/**", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ version: 8, sources: {}, layers: [{ id: "background", type: "background", paint: { "background-color": "#dddddd" } }] }),
+    }),
+  );
+  await mock(page, "https://styles.example.test/style.json");
+  const create = await openCreate(page);
+  const map = create.getByTestId("map-view");
+  await expect(map).toHaveAttribute("data-map-state", "ready");
+  return { create, map, field: create.getByLabel("Shape (GeoJSON Polygon or MultiPolygon)") };
+}
+
+async function clickAt(map: ReturnType<Page["getByTestId"]>, fx: number, fy: number) {
+  const box = await map.locator("canvas.maplibregl-canvas").boundingBox();
+  if (box === null) throw new Error("no canvas");
+  await map.page().mouse.click(box.x + box.width * fx, box.y + box.height * fy);
+}
+
+test("a placeholder map has no draw button", async ({ page }) => {
+  await mock(page, null);
+  const create = await openCreate(page);
+  await expect(create.getByTestId("map-view")).toHaveAttribute("data-map-state", "placeholder");
+  await expect(create.getByRole("button", { name: "Draw shape on map" })).toHaveCount(0);
+});
+
+test("drawing: corners, remove last, use this shape fills a closed Polygon", async ({ page }) => {
+  const { create, map, field } = await readyMap(page);
+  await create.getByRole("button", { name: "Draw shape on map" }).click();
+  const status = map.getByTestId("map-draw-status");
+  const use = create.getByRole("button", { name: "Use this shape" });
+  await expect(status).toContainText("Click the map to place the first corner");
+  await expect(use).toBeDisabled();
+
+  await clickAt(map, 0.2, 0.2);
+  await expect(status).toContainText("1 corner placed");
+  await clickAt(map, 0.8, 0.2);
+  await expect(status).toContainText("2 corners placed");
+  await clickAt(map, 0.8, 0.8);
+  await expect(status).toContainText("3 corners placed");
+  await expect(status).not.toContainText("needs at least 3");
+  await expect(use).toBeEnabled();
+  await clickAt(map, 0.2, 0.8);
+  await expect(status).toContainText("4 corners placed");
+
+  await create.getByRole("button", { name: "Remove last corner" }).click();
+  await expect(status).toContainText("3 corners placed");
+
+  const axe = await new AxeBuilder({ page })
+    .include('[role="group"][aria-label="Draw a shape"]')
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+    .analyze();
+  expect(axe.violations.map(({ id }) => id)).toEqual([]);
+
+  await use.click();
+  await expect(create.getByRole("button", { name: "Draw shape on map" })).toBeVisible();
+  const shape = JSON.parse(await field.inputValue());
+  expect(shape.type).toBe("Polygon");
+  const ring = shape.coordinates[0];
+  expect(ring).toHaveLength(4);
+  expect(ring[0]).toEqual(ring[ring.length - 1]);
+  expect(new Set(ring.slice(0, 3).map((p: number[]) => p.join(","))).size).toBe(3);
+  await expect(map.getByTestId("map-bounds")).toContainText("Zone bounds");
+});
+
+test("cancel drawing leaves the field unchanged", async ({ page }) => {
+  const { create, map, field } = await readyMap(page);
+  await field.fill(JSON.stringify(geometry));
+  await create.getByRole("button", { name: "Draw shape on map" }).click();
+  await clickAt(map, 0.3, 0.3);
+  await clickAt(map, 0.7, 0.3);
+  await clickAt(map, 0.5, 0.7);
+  await create.getByRole("button", { name: "Cancel drawing" }).click();
+  await expect(create.getByRole("button", { name: "Draw shape on map" })).toBeVisible();
+  expect(JSON.parse(await field.inputValue())).toEqual(geometry);
+});

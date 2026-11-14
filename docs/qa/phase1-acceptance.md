@@ -11,7 +11,7 @@ Result key: `not run`, `pass`, `fail`, `blocked`.
 | 1 | `setup`, `up`, `migrate`, `seed-demo`, `check` work through Make and PowerShell | `docs/qa/evidence/x01-2026-11-14-clean-clone.txt` | partial: `setup` passes in a fresh clone; `up`, `migrate`, `seed-demo`, `check` not run there (would reuse the running stack); Makefile not run (`make` missing) |
 | 2 | API boots with isolated databases; fresh migrate and rollback verified | Healthy Compose stack and MigrationRollbackTest in the isolated test database | pass locally |
 | 3 | Register, login, logout, current user | Feature tests B-02 | pass locally |
-| 4 | Admin creates and disables a city, creates and disables a polygon zone; no assumed coordinates or timezone | Feature tests C-02, C-04, C-05 and local live Chromium run with synthetic GeoJSON | City and zone lifecycle verified locally; map drawing remains open. The repository-wide hardcoded-coordinate review was done by text search (`docs/qa/evidence/x01-2026-11-14-text-searches.txt`) |
+| 4 | Admin creates and disables a city, creates and disables a polygon zone; no assumed coordinates or timezone | Feature tests C-02, C-04, C-05 and local live Chromium run with synthetic GeoJSON | City and zone lifecycle verified locally; map drawing is built (2026-11-14), but it needs hosted tiles before anyone can use it. The repository-wide hardcoded-coordinate review was done by text search (`docs/qa/evidence/x01-2026-11-14-text-searches.txt`) |
 | 5 | Serviceability returns inside/outside correctly and `NO_ACTIVE_ZONE` when nothing is configured | ServiceabilityTest | pass locally |
 | 6 | Cross-tenant access denied for guessed or edited IDs | CrossTenantIsolationTest, route coverage test | pass for implemented city-scoped endpoints; merchant endpoints are pending |
 | 7 | Four shells work at narrow and wide viewports; placeholders disabled and labelled | `docs/qa/evidence/x01-2026-11-14-playwright-default.txt`; Flutter widget tests (47 pass, 2 skipped, in the clean clone) | pass locally for Chromium at 375, 768 and 1440 wide; the rider app has never run on a device |
@@ -62,7 +62,7 @@ The default Playwright suite runs in Chromium at 375×812, 768×1024 and 1440×9
 
 The default run at HEAD `c7e360f` passed 354 cases and skipped 66 opt-in cases (`docs/qa/evidence/x01-2026-11-14-playwright-default-HEAD.txt`). This replaces the earlier "27 default cases" count. The zone edit conflict that preserves the draft, the system settings retry and permission denial at each viewport are recorded in `docs/qa/evidence/phase1-2026-11-14-admin-settings.txt`.
 
-The opt-in desktop run covers live admin sign-in, city creation and activation, invalid GeoJSON rejection, normalized shape persistence, zone edit and activation, exclusion add and remove, customer serviceability and denial of admin access to a signed-in customer. Cleanup pauses and archives the synthetic records. Map drawing remains open. See `docs/qa/evidence/phase1-2026-11-14-zone-exclusions.txt`.
+The opt-in desktop run covers live admin sign-in, city creation and activation, invalid GeoJSON rejection, normalized shape persistence, zone edit and activation, exclusion add and remove, customer serviceability and denial of admin access to a signed-in customer. Cleanup pauses and archives the synthetic records. Map drawing is built (2026-11-14), but it needs hosted tiles before anyone can use it. See `docs/qa/evidence/phase1-2026-11-14-zone-exclusions.txt`.
 
 ## Phase boundary checks
 

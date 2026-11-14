@@ -517,7 +517,7 @@ function EditZone({ zone, onCancel, onSaved }: { zone: Zone; onCancel: () => voi
         <textarea name="geometry" rows={8} value={shapeText} onChange={(event) => setShapeText(event.target.value)} required readOnly={busy} spellCheck={false} className={`${fieldClass} py-2 font-mono text-sm`} />
       </label>
       <div className="sm:col-span-2">
-        <ZoneMap shapeText={shapeText} />
+        <ZoneMap shapeText={shapeText} onDraw={busy ? undefined : setShapeText} />
       </div>
       {failure ? (
         <div className="sm:col-span-2">
@@ -671,7 +671,7 @@ function CreateZone({ cityId, onCreated }: { cityId: string; onCreated: () => Pr
             <FieldError id="zone-geometry-error" messages={geometryErrors} />
           </div>
           <div className="sm:col-span-3">
-            <ZoneMap shapeText={shapeText} />
+            <ZoneMap shapeText={shapeText} onDraw={busy ? undefined : setShapeText} />
           </div>
           <div className="flex flex-col gap-2 sm:col-span-3">
             <button type="submit" disabled={busy} aria-busy={busy} className={`${primaryButton} w-fit`}>

@@ -65,3 +65,12 @@ export function resolveMapState(input: { styleUrl: unknown; geometry?: unknown }
   const styleUrl = cleanStyleUrl(input.styleUrl);
   return styleUrl === null ? { kind: "placeholder", reason: "no-style", bounds } : { kind: "map", styleUrl, bounds };
 }
+
+export type Position = [number, number];
+
+/** A closed ring from the placed points, rounded to 6 decimals (about 0.1 m). Null under 3 points. */
+export function polygonFromPoints(points: Position[]): { type: "Polygon"; coordinates: Position[][] } | null {
+  if (points.length < 3) return null;
+  const ring = points.map(([x, y]) => [Number(x.toFixed(6)), Number(y.toFixed(6))] as Position);
+  return { type: "Polygon", coordinates: [[...ring, ring[0]]] };
+}
