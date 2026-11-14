@@ -12,3 +12,6 @@
 # 2026-11-14: a made-up password used only against the mocked API in the
 # delete-account browser test; not a real or demo credential.
 45ef9c534f30b29dd68ad19d5df19ca799fe4f07:tests/browser/account-delete.spec.ts:generic-api-key:6
+# 2026-11-15: the published SHA-256 checksum of the pinned go-pmtiles release zip
+# in the map tiles runbook; a public file hash, not a credential.
+c634ad8fb18d84352ca0e5e357cc49aef84b441b:docs/operations/map-tiles.md:generic-api-key:42
