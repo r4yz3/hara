@@ -25,6 +25,7 @@ return [
         'riders.read',
         'users.read',
         'users.roles.assign',
+        'users.suspend',
         'users.mfa.reset',
         'audit.read',
         'system.status.read',
@@ -46,7 +47,7 @@ return [
             'assignable_by' => [],
             'permissions' => [
                 'cities.read', 'cities.write', 'zones.read', 'zones.write', 'merchants.read', 'merchants.approve',
-                'riders.read', 'users.read', 'users.roles.assign', 'audit.read', 'system.status.read',
+                'riders.read', 'users.read', 'users.roles.assign', 'users.suspend', 'audit.read', 'system.status.read',
                 'dispatch.read', 'dispatch.override',
             ],
         ],

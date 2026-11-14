@@ -78,6 +78,8 @@ Route::middleware(EnsureSurfaceSession::class)->group(function (): void {
         Route::get('/roles', [StaffAccessController::class, 'roles'])->name('admin.roles.index');
         Route::post('/users/{user}/roles', [StaffAccessController::class, 'grant'])->name('admin.users.roles.store');
         Route::delete('/users/{user}/roles/{grant}', [StaffAccessController::class, 'revoke'])->name('admin.users.roles.destroy');
+        Route::post('/users/{user}/suspend', [StaffAccessController::class, 'suspend'])->name('admin.users.suspend');
+        Route::post('/users/{user}/reactivate', [StaffAccessController::class, 'reactivate'])->name('admin.users.reactivate');
         Route::post('/users/{user}/mfa/reset', [MfaController::class, 'reset'])->name('admin.users.mfa.reset');
         Route::get('/invitations', [StaffInvitationController::class, 'index'])->name('admin.invitations.index');
         Route::post('/invitations', [StaffInvitationController::class, 'store'])->middleware('throttle:admin-invitations-store')->name('admin.invitations.store');

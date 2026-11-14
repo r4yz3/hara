@@ -770,6 +770,65 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/users/{user}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Id of a staff member. Letter case is ignored. */
+                user: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suspend a staff account
+         * @description Product owner decision 2026-11-14: only global administrators. Needs
+         *     `users.suspend` through a GLOBAL grant (platform owner, platform
+         *     admin); a city-scoped holder gets 403 whatever the target. 403 when
+         *     the target is the caller, and when the target is a platform owner.
+         *     404 for an unknown id, a user without a live staff grant, or when the
+         *     caller cannot see them. 409 when the account is already suspended.
+         *     Sets `users.status` to `suspended`, deletes the person's stored web
+         *     sessions and rider bearer tokens, and writes the audit row
+         *     `user.suspended` (reason included) in one transaction. Any other
+         *     session ends on its next request. Pending invitations they sent can
+         *     no longer be accepted.
+         */
+        post: operations["adminUsersSuspend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{user}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Id of a staff member. Letter case is ignored. */
+                user: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reactivate a suspended staff account
+         * @description Same permission and visibility rules as suspend. 409 when the account
+         *     is not suspended. Sets `users.status` back to `active` and writes the
+         *     audit row `user.reactivated`. It does not restore sessions or rider
+         *     tokens: the person signs in again.
+         */
+        post: operations["adminUsersReactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users": {
         parameters: {
             query?: never;
@@ -1118,6 +1177,10 @@ export interface components {
             status: "active" | "suspended";
             mfa_enrolled: boolean;
             is_self: boolean;
+            /** @description True when the caller may suspend this active account (global `users.suspend`, not themselves, not a platform owner). */
+            can_suspend: boolean;
+            /** @description True when the caller may reactivate this suspended account. */
+            can_reactivate: boolean;
             grants: components["schemas"]["StaffGrant"][];
         };
         StaffInvitation: {
@@ -2491,6 +2554,76 @@ export interface operations {
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    adminUsersSuspend: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path: {
+                /** @description Id of a staff member. Letter case is ignored. */
+                user: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Why the account is suspended, for the audit trail. Never put a secret here. */
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Suspended. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    adminUsersReactivate: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path: {
+                /** @description Id of a staff member. Letter case is ignored. */
+                user: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @description Optional note for the audit trail. Never put a secret here. */
+                    reason?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Reactivated. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
             422: components["responses"]["Error"];
         };
     };

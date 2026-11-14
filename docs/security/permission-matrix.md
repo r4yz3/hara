@@ -1,7 +1,7 @@
 # Role and permission matrix — Phase 1
 
 - Date: 2026-11-12. Status: **accepted by the product owner on 2026-11-13**, with the proposed answer to each reviewer question below. The seeded catalogue is `backend/config/rbac.php`; a test keeps it equal to this table.
-- Roles and their scopes come from spec section 6.1. Permission slugs come from 6.1 plus three added for Phase 1 endpoints: `users.read`, `system.status.read`, `flags.write`, and `users.mfa.reset` (backlog B-09, 2026-11-14).
+- Roles and their scopes come from spec section 6.1. Permission slugs come from 6.1 plus three added for Phase 1 endpoints: `users.read`, `system.status.read`, `flags.write`, `users.mfa.reset` (backlog B-09, 2026-11-14) and `users.suspend` (product owner decision 2026-11-14: global admins only).
 - A tick means the role carries the permission **within its scope only**. Enforcement follows ADR-005.
 
 ## Scope of each role
@@ -35,6 +35,7 @@ Nobody can assign a role equal to or above their own, or outside their own scope
 | `riders.read` | ✓ | ✓ | ✓ | ✓ | | | | | |
 | `users.read` | ✓ | ✓ | ✓ | | | ✓ (redacted) | | | |
 | `users.roles.assign` | ✓ | ✓ | ✓ (dispatcher only) | | | | | | |
+| `users.suspend` (global grant only; never a platform owner, never oneself) | ✓ | ✓ | | | | | | | |
 | `audit.read` | ✓ | ✓ | | | | | | | |
 | `system.status.read` | ✓ | ✓ | | | | | | | |
 | `flags.write` | ✓ | | | | | | | | |

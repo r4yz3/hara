@@ -28,6 +28,14 @@ final class AccessDenied extends DomainException
 
     public const GRANT_NOT_FOUND = 'grant_not_found';
 
+    public const SELF_SUSPEND = 'self_suspend';
+
+    public const PROTECTED_TARGET = 'protected_target';
+
+    public const ALREADY_SUSPENDED = 'already_suspended';
+
+    public const NOT_SUSPENDED = 'not_suspended';
+
     private function __construct(public readonly string $reason)
     {
         parent::__construct("Access denied ({$reason}).");

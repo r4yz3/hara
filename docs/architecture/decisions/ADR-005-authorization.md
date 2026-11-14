@@ -28,3 +28,6 @@ Rules:
 ## Consequences
 - Each admin endpoint needs a policy, a scoped query and an isolation test before it is registered.
 - Every denial emits an `rbac.denied` log event without personal data.
+
+## Later additions
+- 2026-11-14, staff suspension (`users.suspend`): the permission is effective only through a global grant, so city-scoped holders get 403 (product owner decision: global admins only). A platform owner account cannot be suspended by anyone (403), and nobody can suspend themselves (403). Suspension is audited with its reason and ends the target's web sessions and rider tokens at once; other access is refused on the next request because it is re-read every time.

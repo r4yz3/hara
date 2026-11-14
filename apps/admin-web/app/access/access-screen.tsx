@@ -6,6 +6,7 @@ import type { AssignableRole, City, StaffGrant, StaffMember } from "@food-delive
 import { apiGet, apiSend, describeFailure, type ApiFailure } from "@food-delivery/session";
 
 import { InviteStaff, PendingInvitations } from "./invitations";
+import { SuspensionControls } from "./suspension";
 import {
   FieldError,
   LoadProblem,
@@ -236,6 +237,7 @@ function Member({ member, onChanged }: { member: StaffMember; onChanged: (text: 
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <StatusPill status={member.status} />
+          <SuspensionControls member={member} onChanged={onChanged} />
           <span className="inline-flex min-h-7 items-center rounded-full border border-border-strong px-3 text-sm text-text-secondary">
             Two-step sign-in: {member.mfa_enrolled ? "set up" : "not set up"}
           </span>

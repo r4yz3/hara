@@ -669,12 +669,12 @@ test("exclusions: an added exclusion is listed, and a removal needs confirmation
 const people = {
   self: {
     id: "person-self", name: "Synthetic owner", email: "owner@example.test", email_masked: false, status: "active",
-    mfa_enrolled: true, is_self: true,
+    mfa_enrolled: true, is_self: true, can_suspend: false, can_reactivate: false,
     grants: [{ id: "grant-self", role: "platform_owner", role_label: "Platform owner", scope_type: "global", scope_id: null, city_name: null, granted_at: "2026-01-01T00:00:00Z", can_revoke: false }],
   },
   dispatcher: {
     id: "person-1", name: "Synthetic dispatcher", email: "dispatcher@example.test", email_masked: false, status: "active",
-    mfa_enrolled: false, is_self: false,
+    mfa_enrolled: false, is_self: false, can_suspend: false, can_reactivate: false,
     grants: [{ id: "grant-1", role: "dispatcher", role_label: "Dispatcher", scope_type: "city", scope_id: "test-city", city_name: "Synthetic city", granted_at: "2026-02-03T00:00:00Z", can_revoke: true }],
   },
 };
@@ -862,4 +862,130 @@ test("access: roles that failed to load say so, and Try again recovers", async (
   healthy = true;
   await page.getByRole("button", { name: "Try again" }).press("Enter");
   await expect(page.getByRole("form", { name: "Give a role" })).toBeVisible();
+});
+
+// ---------------------------------------------------------------- admin /access: suspend and reactivate
+
+const suspendable = { ...people.dispatcher, can_suspend: true, can_reactivate: false };
+const suspended = { ...people.dispatcher, status: "suspended", can_suspend: false, can_reactivate: true };
+
+test("access: suspend and reactivate buttons appear only where the API allows them, and a suspended person is marked in words", async ({ page }) => {
+  const locked = { ...people.dispatcher, id: "person-3", name: "Locked dispatcher", can_suspend: false, can_reactivate: false };
+  const gone = { ...suspended, id: "person-2", name: "Suspended support" };
+  await mockAccess(page, { members: [people.self, suspendable, gone, locked] });
+  await page.goto(`${admin}/access`);
+
+  await expect(page.getByRole("button", { name: /^Suspend / })).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Suspend Synthetic dispatcher" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Reactivate / })).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Reactivate Suspended support" })).toBeVisible();
+  await expect(page.getByText("○ Suspended")).toBeVisible();
+  await assertAccessible(page);
+});
+
+test("access: suspending needs a reason and a confirmation, sends one request, and refreshes the list", async ({ page }) => {
+  let done = false;
+  const posts: unknown[] = [];
+  const held = gate();
+  await mockAccess(page, {
+    usersHandler: (route) => route.fulfill({ json: { data: [people.self, done ? suspended : suspendable], meta: { next_cursor: null } } }),
+  });
+  await api(page, "/api/v1/admin/users/person-1/suspend", async (route) => {
+    posts.push(route.request().postDataJSON());
+    await held.opened;
+    done = true;
+    await route.fulfill({ status: 204 });
+  });
+  await page.goto(`${admin}/access`);
+  await page.getByRole("button", { name: "Suspend Synthetic dispatcher" }).press("Enter");
+
+  const dialog = page.getByRole("dialog", { name: "Suspend Synthetic dispatcher?" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel("Reason")).toBeFocused();
+  await assertAccessible(page);
+
+  // No reason: nothing is sent and focus returns to the field.
+  await dialog.getByRole("button", { name: "Yes, suspend" }).press("Enter");
+  await expect(dialog).toContainText("Say why this account is being suspended.");
+  await expect(dialog.getByLabel("Reason")).toBeFocused();
+  expect(posts).toEqual([]);
+
+  // Cancel sends nothing.
+  await dialog.getByRole("button", { name: "Cancel" }).press("Enter");
+  await expect(dialog).toHaveCount(0);
+  expect(posts).toEqual([]);
+
+  await page.getByRole("button", { name: "Suspend Synthetic dispatcher" }).press("Enter");
+  await dialog.getByLabel("Reason").fill("Left the company.");
+  await dialog.getByRole("button", { name: "Yes, suspend" }).press("Enter");
+  await expect(dialog.getByRole("button", { name: "Suspending…" })).toBeDisabled();
+  held.open();
+
+  await expect(page.getByRole("status").filter({ hasText: "Suspended Synthetic dispatcher." })).toBeVisible();
+  await expect(page.getByText("○ Suspended")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Reactivate Synthetic dispatcher" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Suspend Synthetic dispatcher" })).toHaveCount(0);
+  expect(posts).toEqual([{ reason: "Left the company." }]);
+  await assertAccessible(page);
+});
+
+test("access: a refused, missing, conflicting or offline suspension is reported in the dialog and can be repeated", async ({ page, context }) => {
+  let answer: { status: number; message: string } | null = { status: 403, message: "A platform owner cannot be suspended here." };
+  await mockAccess(page, { members: [people.self, suspendable] });
+  await api(page, "/api/v1/admin/users/person-1/suspend", (route) => answer
+    ? route.fulfill({ status: answer.status, json: { error: { code: "ERR", message: answer.message } } })
+    : route.fulfill({ status: 204 }));
+  await page.goto(`${admin}/access`);
+  await page.getByRole("button", { name: "Suspend Synthetic dispatcher" }).press("Enter");
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Reason").fill("Reason text");
+  const confirm = dialog.getByRole("button", { name: "Yes, suspend" });
+
+  await confirm.press("Enter");
+  await expect(dialog.getByRole("alert")).toContainText("A platform owner cannot be suspended here.");
+  await expect(confirm).toBeEnabled();
+
+  answer = { status: 404, message: "Not found." };
+  await confirm.press("Enter");
+  await expect(dialog.getByRole("alert")).toContainText("does not exist, or you do not have access");
+
+  answer = { status: 409, message: "That account is already suspended." };
+  await confirm.press("Enter");
+  await expect(dialog.getByRole("alert")).toContainText("That account is already suspended.");
+
+  await setOffline(context, true);
+  await confirm.press("Enter");
+  await expect(dialog.getByRole("alert")).toContainText("could not reach the server");
+  await setOffline(context, false);
+  await expect(dialog.getByLabel("Reason")).toHaveValue("Reason text");
+
+  answer = null;
+  const sent = page.waitForRequest((request) => request.url().endsWith("/users/person-1/suspend") && request.method() === "POST");
+  await confirm.press("Enter");
+  await sent;
+  await expect(dialog).toHaveCount(0);
+});
+
+test("access: reactivating takes an optional note, sends it, and says what happened", async ({ page }) => {
+  let done = false;
+  const posts: unknown[] = [];
+  await mockAccess(page, {
+    usersHandler: (route) => route.fulfill({ json: { data: [people.self, done ? suspendable : suspended], meta: { next_cursor: null } } }),
+  });
+  await api(page, "/api/v1/admin/users/person-1/reactivate", (route) => {
+    posts.push(route.request().postDataJSON());
+    done = true;
+    return route.fulfill({ status: 204 });
+  });
+  await page.goto(`${admin}/access`);
+  await page.getByRole("button", { name: "Reactivate Synthetic dispatcher" }).press("Enter");
+
+  const dialog = page.getByRole("dialog", { name: "Reactivate Synthetic dispatcher?" });
+  await expect(dialog.getByLabel("Note (optional)")).toBeVisible();
+  await assertAccessible(page);
+  await dialog.getByRole("button", { name: "Yes, reactivate" }).press("Enter");
+
+  await expect(page.getByRole("status").filter({ hasText: "Reactivated Synthetic dispatcher." })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Suspend Synthetic dispatcher" })).toBeVisible();
+  expect(posts).toEqual([{}]);
 });

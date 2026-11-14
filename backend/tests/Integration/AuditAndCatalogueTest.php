@@ -101,6 +101,7 @@ class AuditAndCatalogueTest extends RbacTestCase
         // Each row is one column of the matrix that would be dangerous to get wrong.
         $this->assertSame(['platform_owner'], $holders('flags.write'));
         $this->assertSame(['platform_owner'], $holders('users.mfa.reset'));
+        $this->assertSame(['platform_admin', 'platform_owner'], $holders('users.suspend'));
         $this->assertSame(['platform_admin', 'platform_owner'], $holders('cities.write'));
         $this->assertSame(['platform_admin', 'platform_owner'], $holders('audit.read'));
         $this->assertSame(['platform_admin', 'platform_owner'], $holders('system.status.read'));

@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Application\Commands\RoleGrantService;
+use App\Application\Commands\StaffSuspension;
 use App\Application\Queries\AccessChecker;
 use App\Domain\Identity\AccessDenied;
 use App\Domain\Identity\Scope;
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\AssignRequestId;
 use App\Models\User;
 use App\Support\Errors\ApiError;
 use App\Support\Http\ApiResponse;
@@ -40,6 +42,7 @@ class StaffAccessController extends Controller
     public function __construct(
         private readonly AccessChecker $access,
         private readonly RoleGrantService $grants,
+        private readonly StaffSuspension $suspension,
     ) {}
 
     /** Staff members, by id, with the grants the caller may see. */
@@ -103,6 +106,67 @@ class StaffAccessController extends Controller
         $row = DB::table('users')->where('id', $target)->first(['id', 'name', 'email', 'status']);
 
         return ApiResponse::data($request, $this->resources([$row], $reach)[0], 201);
+    }
+
+    /**
+     * Suspends a staff account (product owner decision 2026-11-14: global
+     * administration only). The permission is checked first and does not
+     * depend on the target, so a refusal says nothing about who exists; after
+     * that a person outside the caller's view is 404.
+     */
+    public function suspend(Request $request, string $user): Response
+    {
+        $target = $this->suspendTarget($user);
+        $input = $request->validate(['reason' => ['required', 'string', 'max:500']]);
+        $reason = trim((string) $input['reason']);
+        if ($reason === '') {
+            throw ValidationException::withMessages(['reason' => ['The reason is required.']]);
+        }
+
+        try {
+            $this->suspension->suspend($this->user(), $target, $reason, $request->ip(), AssignRequestId::for($request));
+        } catch (AccessDenied $denied) {
+            throw $this->suspensionRefusal($denied);
+        }
+
+        return response()->noContent();
+    }
+
+    public function reactivate(Request $request, string $user): Response
+    {
+        $target = $this->suspendTarget($user);
+        $input = $request->validate(['reason' => ['sometimes', 'nullable', 'string', 'max:500']]);
+        $reason = isset($input['reason']) ? trim((string) $input['reason']) : null;
+
+        try {
+            $this->suspension->reactivate($this->user(), $target, $reason === '' ? null : $reason, $request->ip(), AssignRequestId::for($request));
+        } catch (AccessDenied $denied) {
+            throw $this->suspensionRefusal($denied);
+        }
+
+        return response()->noContent();
+    }
+
+    private function suspendTarget(string $user): string
+    {
+        if (! $this->suspension->mayAct($this->user(), log: true)) {
+            throw ApiError::forbidden();
+        }
+
+        // Global holders of users.read see every staff member; a holder without it sees none.
+        return $this->visibleTarget($user, $this->readReach(hideRefusal: true));
+    }
+
+    private function suspensionRefusal(AccessDenied $denied): ApiError
+    {
+        return match ($denied->reason) {
+            AccessDenied::SELF_SUSPEND => ApiError::forbidden('You cannot suspend or reactivate your own account.'),
+            AccessDenied::PROTECTED_TARGET => ApiError::forbidden('A platform owner cannot be suspended here.'),
+            AccessDenied::SCOPE_TARGET_MISSING => ApiError::notFound(),
+            AccessDenied::ALREADY_SUSPENDED => new ApiError(409, 'CONFLICT', 'That account is already suspended.'),
+            AccessDenied::NOT_SUSPENDED => new ApiError(409, 'CONFLICT', 'That account is not suspended.'),
+            default => ApiError::forbidden(),
+        };
     }
 
     public function revoke(string $user, string $grant): Response
@@ -212,9 +276,14 @@ class StaffAccessController extends Controller
             $grants[(string) $row->user_id][] = $row;
         }
 
+        $mayAct = $this->suspension->mayAct($actor);
+        $owners = DB::table('user_role_scopes as g')->join('roles as r', 'r.id', '=', 'g.role_id')
+            ->whereNull('g.revoked_at')->where('r.slug', 'platform_owner')->whereIn('g.user_id', $ids)
+            ->pluck('g.user_id')->all();
+
         $enrolled = DB::table('user_mfa_factors')->whereIn('user_id', $ids)->whereNotNull('confirmed_at')->pluck('user_id')->all();
 
-        return array_map(function (object $u) use ($grants, $enrolled, $actor, $full): array {
+        return array_map(function (object $u) use ($grants, $enrolled, $actor, $full, $mayAct, $owners): array {
             $mine = $grants[(string) $u->id] ?? [];
             $isSelf = $u->id === $actor->getKey();
 
@@ -229,6 +298,8 @@ class StaffAccessController extends Controller
                 'status' => $u->status,
                 'mfa_enrolled' => in_array($u->id, $enrolled, true),
                 'is_self' => $isSelf,
+                'can_suspend' => $mayAct && ! $isSelf && $u->status === 'active' && ! in_array($u->id, $owners, true),
+                'can_reactivate' => $mayAct && ! $isSelf && $u->status === 'suspended',
                 'grants' => array_map(function (object $g) use ($u, $actor, $isSelf): array {
                     $scope = Scope::of($g->scope_type, $g->scope_id);
 
