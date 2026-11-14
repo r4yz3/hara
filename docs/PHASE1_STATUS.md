@@ -12,10 +12,12 @@ Last updated: 2026-11-14. **The Phase 1 gate is not passed.** Staging does not e
 - **Privacy:** reviewed in the code. Only the opaque address id goes in a URL; positions go only in request bodies, and nothing goes to storage or the console. A browser test checks the URL, storage, console and every request URL after create and edit.
 - **Tests:** `tests/browser/addresses.spec.ts` (16 tests x 3 viewports, with axe). The agent's full browser run passed 582 with 78 opt-in skips. I re-ran lint and type checks.
 - **Not done:**
-  - not run against the live API;
+  - live run: passed (see below), but only on the desktop viewport;
   - no 404 test for edit or make-default;
   - no screenshots;
   - no map pin or address search (no tiles or geocoding provider).
+
+- **Live run (2026-11-14):** `tests/browser/live-addresses.spec.ts` passed against the real API as `demo-customer@example.test` (BROWSER_LIVE=1, desktop, 1 test, about 28 s). It covers: no addresses at start, first address inside the demo zone with Default and the demo city line, second outside every zone without the badge, making the second the default, editing a landmark across a reload, delete with the dialog across a reload, no address text or position in 139 request URLs, the page URL or browser storage, and `GET /api/v1/me/addresses` from the merchant origin answering 404 (a merchant session on the customer origin answered 401). It removes its addresses through the API at the end (0 remain). Evidence: `docs/qa/evidence/phase1-2026-11-14-live-addresses.txt`. Not covered: a second customer account (none seeded), edit or make-default 404s, phone and tablet viewports. Without `BROWSER_LIVE=1` the test is skipped.
 
 ## November 14 saved addresses API (U-06, backend)
 

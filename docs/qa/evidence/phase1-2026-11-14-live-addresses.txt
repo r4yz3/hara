@@ -1,0 +1,8 @@
+Live saved addresses run, 2026-11-14, desktop project, BROWSER_LIVE=1, real API on localhost:8000
+Running 1 test using 1 worker
+step 1: leftover addresses removed through the API: 0
+step 7: 139 request URLs checked against 12 needles; storage and page URL clean
+step 8: merchant origin answered 404; merchant session on customer origin answered 401
+cleanup: removed 1, remaining after cleanup: 0
+  ok 1 [desktop] › tests\browser\live-addresses.spec.ts:60:1 › the demo customer manages saved addresses against the live API; nothing leaks to URLs or storage; other apps are refused (27.6s)
+  1 passed (1.1m)
