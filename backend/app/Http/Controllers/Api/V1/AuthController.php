@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Application\Commands\DeleteCustomerAccount;
 use App\Application\Commands\PasswordRecovery;
 use App\Application\Commands\ProfileService;
 use App\Application\Commands\RegisterCustomer;
@@ -9,6 +10,7 @@ use App\Application\Commands\StaffMfa;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\ResolveSurface;
+use App\Http\Requests\DeleteAccountRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\UpdateProfileRequest;
@@ -212,6 +214,39 @@ class AuthController extends Controller
         $updated = $profile->rename($user, $request->validated('name'), $request->ip(), AssignRequestId::for($request));
 
         return ApiResponse::data($request, (new CurrentUserResource($updated, (string) ResolveSurface::of($request)))->toArray());
+    }
+
+    /**
+     * A customer closes their own account (ADR-017). The password is
+     * re-checked here, and wrong guesses count against the account (not the
+     * network), like sign-in, so a hijacked session cannot guess its way in.
+     */
+    public function deleteMe(DeleteAccountRequest $request, DeleteCustomerAccount $deletion): Response
+    {
+        /** @var User $user */
+        $user = Auth::guard('web')->user();
+
+        $throttleKey = 'account-delete:'.hash('sha256', (string) $user->id);
+        if (RateLimiter::tooManyAttempts($throttleKey, (int) config('surfaces.login.max_attempts'))) {
+            throw ApiError::rateLimited(RateLimiter::availableIn($throttleKey));
+        }
+
+        if (! $deletion->handle($user, $request->string('password')->toString(), AssignRequestId::for($request))) {
+            RateLimiter::hit($throttleKey, (int) config('surfaces.login.decay_seconds'));
+            Log::info('account.delete.refused', ['surface' => ResolveSurface::of($request)]);
+
+            throw ValidationException::withMessages(['password' => ['The password is not correct.']]);
+        }
+
+        RateLimiter::clear($throttleKey);
+
+        // This browser session ends now; every other one ends on its next
+        // request, because the user row is gone or its password hash changed.
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->noContent();
     }
 
     /**

@@ -26,6 +26,7 @@ class RouteInventoryTest extends TestCase
             'DELETE api/v1/admin/invitations/{invitation}',
             'DELETE api/v1/admin/users/{user}/roles/{grant}',
             'DELETE api/v1/auth/mobile/token',
+            'DELETE api/v1/me',
             'DELETE api/v1/me/addresses/{address}',
             'GET|HEAD api/v1/admin/audit-logs',
             'GET|HEAD api/v1/admin/cities',

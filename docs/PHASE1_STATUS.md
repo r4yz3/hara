@@ -2,6 +2,23 @@
 
 Last updated: 2026-11-14. **The Phase 1 gate is not passed.** Staging does not exist (E-07, human), several decisions and document reviews are open, and the rider app has never run on a device. Nothing here is a production-readiness claim: everything built is local, mocked or sandbox-level unless a line says "hosted CI". The dated sections below the definition-of-done checklist are history and are kept unchanged; where they contradict this section, this section is newer.
 
+## November 14 delete my account (customer erasure, backend)
+
+Evidence: `docs/qa/evidence/phase1-2026-11-14-account-delete-check.txt` (`dev.ps1 check`, exit 0; 755 backend tests) and `phase1-2026-11-14-account-delete-csrf.txt` (live CSRF check).
+
+- Product owner decision: customers get a delete-my-account flow as the erasure rule for saved addresses. Built by a Sonnet subagent and reviewed; design in ADR-017.
+- `DELETE /api/v1/me` with the current password, customer app only. It sits in the account-writes limit, and wrong passwords also count against a sign-in-style limit (5 a minute).
+- The password is checked before anything else, so a wrong one never reveals whether the account is a work account.
+- Accounts also used for work (a live staff role, active merchant staff, a rider record, or a confirmed two-step factor) get 409 and nothing changes.
+- In one transaction it removes saved addresses, the customer profile, reset links, tokens, devices, privacy consents, unconfirmed two-step enrolment, customer role grants and database sessions, then deletes the user row. If ended work history must be kept (revoked grants, invitations sent), it anonymises the row instead. Audit `account.deleted` holds the user id only. All other sessions end on their next request.
+- Tests: AccountDeletionTest (23), including a scan of logs, audit rows and error bodies for any address, position, email, name or password.
+- CSRF checked with real requests: with the correct password but no token or a forged token, the request was refused (403) and the account was untouched. No real deletion was run against the development database.
+- Not done:
+  - no screen yet; it must warn that deletion is immediate and cannot be undone;
+  - backups taken before a deletion still hold the data until they expire;
+  - deleting consents loses proof of consent (flagged for the privacy review);
+  - once orders and payments exist, anonymising will likely become the normal path.
+
 ## November 14 product owner decisions
 
 - **Customer erasure:** build a delete-my-account flow (in progress), on top of the existing per-address delete.

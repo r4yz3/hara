@@ -654,6 +654,44 @@ paths:
         "403": { $ref: "#/components/responses/Error" }
         "422": { $ref: "#/components/responses/Error" }
         "429": { $ref: "#/components/responses/Error" }
+    delete:
+      tags: [Customer]
+      summary: Delete the signed-in customer's own account
+      description: |
+        Customer app only; the merchant and admin apps get 404. Needs the
+        current `password`. A wrong password answers 422 on `password` and
+        counts against a per-account limit of 5 a minute, then 429
+        `RATE_LIMITED` with `Retry-After` (the right password is refused too
+        while the limit holds). The account must be purely a customer: any
+        live staff role, active merchant staff membership, a rider record or a
+        confirmed second factor answers 409 `CONFLICT` and changes nothing.
+        Otherwise, in one transaction, the person's saved addresses, profile,
+        reset rows, API tokens, devices, consents and sessions are deleted and
+        the user row is deleted (or anonymised, if past work history still
+        references it; see ADR-017). Writes `account.deleted` (the user id
+        only). The current session ends; every other session of the person
+        answers 401 on its next request. The email address can register again.
+        Counts toward the shared 30 writes a minute per account.
+      operationId: meDelete
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string, maxLength: 1024 }
+      responses:
+        "204": { description: Account closed. }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
   /api/v1/me/addresses:
     get:
       tags: [Customer]

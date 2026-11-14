@@ -57,6 +57,7 @@ Route::middleware(EnsureSurfaceSession::class)->group(function (): void {
     Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
     Route::get('/me', [AuthController::class, 'me'])->name('me.show');
     Route::patch('/me', [AuthController::class, 'updateMe'])->middleware('throttle:account-writes')->name('me.update');
+    Route::delete('/me', [AuthController::class, 'deleteMe'])->middleware([EnsureCustomerSurface::class, 'throttle:account-writes'])->name('me.destroy');
     Route::post('/me/mfa/totp', [MfaController::class, 'start'])->name('me.mfa.totp.start');
     Route::post('/me/mfa/totp/confirm', [MfaController::class, 'confirm'])->name('me.mfa.totp.confirm');
     Route::post('/me/mfa/recovery-codes', [MfaController::class, 'regenerateRecoveryCodes'])->name('me.mfa.recovery-codes.regenerate');

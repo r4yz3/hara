@@ -415,7 +415,24 @@ export interface paths {
         get: operations["meShow"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete the signed-in customer's own account
+         * @description Customer app only; the merchant and admin apps get 404. Needs the
+         *     current `password`. A wrong password answers 422 on `password` and
+         *     counts against a per-account limit of 5 a minute, then 429
+         *     `RATE_LIMITED` with `Retry-After` (the right password is refused too
+         *     while the limit holds). The account must be purely a customer: any
+         *     live staff role, active merchant staff membership, a rider record or a
+         *     confirmed second factor answers 409 `CONFLICT` and changes nothing.
+         *     Otherwise, in one transaction, the person's saved addresses, profile,
+         *     reset rows, API tokens, devices, consents and sessions are deleted and
+         *     the user row is deleted (or anonymised, if past work history still
+         *     references it; see ADR-017). Writes `account.deleted` (the user id
+         *     only). The current session ends; every other session of the person
+         *     answers 401 on its next request. The email address can register again.
+         *     Counts toward the shared 30 writes a minute per account.
+         */
+        delete: operations["meDelete"];
         options?: never;
         head?: never;
         /**
@@ -2078,6 +2095,38 @@ export interface operations {
                 };
             };
             401: components["responses"]["Error"];
+        };
+    };
+    meDelete: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    password: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Account closed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+            429: components["responses"]["Error"];
         };
     };
     meUpdate: {

@@ -1,0 +1,6 @@
+# DELETE /api/v1/me against the running local API (localhost:8000), customer origin, demo customer account.
+# Only requests that must be refused were sent, so the account could not be deleted.
+sign in: 200
+DELETE /me, correct password, no CSRF token: 403
+DELETE /me, correct password, forged token:  403
+account still there (/me): 200
