@@ -42,7 +42,7 @@ How to read it: "evidence" names a file under `docs/qa/evidence/` or a test. Whe
 | Generated API types checked for drift (C-11, types only) | `sprint5-api-types-check.txt` |
 | Browser suites: default Chromium run at 375, 768 and 1440 with axe, and one live run | `x01-2026-11-14-playwright-default.txt` (267 passed, 66 opt-in skipped), `x01-2026-11-14-playwright-live.txt` (1 passed). Default run at HEAD `c7e360f`: 354 passed, 66 skipped (`x01-2026-11-14-playwright-default-HEAD.txt`); 63 passed in `customer.spec.ts` is recorded as text only |
 | Screenshots of every built screen at 360/375, 768, 1440 (U-09; API mocked) | `docs/qa/evidence/screens/`, rider images `rider-home-390-*.png` |
-| Hosted CI green for web, backend and security on `099a3db` | `x01-2026-11-14-hosted-ci.txt`. The current head is `102476e`; no hosted result for the later commits is saved (unverified) |
+| Hosted CI green for web, backend and security (secret scan and all three image scans) on `61ccc84` | `x01-2026-11-14-hosted-ci-61ccc84.txt`; earlier `099a3db` in `x01-2026-11-14-hosted-ci.txt`. Commits after `61ccc84` are unverified until their runs are recorded. |
 | Hardcoded-city, coordinate, map-centre and invented-data text searches | `x01-2026-11-14-text-searches.txt` (no problem found) |
 | Skills synchronised; ADR-000 to ADR-014, threat model, permission matrix and operations docs exist | `skills-lock.json`; `docs/architecture/decisions/`, `docs/security/`, `docs/operations/` (presence only; review is open below) |
 
@@ -61,7 +61,7 @@ How to read it: "evidence" names a file under `docs/qa/evidence/` or a test. Whe
 | B-08 | No rider approval flow (Phase 2) and no device attestation. |
 | B-09 | No QR code, no way to turn two-step off, enrolment-only redirect only from sign-in and `/security`, city-scoped staff get 403 not 404 on the reset route. |
 | A-10 | Makefile never run (`make` is not installed). |
-| A-11, C-01, C-11 | Workflows ran green on `099a3db`; not independently audited. Request helpers in `packages/session` are hand written, not generated. |
+| A-11, C-01, C-11 | Workflows ran green on `61ccc84`; not independently audited. Request helpers in `packages/session` are hand written, not generated. |
 | E-01 | `outbox.failure` (no outbox worker) and alerts (need a host) not done; no log shipping or retention. |
 | E-02 | API headers, CORS negatives and cookie attributes tested. The web apps send a baseline CSP only, with no script, style or connect restriction (deferred, see blocked). |
 | E-03 | Local drill only: no schedule, off-machine copy, encryption, fault injection or staging restore. Backups are unencrypted. |
@@ -104,7 +104,7 @@ Not built and not exposed as working routes (the route and OpenAPI tests fail if
 | 5 | Serviceability reliable inside and outside; useful not-configured answer | Met (local) | ServiceabilityTest, `sprint5-config-plan-check.txt` (GiST plan). Geometry caps are unapproved (C-13). |
 | 6 | Cross-tenant access denied for guessed IDs | Met for city scope | `sprint5-cross-tenant-check.txt`. Merchant scope cannot be tested yet (no merchant endpoints). |
 | 7 | Four shells work at narrow and wide viewports; placeholders disabled and labelled | Partial | Web: Chromium at 375, 768 and 1440 with axe (`x01-2026-11-14-playwright-default.txt`). Rider: widget tests only, never on a device. Merchant has no account. Screen reader and dark theme not checked. |
-| 8 | CI runs lint, types, tests, schema validation, OpenAPI diff, security scans | Met for `099a3db` | `x01-2026-11-14-hosted-ci.txt`. Later commits unverified. |
+| 8 | CI runs lint, types, tests, schema validation, OpenAPI diff, security scans | Met for `61ccc84` | `x01-2026-11-14-hosted-ci-61ccc84.txt` (web, backend, security including the image scans). Later commits unverified. |
 | 9 | README, ADRs, threat model, test evidence | Met (presence) | `README.md`, `docs/architecture/decisions/`, `docs/security/threat-model.md`, `docs/qa/evidence/`. Human review is open. |
 
 Other gate conditions (spec 15 and section 12): "MFA for admin production access" is built but its recovery design is unreviewed and no deployed admin exists; "Staging database backup restored successfully" is not met (no staging); "Proper map attribution, valid tile access terms" is not met (no provider); the spec 15 human checklist has not been ticked by a human. The Sprint 7 gate ("production-like staging with documented rollback") is met only as a local rehearsal. Sprint 8's rule applies: an open critical failure blocks the phase. No failing security, authorization, geometry or migration test is known.

@@ -1,0 +1,29 @@
+Hosted CI evidence for r4yz3/hara
+Full commit sha: 61ccc845a9f4783c438f9e5e26abf305b6dad2ca (short 61ccc84, branch main)
+Checked: 2026-11-14 04:28:03 UTC
+Method: gh run list --commit <full sha>; gh run view <id> --json jobs. Read-only. No workflow was re-run, cancelled or triggered.
+Polling: runs were queued or in progress at first check (3 pending). Re-checked once a minute; all three completed after 8 checks (about 7 minutes). No run was left in progress.
+
+Run: web (run 43556079855)
+  URL: https://github.com/r4yz3/hara/actions/runs/43556079855
+  Event: push | Status: completed | Conclusion: success
+  Jobs:
+    - check: success (16 of 16 steps succeeded)
+
+Run: backend (run 43556079854)
+  URL: https://github.com/r4yz3/hara/actions/runs/43556079854
+  Event: push | Status: completed | Conclusion: success
+  Jobs:
+    - test: success (13 of 13 steps succeeded)
+
+Run: security (run 43556079871)
+  URL: https://github.com/r4yz3/hara/actions/runs/43556079871
+  Event: push | Status: completed | Conclusion: success
+  Jobs:
+    - secrets: success (5 of 5 steps succeeded)
+    - image (api-dev, infra/docker/php/Dockerfile): success (6 of 6 steps succeeded)
+    - image (api-prod, infra/docker/prod/api.Dockerfile, api): success (6 of 6 steps succeeded)
+    - image (web-prod, infra/docker/prod/api.Dockerfile, web): success (6 of 6 steps succeeded)
+
+Failures: none. No failure excerpts recorded.
+Summary: 3 of 3 workflow runs passed for 61ccc84. 0 failed. 0 in progress.
