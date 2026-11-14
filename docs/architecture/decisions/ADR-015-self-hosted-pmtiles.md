@@ -17,7 +17,7 @@
 - The archive is extracted for the chosen coverage only after the launch city is chosen. No file, bounds or coordinates are committed to this repository.
 
 ## Not done here
-- No PMTiles archive, style JSON or tile host exists yet; every environment still shows the placeholder until the operator sets `MAP_STYLE_URL`.
+- Superseded 2026-11-14: staging now has a tile host (see "Hosting done"). Environments without `MAP_STYLE_URL` still show the placeholder.
 
 ## Consequences
 - No provider lock-in or key rotation. We pay storage and egress, and we refresh the archive ourselves when OpenStreetMap data changes.
@@ -29,3 +29,10 @@
 - Launch area: Magsaysay, Bansalan and Matanao, Davao del Sur. This is recorded in prose only. The bbox is computed at extract time and **no coordinates or bounding box are added to tracked files**; the style JSON stays outside the repository until the operator publishes it.
 - Layout planned 2026-11-14 (`docs/operations/map-tiles.md`, not run): a separate public R2 bucket `hara-staging-tiles` on the custom domain `tiles.haradelivery.com`, holding the dated `.pmtiles`, a static style JSON generated with `@protomaps/basemaps` 5.7.2 (`infra/map/build-style.mjs`, operator-run, no workspace dependency), and self-hosted glyphs and sprites from `protomaps/basemaps-assets` at a pinned commit. CORS: `GET`, `HEAD`, `range` from the three web origins. The style URL reaches the apps at run time through `GET /api/v1/public/config`, so no web rebuild is needed; `NEXT_PUBLIC_MAP_STYLE_URL` only matters once the per-request CSP is wired.
 - Still to do: create the R2 bucket, run the extract, publish the style JSON, set `MAP_STYLE_URL`, and add the R2 origin to `connect-src` through `tileOriginFrom`. Nothing was run here.
+
+## Hosting done (2026-11-14, staging)
+- Public R2 bucket `hara-staging-tiles` on the custom domain `tiles.haradelivery.com`, CORS for the three staging web origins, a Cloudflare cache rule.
+- Extract from Protomaps build 20261113 with go-pmtiles 1.31.2, maxzoom 15, 1676 tiles, archive 4,505,388 bytes. Fonts, sprites and style uploaded; bucket total 15.452 MiB, 1047 objects. The bbox stays out of tracked files.
+- Checked from the workstation: ranged GET returns 206 with `content-range: bytes 0-16383/4505388`; CORS allows the admin origin and exposes the range headers, and nothing for `https://example.com`; strong ETag; `PMTiles` magic; style, glyph and sprite files return 200; the style references only `tiles.haradelivery.com`.
+- `MAP_STYLE_URL` on staging is `https://tiles.haradelivery.com/style-20261113.json`, returned by `GET /api/v1/public/config`.
+- Not yet seen: the map rendering in a browser over a real zone (no city or zone exists). The operator should delete the upload token.

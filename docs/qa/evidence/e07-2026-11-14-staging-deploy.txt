@@ -69,3 +69,15 @@
 - `sudo hara-cloudflare-firewall status`: DOCKER-USER jumps for 443 and 80 on eth0 to HARA-CF, with 15 IPv4 and 7 IPv6 Cloudflare RETURN rules ending in DROP. The firewall unit re-applied its rules at boot.
 - `/dev/shm` was empty (no leftover drill key).
 - Not recorded for this boot: workstation checks of the public hosts, the next scheduled backup run, and the weekly firewall timer.
+
+## 10. Map tiles and the API_URL fix, 2026-11-14 (operator-run; checks from the workstation)
+- Hosting (ADR-015, U-04, U-10): public R2 bucket `hara-staging-tiles` on the custom domain `tiles.haradelivery.com`, CORS for the three staging web origins, Cloudflare cache rule.
+- Extract: Protomaps build 20261113, go-pmtiles 1.31.2, maxzoom 15, 1676 tiles, archive 4,505,388 bytes. Fonts, sprites and style uploaded. Bucket total 15.452 MiB, 1047 objects.
+- Ranged GET: 206, `content-range: bytes 0-16383/4505388`.
+- CORS: `access-control-allow-origin` for the admin origin with the exposed headers; none for `https://example.com`.
+- Strong ETag present; first bytes are the magic `PMTiles`.
+- Style, glyph and sprite json and png files return 200; the style references only `tiles.haradelivery.com`.
+- `MAP_STYLE_URL` is set on staging to `https://tiles.haradelivery.com/style-20261113.json`; `GET /api/v1/public/config` returns it.
+- Not seen: the map rendering in a browser over a real zone (no city or zone created yet).
+- The upload token should be deleted by the operator.
+- Fix `733fd4d`: the staging web apps had no `API_URL`, so server-side calls (admin API status card, customer service banner) went to localhost:8000. Now `API_URL=http://web:8080`; deployed. The customer banner renders "We are not delivering anywhere yet", so the API is reached.

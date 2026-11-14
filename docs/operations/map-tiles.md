@@ -297,6 +297,8 @@ curl -sk --resolve staging-api.haradelivery.com:443:127.0.0.1 https://staging-ap
 - **Back to the previous extract:** set `MAP_STYLE_URL` to the previous `style-<DATE>.json` (kept in the bucket) and recreate the API.
 - **Refresh the data:** repeat sections 4 (reuse `$bbox` from your notes, not from the repository), 5, 7 (new dated files), 9. Then delete the old dated files with `rclone delete`.
 
-## 11. What stays unverified until you run it
+## 11. What was verified, and what stays unverified
 
-The extract size, `pmtiles extract` against the chosen build, Cloudflare's range and cache behaviour on the custom domain, the rclone upload, the CORS policy, and the map drawing in the real admin app. Record the dates, the build date, the file size and the curl results in `docs/PHASE1_STATUS.md` once done. Nothing here proves a launch-city choice: the tiles show where OpenStreetMap has data and say nothing about service coverage.
+Verified on 2026-11-14 (operator ran the steps; checks made from the workstation): Protomaps build 20261113, go-pmtiles 1.31.2, maxzoom 15, 1676 tiles, archive 4,505,388 bytes; bucket total 15.452 MiB, 1047 objects (fonts, sprites, style included). Ranged GET returned 206 with `content-range: bytes 0-16383/4505388`; CORS returned the admin origin with exposed headers and none for `https://example.com`; strong ETag; first bytes `PMTiles`; style, glyph and sprite json and png files returned 200; the style references only `tiles.haradelivery.com`. `MAP_STYLE_URL` is set on staging and `GET /api/v1/public/config` returns it. Evidence: `docs/qa/evidence/e07-2026-11-14-staging-deploy.txt`, section 10.
+
+Still unverified: the map drawing in the real admin app over a real zone (no city or zone exists yet), and Cloudflare cache hit behaviour on repeat requests. The operator should delete the upload token. Nothing here proves a launch-city choice: the tiles show where OpenStreetMap has data and say nothing about service coverage.
