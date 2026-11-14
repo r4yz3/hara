@@ -21,7 +21,7 @@ export default function AccountPage() {
           Not available yet
         </h2>
         <ul className="mt-2 list-disc pl-5 text-sm text-text-secondary">
-          <li>Saved addresses.</li>
+          <li>Saved addresses on a map, with a pin or an address search.</li>
           <li>Orders and order history.</li>
           <li>Payment methods.</li>
         </ul>

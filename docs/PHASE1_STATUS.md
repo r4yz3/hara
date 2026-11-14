@@ -2,6 +2,21 @@
 
 Last updated: 2026-11-14. **The Phase 1 gate is not passed.** Staging does not exist (E-07, human), several decisions and document reviews are open, and the rider app has never run on a device. Nothing here is a production-readiness claim: everything built is local, mocked or sandbox-level unless a line says "hosted CI". The dated sections below the definition-of-done checklist are history and are kept unchanged; where they contradict this section, this section is newer.
 
+## November 14 saved addresses screen (U-06)
+
+- Built by a Sonnet subagent and reviewed. On `/account` below Sign out (kept there so the existing phone-size sign-out test still reaches the button).
+- **List:** each address shows its tag, line, landmark, a Default badge, and "Inside a delivery area (City)" or "Not inside an open delivery area yet". Coordinates appear only inside the edit form.
+- **Add and edit:** the form takes the address line, landmark (with a hint that riders use it), label, latitude and longitude, plus "Use this device's location" (rounded to 4 decimals, as on `/location`) and "Make this my default". It says a map pin is not available yet.
+- **Delete:** a confirmation dialog; focus starts on Cancel and Escape returns it.
+- **States:** empty, loading, error with "Reload addresses", 422 with focus on the first refused field, no double submit, the 20-address limit, and a 404 that reloads the list.
+- **Privacy:** reviewed in the code. Only the opaque address id goes in a URL; positions go only in request bodies, and nothing goes to storage or the console. A browser test checks the URL, storage, console and every request URL after create and edit.
+- **Tests:** `tests/browser/addresses.spec.ts` (16 tests x 3 viewports, with axe). The agent's full browser run passed 582 with 78 opt-in skips. I re-ran lint and type checks.
+- **Not done:**
+  - not run against the live API;
+  - no 404 test for edit or make-default;
+  - no screenshots;
+  - no map pin or address search (no tiles or geocoding provider).
+
 ## November 14 saved addresses API (U-06, backend)
 
 Evidence: `docs/qa/evidence/phase1-2026-11-14-addresses-check.txt` (`dev.ps1 check`, exit 0; 727 backend tests).

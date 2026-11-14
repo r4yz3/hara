@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
+import { AddressesSection } from "./addresses";
 import { apiSend, currentUser, describeFailure, signOut, type CurrentUser, type Failure } from "@food-delivery/session";
 
 type State =
@@ -121,6 +122,9 @@ export function AccountScreen() {
       >
         {leaving ? "Signing out…" : "Sign out"}
       </button>
+
+      {/* Below Sign out on purpose: customer.spec.ts requires the Sign out button to stay in view on a phone. */}
+      <AddressesSection />
     </div>
   );
 }
