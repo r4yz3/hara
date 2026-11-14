@@ -418,7 +418,16 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Change the signed-in user's display name
+         * @description Works on every browser surface under its own session. Only `name` can
+         *     change (trimmed, 1 to 160 characters, no control characters). Email,
+         *     phone, status, roles, password and ids are never editable here; any
+         *     other field in the body is ignored. Writes a `user.profile_updated`
+         *     audit entry only when the name actually changed. A deployed staff
+         *     session without a second factor answers 403, as for other routes.
+         */
+        patch: operations["meUpdate"];
         trace?: never;
     };
     "/api/v1/public/config": {
@@ -1926,6 +1935,37 @@ export interface operations {
                 };
             };
             401: components["responses"]["Error"];
+        };
+    };
+    meUpdate: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-TOKEN": components["parameters"]["CsrfToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated; the same body as GET /me. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentUserResponse"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            422: components["responses"]["Error"];
         };
     };
     publicConfig: {

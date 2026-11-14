@@ -45,6 +45,7 @@ class RouteInventoryTest extends TestCase
             'GET|HEAD health/ready',
             'PATCH api/v1/admin/cities/{city}',
             'PATCH api/v1/admin/zones/{zone}',
+            'PATCH api/v1/me',
             'POST api/v1/admin/cities',
             'POST api/v1/admin/cities/{city}/zones',
             'POST api/v1/admin/invitations',

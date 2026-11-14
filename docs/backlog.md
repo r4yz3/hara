@@ -49,7 +49,7 @@ Status key: `todo`, `blocked`, `done`.
 |---|---|---|---|---|
 | B-00 | Close ADR-011 open items (human + agent) | Session separation and MFA factor decided and threat-modelled | — | done: decided 2026-11-13 (ADR-011) |
 | B-01 | Approve permission matrix (human) | Reviewer questions answered | — | done: accepted 2026-11-13 |
-| B-02 | Register, login, logout, `/me` | RegisterCustomerTest, SessionLoginTest, SessionLogoutTest, MeEndpointTest | D-01, B-00 | done: csrf, register, login, logout, `/me` (37 feature tests) plus 12 real-request checks in `docs/qa/evidence/sprint4-auth-smoke.txt`. `PATCH /me` not built |
+| B-02 | Register, login, logout, `/me` | RegisterCustomerTest, SessionLoginTest, SessionLogoutTest, MeEndpointTest | D-01, B-00 | done: csrf, register, login, logout, `/me` (37 feature tests) plus 12 real-request checks in `docs/qa/evidence/sprint4-auth-smoke.txt`. `PATCH /me` built for the display name only (ProfileUpdateTest, 27; CSRF checked live in `phase1-2026-11-14-profile-csrf.txt`); email and phone changes need a verification flow and are not editable |
 | B-03 | Password recovery | Generic response; single-use expiring token | B-02 | done: forgot and reset endpoints and screens in all three apps; local email run. PasswordRecoveryTest verifies existing browser sessions are rejected on the next protected request after reset |
 | B-04 | Throttling | RateLimitTest | B-02 | done for sign-in: 5 failures per account and address per minute, plus a per-address cap on each auth route (tested) |
 | B-05 | Permission resolver and scope policies | PermissionResolverTest, ScopePolicyTest | D-01, B-01 | done: `AccessChecker` (AccessCheckerTest, 11 tests) — deny by default, scope and status read from storage on every check |

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Application\Commands\PasswordRecovery;
+use App\Application\Commands\ProfileService;
 use App\Application\Commands\RegisterCustomer;
 use App\Application\Commands\StaffMfa;
 use App\Http\Controllers\Controller;
@@ -10,6 +11,7 @@ use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\ResolveSurface;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Resources\CurrentUserResource;
 use App\Models\User;
 use App\Support\Auth\SurfaceAccess;
@@ -200,6 +202,16 @@ class AuthController extends Controller
         $user = Auth::guard('web')->user();
 
         return ApiResponse::data($request, (new CurrentUserResource($user, (string) ResolveSurface::of($request)))->toArray());
+    }
+
+    public function updateMe(UpdateProfileRequest $request, ProfileService $profile): JsonResponse
+    {
+        /** @var User $user */
+        $user = Auth::guard('web')->user();
+
+        $updated = $profile->rename($user, $request->validated('name'), $request->ip(), AssignRequestId::for($request));
+
+        return ApiResponse::data($request, (new CurrentUserResource($updated, (string) ResolveSurface::of($request)))->toArray());
     }
 
     /**

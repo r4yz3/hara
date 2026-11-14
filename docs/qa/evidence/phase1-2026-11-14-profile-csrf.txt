@@ -1,0 +1,8 @@
+# PATCH /api/v1/me against the running local API (localhost:8000), customer origin, demo customer account.
+# Real requests: the test framework disables CSRF, so this is the CSRF proof for the route.
+sign in: 200
+name before: Demo Customer (synthetic)
+PATCH without CSRF token: 403
+PATCH with forged token:  403
+name after refused calls: Demo Customer (synthetic)
+PATCH with real token:    200   (sent the unchanged name, so no audit row and no data change)

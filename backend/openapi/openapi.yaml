@@ -621,6 +621,37 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/CurrentUserResponse" }
         "401": { $ref: "#/components/responses/Error" }
+    patch:
+      tags: [Auth]
+      summary: Change the signed-in user's display name
+      description: |
+        Works on every browser surface under its own session. Only `name` can
+        change (trimmed, 1 to 160 characters, no control characters). Email,
+        phone, status, roles, password and ids are never editable here; any
+        other field in the body is ignored. Writes a `user.profile_updated`
+        audit entry only when the name actually changed. A deployed staff
+        session without a second factor answers 403, as for other routes.
+      operationId: meUpdate
+      parameters:
+        - { $ref: "#/components/parameters/CsrfToken" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 160 }
+      responses:
+        "200":
+          description: Updated; the same body as GET /me.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CurrentUserResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
   /api/v1/public/config:
     get:
       tags: [Geography]

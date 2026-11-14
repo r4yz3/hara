@@ -2,6 +2,15 @@
 
 Last updated: 2026-11-14. **The Phase 1 gate is not passed.** Staging does not exist (E-07, human), several decisions and document reviews are open, and the rider app has never run on a device. Nothing here is a production-readiness claim: everything built is local, mocked or sandbox-level unless a line says "hosted CI". The dated sections below the definition-of-done checklist are history and are kept unchanged; where they contradict this section, this section is newer.
 
+## November 14 profile name editing (B-02)
+
+- `PATCH /api/v1/me` changes the signed-in person's display name only. Email and phone need a verification flow that is not built, so they are not editable. Any other field in the body (email, phone, status, roles, password, id) is ignored. Returns the same body as `GET /me`. Audited as `user.profile_updated` (name before and after) only when the name changes.
+- The name is trimmed, 1 to 160 characters. Control characters are refused, and so are invisible format characters such as right-to-left overrides and zero-width spaces, which could make a name display as something else (added in review). The zero-width joiner and non-joiner stay allowed for scripts and emoji that need them.
+- An enrolment-only admin session (staff without two-step sign-in outside local and testing) gets 403, as on every other route except enrolment. Rider tokens are refused.
+- Tests: ProfileUpdateTest (27). CSRF checked with real requests: no token and a forged token were refused with 403 and the name did not change; a real token succeeded (`docs/qa/evidence/phase1-2026-11-14-profile-csrf.txt`).
+- Built by a Sonnet subagent; reviewed, with the character rule tightened.
+- Not done: no screen uses the route yet; the merchant surface is untested because no merchant account can sign in.
+
 ## Phase 1 position (2026-11-14)
 
 How to read it: "evidence" names a file under `docs/qa/evidence/` or a test. Where a result is only recorded as text in a dated section below and no output file was saved, the line says "no saved output". Anything not re-checked while writing this section is marked "unverified".
