@@ -2,6 +2,25 @@
 
 Last updated: 2026-11-14. **The Phase 1 gate is not passed.** Staging does not exist (E-07, human), several decisions and document reviews are open, and the rider app has never run on a device. Nothing here is a production-readiness claim: everything built is local, mocked or sandbox-level unless a line says "hosted CI". The dated sections below the definition-of-done checklist are history and are kept unchanged; where they contradict this section, this section is newer.
 
+## November 14 delete-my-account screen
+
+- Built by a Sonnet subagent and reviewed. The last section of `/account` (Sign out stays in view on a phone).
+- It explains what is removed, that deletion is immediate and cannot be undone, and that backup copies may remain for a limited time.
+- A confirmation dialog (focus on Cancel, Escape returns focus) asks for the current password and has a "Delete my account permanently" button. It sends one request even if pressed twice.
+- Outcomes:
+  - success goes to `/account/deleted`;
+  - a wrong password shows a field message with focus;
+  - a work account sees the "ask an administrator" message;
+  - 429 shows the wait time (`packages/session` now reads `Retry-After` into the rate-limited failure, an additive change);
+  - 401 goes to sign-in;
+  - a server error offers Try again.
+- The password is cleared after every request and never goes in a URL, storage or the console; tests check this.
+- Tests: `tests/browser/account-delete.spec.ts` (8 x 3 viewports, with axe). 120 of 120 passed when repeated 5 times. The agent's run of the account-related suites passed 198.
+- Not done:
+  - not run against the live API (deletion CSRF was checked live separately);
+  - `/account/deleted` is a static page, so it shows its message to anyone who opens it;
+  - no screenshot.
+
 ## November 14 delete my account (customer erasure, backend)
 
 Evidence: `docs/qa/evidence/phase1-2026-11-14-account-delete-check.txt` (`dev.ps1 check`, exit 0; 755 backend tests) and `phase1-2026-11-14-account-delete-csrf.txt` (live CSRF check).
@@ -14,7 +33,7 @@ Evidence: `docs/qa/evidence/phase1-2026-11-14-account-delete-check.txt` (`dev.ps
 - Tests: AccountDeletionTest (23), including a scan of logs, audit rows and error bodies for any address, position, email, name or password.
 - CSRF checked with real requests: with the correct password but no token or a forged token, the request was refused (403) and the account was untouched. No real deletion was run against the development database.
 - Not done:
-  - no screen yet; it must warn that deletion is immediate and cannot be undone;
+  - screen built the same day (below);
   - backups taken before a deletion still hold the data until they expire;
   - deleting consents loses proof of consent (flagged for the privacy review);
   - once orders and payments exist, anonymising will likely become the normal path.

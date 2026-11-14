@@ -11,7 +11,7 @@ export type ApiFailure =
   | { kind: "not_found" }
   | { kind: "conflict"; message: string }
   | { kind: "validation"; fields: Record<string, string[]> }
-  | { kind: "rate_limited" }
+  | { kind: "rate_limited"; retryAfterSeconds?: number }
   | { kind: "unavailable" }
   | { kind: "network" };
 
@@ -34,8 +34,10 @@ async function failureOf(response: Response): Promise<ApiFailure> {
       return { kind: "conflict", message: message || "This changed since you loaded it. Reload and try again." };
     case 422:
       return { kind: "validation", fields: body.error?.fields ?? {} };
-    case 429:
-      return { kind: "rate_limited" };
+    case 429: {
+      const retry = Number(response.headers.get("Retry-After"));
+      return Number.isFinite(retry) && retry > 0 ? { kind: "rate_limited", retryAfterSeconds: Math.ceil(retry) } : { kind: "rate_limited" };
+    }
     default:
       return { kind: "unavailable" };
   }
