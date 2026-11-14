@@ -43,13 +43,15 @@ export function Panel({ children, dashed = false }: { children: ReactNode; dashe
   );
 }
 
+const enrolmentSentence = "Set up two-step sign-in before using the admin console. Nothing else here works until it is done.";
+
 /** Shown instead of the generic forbidden text when the 403 means "enrol in two-step sign-in first". */
 export function EnrolmentSetup() {
   return (
     <Panel>
       <div role="alert" className="flex flex-col gap-1">
         <h2 className="font-semibold">Set up two-step sign-in</h2>
-        <p className="font-medium">Set up two-step sign-in before using the admin console. Nothing else here works until it is done.</p>
+        <p className="font-medium">{enrolmentSentence}</p>
       </div>
       <div className="flex flex-wrap gap-2">
         <Link href="/security" className={`${primaryButton} content-center`}>
@@ -57,6 +59,20 @@ export function EnrolmentSetup() {
         </Link>
       </div>
     </Panel>
+  );
+}
+
+/** EnrolmentSetup's words and link, inline, where a failed action's message goes. */
+export function EnrolmentNotice() {
+  return (
+    <div role="alert" className="flex flex-col gap-2">
+      <p className="text-sm font-medium text-danger">{enrolmentSentence}</p>
+      <div className="flex flex-wrap gap-2">
+        <Link href="/security" className={`${primaryButton} content-center`}>
+          Set up two-step sign-in
+        </Link>
+      </div>
+    </div>
   );
 }
 

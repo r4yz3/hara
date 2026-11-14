@@ -3,9 +3,9 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 
 import type { StaffMember } from "@food-delivery/api-client";
-import { apiSend, describeFailure } from "@food-delivery/session";
+import { apiSend, describeFailure, isEnrolmentOnly } from "@food-delivery/session";
 
-import { FieldError, Notice, dangerButton, fieldClass, primaryButton, quietButton } from "@/components/ui";
+import { EnrolmentNotice, FieldError, Notice, dangerButton, fieldClass, primaryButton, quietButton } from "@/components/ui";
 
 const MAX_REASON = 500;
 
@@ -22,7 +22,7 @@ export function SuspensionControls({ member, onChanged }: { member: StaffMember;
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [fieldProblem, setFieldProblem] = useState<string[] | undefined>();
-  const [problem, setProblem] = useState<string | null>(null);
+  const [problem, setProblem] = useState<{ text: string; enrolment: boolean } | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const field = useRef<HTMLTextAreaElement>(null);
   const id = useId();
@@ -77,7 +77,7 @@ export function SuspensionControls({ member, onChanged }: { member: StaffMember;
       return;
     }
 
-    setProblem(describeFailure(result.failure));
+    setProblem({ text: describeFailure(result.failure), enrolment: isEnrolmentOnly(result.failure) });
   }
 
   const suspending = action === "suspend";
@@ -136,7 +136,7 @@ export function SuspensionControls({ member, onChanged }: { member: StaffMember;
               </p>
               <FieldError id={`${id}-reason-error`} messages={fieldProblem} />
             </div>
-            {problem ? <Notice tone="problem">{problem}</Notice> : null}
+            {problem ? (problem.enrolment ? <EnrolmentNotice /> : <Notice tone="problem">{problem.text}</Notice>) : null}
             <div className="flex flex-wrap gap-2">
               <button type="button" disabled={busy} onClick={() => dialog.current?.close()} className={quietButton}>
                 Cancel

@@ -5,20 +5,20 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
 import type { City, Zone } from "@food-delivery/api-client";
-import { apiGet, apiSend, describeFailure, type ApiFailure, type ApiResult } from "@food-delivery/session";
+import { apiGet, apiSend, describeFailure, isEnrolmentOnly, type ApiFailure, type ApiResult } from "@food-delivery/session";
 
-import { FieldError, LoadProblem, Notice, Panel, StatusPill, dangerButton, fieldClass, focusFirstInvalid, primaryButton, quietButton } from "@/components/ui";
+import { EnrolmentNotice, FieldError, LoadProblem, Notice, Panel, StatusPill, dangerButton, fieldClass, focusFirstInvalid, primaryButton, quietButton } from "@/components/ui";
 import { ZoneExclusions } from "./zone-exclusions";
 import { ZoneMap } from "./zone-map";
 
 type Envelope<T> = { data: T };
-type Message = { tone: "ok" | "problem"; text: string; stale?: boolean } | null;
+type Message = { tone: "ok" | "problem"; text: string; stale?: boolean; enrolment?: boolean } | null;
 
 /** A change notice. After a 409 it also offers to load the latest version (spec 8.7, conflict). */
 function Outcome({ message, onReload }: { message: NonNullable<Message>; onReload: () => Promise<void> }) {
   return (
     <>
-      <Notice tone={message.tone}>{message.text}</Notice>
+      {message.enrolment ? <EnrolmentNotice /> : <Notice tone={message.tone}>{message.text}</Notice>}
       {message.stale ? (
         <button type="button" onClick={() => void onReload()} className={`${quietButton} self-start`}>
           Reload latest
@@ -175,7 +175,12 @@ function CityDetails({ city, onChanged }: { city: City; onChanged: () => Promise
       setFields(result.failure.fields);
       focusFirstInvalid([["name", "#edit-name"], ["timezone", "#edit-timezone"]], result.failure.fields);
     }
-    setMessage({ tone: "problem", text: describeFailure(result.failure), stale: result.failure.kind === "conflict" });
+    setMessage({
+      tone: "problem",
+      text: describeFailure(result.failure),
+      stale: result.failure.kind === "conflict",
+      enrolment: isEnrolmentOnly(result.failure),
+    });
   }
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -329,7 +334,7 @@ function ZoneRow({ zone, cityActive, onChanged }: { zone: Zone; cityActive: bool
     const result = await apiGet<Envelope<Zone>>(`/api/v1/admin/zones/${zone.id}`);
     setBusy(false);
     if (!result.ok) {
-      setMessage({ tone: "problem", text: describeFailure(result.failure) });
+      setMessage({ tone: "problem", text: describeFailure(result.failure), enrolment: isEnrolmentOnly(result.failure) });
     } else if (result.value.data.status === "archived") {
       await onChanged();
     } else {
@@ -359,6 +364,7 @@ function ZoneRow({ zone, cityActive, onChanged }: { zone: Zone; cityActive: bool
           ? Object.values(result.failure.fields).flat().join(" ") || describeFailure(result.failure)
           : describeFailure(result.failure),
       stale: result.failure.kind === "conflict",
+      enrolment: isEnrolmentOnly(result.failure),
     });
   }
 
@@ -519,7 +525,11 @@ function EditZone({ zone, onCancel, onSaved }: { zone: Zone; onCancel: () => voi
       <div className="sm:col-span-2">
         <ZoneMap shapeText={shapeText} onDraw={busy ? undefined : setShapeText} />
       </div>
-      {failure ? (
+      {failure && isEnrolmentOnly(failure) ? (
+        <div className="sm:col-span-2">
+          <EnrolmentNotice />
+        </div>
+      ) : failure ? (
         <div className="sm:col-span-2">
           <Notice tone="problem">
             {conflicted
@@ -589,7 +599,7 @@ function CreateZone({ cityId, onCreated }: { cityId: string; onCreated: () => Pr
         form,
       );
     }
-    setMessage({ tone: "problem", text: describeFailure(result.failure) });
+    setMessage({ tone: "problem", text: describeFailure(result.failure), enrolment: isEnrolmentOnly(result.failure) });
   }
 
   const geometryErrors = Object.entries(fields)
@@ -677,7 +687,7 @@ function CreateZone({ cityId, onCreated }: { cityId: string; onCreated: () => Pr
             <button type="submit" disabled={busy} aria-busy={busy} className={`${primaryButton} w-fit`}>
               {busy ? "Checking shape…" : "Add draft zone"}
             </button>
-            {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
+            {message ? (message.enrolment ? <EnrolmentNotice /> : <Notice tone={message.tone}>{message.text}</Notice>) : null}
           </div>
         </form>
       </Panel>

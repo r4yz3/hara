@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 
 import type { City } from "@food-delivery/api-client";
-import { apiGet, apiSend, describeFailure, type ApiFailure } from "@food-delivery/session";
+import { apiGet, apiSend, describeFailure, isEnrolmentOnly, type ApiFailure } from "@food-delivery/session";
 
-import { FieldError, LoadProblem, Notice, Panel, StatusPill, fieldClass, focusFirstInvalid, primaryButton } from "@/components/ui";
+import { EnrolmentNotice, FieldError, LoadProblem, Notice, Panel, StatusPill, fieldClass, focusFirstInvalid, primaryButton } from "@/components/ui";
 
 type Loaded = { phase: "loading" } | { phase: "failed"; failure: ApiFailure } | { phase: "ready"; cities: City[]; more: boolean };
 
@@ -122,7 +122,7 @@ function CreateCity({ currency, onCreated }: { currency: string | null; onCreate
   const [slugEdited, setSlugEdited] = useState(false);
   const [busy, setBusy] = useState(false);
   const [fields, setFields] = useState<Record<string, string[]>>({});
-  const [message, setMessage] = useState<{ tone: "ok" | "problem"; text: string } | null>(null);
+  const [message, setMessage] = useState<{ tone: "ok" | "problem"; text: string; enrolment?: boolean } | null>(null);
 
   // The browser's own list; nothing is preselected (a timezone is never assumed).
   const timezones = useMemo(() => {
@@ -172,7 +172,7 @@ function CreateCity({ currency, onCreated }: { currency: string | null; onCreate
         result.failure.fields,
       );
     }
-    setMessage({ tone: "problem", text: describeFailure(result.failure) });
+    setMessage({ tone: "problem", text: describeFailure(result.failure), enrolment: isEnrolmentOnly(result.failure) });
   }
 
   return (
@@ -281,7 +281,7 @@ function CreateCity({ currency, onCreated }: { currency: string | null; onCreate
             <button type="submit" disabled={busy || currency === null} aria-busy={busy} className={`${primaryButton} w-fit`}>
               {busy ? "Creating…" : "Create draft city"}
             </button>
-            {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
+            {message ? (message.enrolment ? <EnrolmentNotice /> : <Notice tone={message.tone}>{message.text}</Notice>) : null}
           </div>
         </form>
       </Panel>

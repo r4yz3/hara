@@ -6,6 +6,7 @@ import type { AssignableRole, City, StaffInvitation } from "@food-delivery/api-c
 import { apiGet, apiSend, describeFailure, isEnrolmentOnly, type ApiFailure } from "@food-delivery/session";
 
 import {
+  EnrolmentNotice,
   EnrolmentSetup,
   FieldError,
   Notice,
@@ -71,7 +72,7 @@ export function InviteStaff({
   const [scope, setScope] = useState("");
   const [busy, setBusy] = useState(false);
   const [fields, setFields] = useState<Record<string, string[]>>({});
-  const [problemText, setProblemText] = useState<string | null>(null);
+  const [problemText, setProblemText] = useState<{ text: string; enrolment: boolean } | null>(null);
   const [sent, setSent] = useState(false);
 
   const role = offer?.roles.find((candidate) => candidate.slug === roleSlug) ?? null;
@@ -121,11 +122,13 @@ export function InviteStaff({
       setFields(mapped);
       focusFirstInvalid(fieldOrder, mapped, form);
     }
-    setProblemText(
-      result.failure.kind === "rate_limited"
-        ? "Too many invitations to that address recently. Wait a while before sending another."
-        : describeFailure(result.failure),
-    );
+    setProblemText({
+      text:
+        result.failure.kind === "rate_limited"
+          ? "Too many invitations to that address recently. Wait a while before sending another."
+          : describeFailure(result.failure),
+      enrolment: isEnrolmentOnly(result.failure),
+    });
   }
 
   return (
@@ -251,7 +254,7 @@ export function InviteStaff({
               <button type="submit" disabled={busy} aria-busy={busy} className={`${primaryButton} w-fit`}>
                 {busy ? "Sending…" : "Send invitation"}
               </button>
-              {problemText ? <Notice tone="problem">{problemText}</Notice> : null}
+              {problemText ? (problemText.enrolment ? <EnrolmentNotice /> : <Notice tone="problem">{problemText.text}</Notice>) : null}
               {sent ? <Notice tone="ok">If the address can receive mail, an invitation is on its way. It expires in 72 hours.</Notice> : null}
             </div>
           </form>
@@ -384,7 +387,7 @@ export function PendingInvitations({ refreshKey }: { refreshKey: number }) {
 function InvitationRow({ invitation, onRevoked }: { invitation: StaffInvitation; onRevoked: (text: string) => Promise<void> }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [problem, setProblem] = useState<string | null>(null);
+  const [problem, setProblem] = useState<{ text: string; enrolment: boolean } | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -405,7 +408,7 @@ function InvitationRow({ invitation, onRevoked }: { invitation: StaffInvitation;
       return;
     }
 
-    setProblem(describeFailure(result.failure));
+    setProblem({ text: describeFailure(result.failure), enrolment: isEnrolmentOnly(result.failure) });
   }
 
   return (
@@ -464,7 +467,7 @@ function InvitationRow({ invitation, onRevoked }: { invitation: StaffInvitation;
               {invitation.role_label} · {scopeLabel(invitation)}. The link in their email stops working at once. You can invite them again later. The
               revocation is recorded in the audit log.
             </p>
-            {problem ? <Notice tone="problem">{problem}</Notice> : null}
+            {problem ? (problem.enrolment ? <EnrolmentNotice /> : <Notice tone="problem">{problem.text}</Notice>) : null}
             <div className="flex flex-wrap gap-2">
               <button type="button" disabled={busy} onClick={() => dialog.current?.close()} className={quietButton}>
                 Cancel

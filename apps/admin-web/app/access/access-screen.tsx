@@ -9,6 +9,7 @@ import { InviteStaff, PendingInvitations } from "./invitations";
 import { SuspensionControls } from "./suspension";
 import {
   FieldError,
+  EnrolmentNotice,
   EnrolmentSetup,
   LoadProblem,
   Notice,
@@ -200,7 +201,7 @@ export function AccessScreen() {
 function Member({ member, onChanged }: { member: StaffMember; onChanged: (text: string) => Promise<void> }) {
   const [revoking, setRevoking] = useState<StaffGrant | null>(null);
   const [busy, setBusy] = useState(false);
-  const [problem, setProblem] = useState<string | null>(null);
+  const [problem, setProblem] = useState<{ text: string; enrolment: boolean } | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -222,7 +223,7 @@ function Member({ member, onChanged }: { member: StaffMember; onChanged: (text: 
       return;
     }
 
-    setProblem(describeFailure(result.failure));
+    setProblem({ text: describeFailure(result.failure), enrolment: isEnrolmentOnly(result.failure) });
   }
 
   return (
@@ -296,7 +297,7 @@ function Member({ member, onChanged }: { member: StaffMember; onChanged: (text: 
                 : "They keep their other roles."}{" "}
               The removal is recorded in the audit log.
             </p>
-            {problem ? <Notice tone="problem">{problem}</Notice> : null}
+            {problem ? (problem.enrolment ? <EnrolmentNotice /> : <Notice tone="problem">{problem.text}</Notice>) : null}
             <div className="flex flex-wrap gap-2">
               <button type="button" disabled={busy} onClick={() => dialog.current?.close()} className={quietButton}>
                 Cancel
@@ -330,7 +331,7 @@ function GrantRole({
   const [scope, setScope] = useState("");
   const [busy, setBusy] = useState(false);
   const [fields, setFields] = useState<Record<string, string[]>>({});
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ text: string; enrolment: boolean } | null>(null);
 
   const others = members.filter((member) => !member.is_self && member.status === "active");
   const role = offer?.roles.find((candidate) => candidate.slug === roleSlug) ?? null;
@@ -385,7 +386,7 @@ function GrantRole({
       setFields(mapped);
       focusFirstInvalid([["person", "#grant-person"], ["role", "#grant-role"], ["scope", "#grant-scope"]], mapped, form);
     }
-    setMessage(describeFailure(result.failure));
+    setMessage({ text: describeFailure(result.failure), enrolment: isEnrolmentOnly(result.failure) });
   }
 
   return (
@@ -506,7 +507,7 @@ function GrantRole({
               <button type="submit" disabled={busy} aria-busy={busy} className={`${primaryButton} w-fit`}>
                 {busy ? "Giving…" : "Give role"}
               </button>
-              {message ? <Notice tone="problem">{message}</Notice> : null}
+              {message ? (message.enrolment ? <EnrolmentNotice /> : <Notice tone="problem">{message.text}</Notice>) : null}
             </div>
           </form>
         </Panel>
