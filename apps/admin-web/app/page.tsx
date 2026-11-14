@@ -26,9 +26,9 @@ export default function AdminOverview() {
             <ApiStatus />
           </Suspense>
           <StatusRow
-            tone="waiting"
+            tone="ok"
             title="Two-step verification"
-            detail="Staff can sign in locally. The second step is not built, so production stays closed."
+            detail="Staff sign in with a password and an authenticator code (ADR-011). This row is fixed text, not checked live."
           />
           <StatusRow tone="waiting" title="City configured" detail="See the Cities screen. It is not summarised here yet." />
           <StatusRow tone="waiting" title="Delivery zone active" detail="See a city's zones. It is not summarised here yet." />
