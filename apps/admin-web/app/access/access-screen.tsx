@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
 import type { AssignableRole, City, StaffGrant, StaffMember } from "@food-delivery/api-client";
-import { apiGet, apiSend, describeFailure, type ApiFailure } from "@food-delivery/session";
+import { apiGet, apiSend, describeFailure, isEnrolmentOnly, type ApiFailure } from "@food-delivery/session";
 
 import { InviteStaff, PendingInvitations } from "./invitations";
 import { SuspensionControls } from "./suspension";
 import {
   FieldError,
+  EnrolmentSetup,
   LoadProblem,
   Notice,
   Panel,
@@ -393,7 +394,9 @@ function GrantRole({
         Give a role
       </h2>
 
-      {problem ? (
+      {problem && isEnrolmentOnly(problem) ? (
+        <EnrolmentSetup />
+      ) : problem ? (
         <Panel>
           <p role="alert" className="font-medium">
             {problem.kind === "forbidden" ? "Your role cannot give roles." : describeFailure(problem)}

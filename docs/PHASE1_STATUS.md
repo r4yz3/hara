@@ -2,6 +2,18 @@
 
 Last updated: 2026-11-14. **The Phase 1 gate is not passed.** Staging does not exist (E-07, human), several decisions and document reviews are open, and the rider app has never run on a device. Nothing here is a production-readiness claim: everything built is local, mocked or sandbox-level unless a line says "hosted CI". The dated sections below the definition-of-done checklist are history and are kept unchanged; where they contradict this section, this section is newer.
 
+## November 14 account name screen and admin setup prompt
+
+- Built by a Sonnet subagent and reviewed. Its full browser run: 510 passed, 75 opt-in skips, 0 failed (57 new). I re-ran lint and type checks before commit.
+- **Customer `/account`:** a "Change your name" form uses `PATCH /api/v1/me` and sends only `{name}`.
+  - Save stays off until the name changes and ignores a second press.
+  - Field errors move focus to the field; a server failure offers Try again.
+  - Email is shown read-only, with a note that email and phone cannot be changed yet. The API returns no phone field, so none is shown.
+- **Admin enrolment-only sessions:** staff who must set up two-step sign-in first now see a "Set up two-step sign-in" panel with a link to `/security` on cities, city detail, audit, settings and access, instead of the generic forbidden text. Other 403s are unchanged.
+- **Gap:** after a failed action (create, revoke, invite), the inline message shows the enrolment sentence without the link.
+- Tests: `tests/browser/profile-and-setup.spec.ts` (19 tests x 3 viewports).
+- The three apps' `tsconfig.json` files now include Next's `.next-fault` type paths. Next adds them whenever the global-error test builds into `.next-fault`; committing them stops the files changing after every browser run.
+
 ## November 14 profile name editing (B-02)
 
 - `PATCH /api/v1/me` changes the signed-in person's display name only. Email and phone need a verification flow that is not built, so they are not editable. Any other field in the body (email, phone, status, roles, password, id) is ignored. Returns the same body as `GET /me`. Audited as `user.profile_updated` (name before and after) only when the name changes.

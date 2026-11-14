@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
 import type { AssignableRole, City, StaffInvitation } from "@food-delivery/api-client";
-import { apiGet, apiSend, describeFailure, type ApiFailure } from "@food-delivery/session";
+import { apiGet, apiSend, describeFailure, isEnrolmentOnly, type ApiFailure } from "@food-delivery/session";
 
 import {
+  EnrolmentSetup,
   FieldError,
   Notice,
   Panel,
@@ -336,6 +337,8 @@ export function PendingInvitations({ refreshKey }: { refreshKey: number }) {
             Loading invitations…
           </p>
         </Panel>
+      ) : state.phase === "failed" && isEnrolmentOnly(state.failure) ? (
+        <EnrolmentSetup />
       ) : state.phase === "failed" ? (
         <Panel>
           <p role="alert" className="font-medium">

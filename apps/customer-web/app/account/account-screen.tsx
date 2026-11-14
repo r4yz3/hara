@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
-import { currentUser, signOut, type CurrentUser, type Failure } from "@food-delivery/session";
+import { apiSend, currentUser, describeFailure, signOut, type CurrentUser, type Failure } from "@food-delivery/session";
 
 type State =
   | { phase: "loading" }
@@ -76,6 +76,7 @@ export function AccountScreen() {
   }
 
   const { user } = state;
+  const saved = (next: CurrentUser) => setState({ phase: "signed-in", user: next });
 
   return (
     <div className="flex flex-col gap-4">
@@ -89,7 +90,12 @@ export function AccountScreen() {
           <dt className="text-sm text-text-secondary">Email</dt>
           <dd className="break-all font-medium">{user.email.trim() === "" ? "No email on file" : user.email}</dd>
         </dl>
+        <p className="text-sm text-text-secondary">
+          Your email and phone number cannot be changed here yet. Changing them needs a verification step that is not built.
+        </p>
       </section>
+
+      <NameForm user={user} onSaved={saved} />
 
       <p role="alert" className="min-h-6 text-sm font-medium text-danger">
         {leaveError}
@@ -116,5 +122,105 @@ export function AccountScreen() {
         {leaving ? "Signing out…" : "Sign out"}
       </button>
     </div>
+  );
+}
+
+const field = "min-h-12 w-full rounded-xl border border-border-strong bg-surface px-4 text-base text-text-primary";
+const primary = "min-h-12 rounded-xl bg-brand-600 px-4 text-base font-semibold text-on-brand disabled:opacity-70";
+
+type Saving = { phase: "idle" } | { phase: "saving" } | { phase: "saved" } | { phase: "failed"; text: string; retry: boolean };
+
+/** Edits the display name only: PATCH /api/v1/me. Compares against the saved name, so Save stays off until the text differs. */
+function NameForm({ user, onSaved }: { user: CurrentUser; onSaved: (next: CurrentUser) => void }) {
+  const router = useRouter();
+  const [name, setName] = useState(user.name);
+  const [saving, setSaving] = useState<Saving>({ phase: "idle" });
+  const [fieldErrors, setFieldErrors] = useState<string[]>([]);
+  const input = useRef<HTMLInputElement>(null);
+
+  const unchanged = name.trim() === user.name;
+  const busy = saving.phase === "saving";
+
+  async function submit(event?: FormEvent) {
+    event?.preventDefault();
+    if (busy || unchanged) return;
+
+    setSaving({ phase: "saving" });
+    setFieldErrors([]);
+    const result = await apiSend<{ data: CurrentUser }>("PATCH", "/api/v1/me", { name });
+
+    if (result.ok) {
+      setName(result.value.data.name);
+      setSaving({ phase: "saved" });
+      onSaved(result.value.data);
+      return;
+    }
+
+    const failure = result.failure;
+    if (failure.kind === "signed_out") {
+      router.replace(`/login?next=${encodeURIComponent("/account")}`);
+      return;
+    }
+    if (failure.kind === "validation") {
+      const messages = failure.fields.name ?? Object.values(failure.fields).flat();
+      setFieldErrors(messages.length > 0 ? messages : ["Enter a name."]);
+      setSaving({ phase: "idle" });
+      input.current?.focus();
+      return;
+    }
+
+    setSaving({ phase: "failed", text: describeFailure(failure), retry: failure.kind !== "forbidden" });
+  }
+
+  return (
+    <form
+      onSubmit={submit}
+      noValidate
+      aria-labelledby="name-heading"
+      className="flex flex-col gap-3 rounded-3xl border border-border bg-surface p-5"
+    >
+      <h2 id="name-heading" className="font-semibold">
+        Change your name
+      </h2>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="display-name" className="text-sm font-medium">
+          Name
+        </label>
+        <input
+          ref={input}
+          id="display-name"
+          name="name"
+          type="text"
+          autoComplete="name"
+          value={name}
+          maxLength={160}
+          aria-invalid={fieldErrors.length > 0}
+          aria-describedby={fieldErrors.length > 0 ? "display-name-error" : undefined}
+          onChange={(event) => {
+            setName(event.target.value);
+            if (saving.phase === "saved") setSaving({ phase: "idle" });
+          }}
+          className={field}
+        />
+        {fieldErrors.length > 0 ? (
+          <p id="display-name-error" className="text-sm font-medium text-danger">
+            {fieldErrors.join(" ")}
+          </p>
+        ) : null}
+      </div>
+
+      <p role="status" className="min-h-6 text-sm font-medium text-success">
+        {saving.phase === "saved" ? "Your name was saved." : null}
+      </p>
+      {saving.phase === "failed" ? (
+        <p role="alert" className="text-sm font-medium text-danger">
+          {saving.text}
+        </p>
+      ) : null}
+
+      <button type="submit" disabled={busy || unchanged} aria-busy={busy} className={`${primary} self-start`}>
+        {busy ? "Saving…" : saving.phase === "failed" && saving.retry ? "Try again" : "Save name"}
+      </button>
+    </form>
   );
 }

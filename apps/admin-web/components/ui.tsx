@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { describeFailure, type ApiFailure } from "@food-delivery/session";
+import { describeFailure, isEnrolmentOnly, type ApiFailure } from "@food-delivery/session";
 
 // Small shared pieces for the console screens. Colours are approved pairs
 // from docs/ux/contrast-report.md.
@@ -43,8 +43,28 @@ export function Panel({ children, dashed = false }: { children: ReactNode; dashe
   );
 }
 
+/** Shown instead of the generic forbidden text when the 403 means "enrol in two-step sign-in first". */
+export function EnrolmentSetup() {
+  return (
+    <Panel>
+      <div role="alert" className="flex flex-col gap-1">
+        <h2 className="font-semibold">Set up two-step sign-in</h2>
+        <p className="font-medium">Set up two-step sign-in before using the admin console. Nothing else here works until it is done.</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Link href="/security" className={`${primaryButton} content-center`}>
+          Set up two-step sign-in
+        </Link>
+      </div>
+    </Panel>
+  );
+}
+
 /** What to show when a load fails: says what happened and offers the next step. */
 export function LoadProblem({ failure, returnTo, onRetry }: { failure: ApiFailure; returnTo: string; onRetry: () => void }) {
+  // A staff session that must enrol first gets 403 on everything else: say so and link to /security.
+  if (isEnrolmentOnly(failure)) return <EnrolmentSetup />;
+
   return (
     <Panel>
       <p role="alert" className="font-medium">
