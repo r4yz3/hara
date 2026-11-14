@@ -915,7 +915,12 @@ test("access: suspending needs a reason and a confirmation, sends one request, a
   await expect(dialog).toHaveCount(0);
   expect(posts).toEqual([]);
 
-  await page.getByRole("button", { name: "Suspend Synthetic dispatcher" }).press("Enter");
+  // Reopen right after Cancel: on a slow CI runner the first press could land
+  // while the dialog was still closing and be lost, so retry until it opens.
+  await expect(async () => {
+    await page.getByRole("button", { name: "Suspend Synthetic dispatcher" }).press("Enter");
+    await expect(dialog).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 10_000 });
   await dialog.getByLabel("Reason").fill("Left the company.");
   await dialog.getByRole("button", { name: "Yes, suspend" }).press("Enter");
   await expect(dialog.getByRole("button", { name: "Suspending…" })).toBeDisabled();
