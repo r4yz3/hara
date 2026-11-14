@@ -16,7 +16,7 @@
     "@food-delivery/ui": "workspace:*",
     "next": "16.4.6",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "4.3.3",
