@@ -41,7 +41,7 @@ async function load(): Promise<Summary> {
   const active = cities.value.data.filter((city) => city.status === "active");
   const moreCities = cities.value.meta.next_cursor != null;
   const lists = await Promise.all(
-    active.map((city) => apiGet<Envelope<Zone[]>>(`/api/v1/admin/cities/${city.id}/zones?limit=100`)),
+    active.map((city) => apiGet<Envelope<Zone[]>>(`/api/v1/admin/cities/${encodeURIComponent(city.id)}/zones?limit=100`)),
   );
 
   const activeIn = new Set<string>();
@@ -135,6 +135,13 @@ function rowsFor(summary: Summary): [Row, Row] {
     return [
       cityRow,
       { tone: "waiting", word: "Not fully checked", title: "Delivery zone active", detail: "Some cities have too many zones to summarise here. Open the city to see them.", action: citiesLink },
+    ];
+  }
+
+  if (moreCities) {
+    return [
+      cityRow,
+      { tone: "waiting", word: "Not fully checked", title: "Delivery zone active", detail: "There are more active cities than this page checks. Open Cities to see them all.", action: citiesLink },
     ];
   }
 
