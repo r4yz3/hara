@@ -85,6 +85,82 @@ test("admin overview reports the live API row and invents no figures", async ({ 
   await assertAccessible(page);
 });
 
+// Overview rows "City configured" and "Delivery zone active": live from the admin city and zone lists.
+const page_ = (data: unknown[], next: string | null = null) => ({ json: { data, meta: { next_cursor: next } } });
+const activeCity = { ...city, status: "active" };
+const activeZone = { ...zone, status: "active" };
+const row = (page: Page, name: string) => page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
+
+test("admin overview: no active city is waiting, never ready", async ({ page }) => {
+  await basics(page);
+  await api(page, "/api/v1/admin/cities", (route) => route.fulfill(page_([])));
+  await page.goto(admin);
+  await expect(row(page, "City configured")).toContainText("No active city yet");
+  await expect(row(page, "City configured")).toContainText("Waiting");
+  await expect(row(page, "Delivery zone active")).toContainText("Waiting for an active city first");
+  await expect(row(page, "Delivery zone active").getByRole("link", { name: "Open Cities" })).toHaveAttribute("href", "/cities");
+  await expect(row(page, "City configured")).not.toContainText("Ready");
+  await assertAccessible(page);
+});
+
+test("admin overview: an active city with an active zone is ready; progress shows first", async ({ page }) => {
+  await basics(page);
+  const held = gate();
+  await api(page, "/api/v1/admin/cities", async (route) => { await held.opened; await route.fulfill(page_([activeCity])); });
+  await api(page, "/api/v1/admin/cities/test-city/zones", (route) => route.fulfill(page_([zone, activeZone])));
+  await page.goto(admin);
+  await expect(page.getByText("Checking cities")).toBeVisible();
+  held.open();
+  await expect(row(page, "City configured")).toContainText("1 active city: Synthetic city.");
+  await expect(row(page, "City configured")).toContainText("Ready");
+  await expect(row(page, "Delivery zone active")).toContainText("Every active city has an active zone (1 of 1)");
+  await expect(row(page, "Delivery zone active")).toContainText("Ready");
+  await assertAccessible(page);
+});
+
+test("admin overview: an active city without an active zone is a problem", async ({ page }) => {
+  await basics(page);
+  await api(page, "/api/v1/admin/cities", (route) => route.fulfill(page_([activeCity])));
+  await api(page, "/api/v1/admin/cities/test-city/zones", (route) => route.fulfill(page_([zone])));
+  await page.goto(admin);
+  await expect(row(page, "City configured")).toContainText("Ready");
+  await expect(row(page, "Delivery zone active")).toContainText("An active city has no active zone: Synthetic city.");
+  await expect(row(page, "Delivery zone active")).toContainText("Problem");
+  await assertAccessible(page);
+});
+
+test("admin overview: a failed zone list says it could not check", async ({ page }) => {
+  await basics(page);
+  await api(page, "/api/v1/admin/cities", (route) => route.fulfill(page_([activeCity])));
+  await api(page, "/api/v1/admin/cities/test-city/zones", (route) => route.fulfill({ status: 500, json: {} }));
+  await page.goto(admin);
+  await expect(row(page, "Delivery zone active")).toContainText("Could not check");
+  await expect(row(page, "Delivery zone active")).not.toContainText("Ready");
+  await assertAccessible(page);
+});
+
+test("admin overview: an unreachable city list is a problem, signed-out and forbidden are not claims", async ({ page }) => {
+  await basics(page);
+  let status = 500;
+  await api(page, "/api/v1/admin/cities", (route) => route.fulfill({ status, json: {} }));
+  await page.goto(admin);
+  await expect(row(page, "City configured")).toContainText("Could not check");
+  await expect(row(page, "Delivery zone active")).toContainText("Could not check");
+  await expect(row(page, "Delivery zone active")).not.toContainText("Ready");
+  await assertAccessible(page);
+
+  status = 401;
+  await page.reload();
+  await expect(row(page, "City configured")).toContainText("Sign in to check");
+  await expect(row(page, "City configured").getByRole("link", { name: "Sign in" })).toBeVisible();
+
+  status = 403;
+  await page.reload();
+  await expect(row(page, "City configured")).toContainText("Not checked");
+  await expect(row(page, "Delivery zone active")).not.toContainText("Ready");
+  await assertAccessible(page);
+});
+
 // ---------------------------------------------------------------- admin /cities
 
 test("cities: progress while slow, then the empty instruction", async ({ page }) => {

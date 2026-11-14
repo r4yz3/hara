@@ -4,6 +4,8 @@ import { Suspense } from "react";
 import { ApiStatus, StatusRow } from "@/components/api-status";
 import { ConsoleShell } from "@/components/console-shell";
 
+import { CoverageStatus } from "./coverage-status";
+
 export default function AdminOverview() {
   return (
     <ConsoleShell current="Overview" title="Overview">
@@ -13,8 +15,8 @@ export default function AdminOverview() {
             Setup readiness
           </h2>
           <p className="max-w-prose text-sm text-text-secondary">
-            What has to be true before the service can open. Only the first item is checked live on this page; cities
-            and zones are managed on the{" "}
+            What has to be true before the service can open. The API, city and zone items are checked live each time
+            this page loads; the two-step item is fixed text. Cities and zones are managed on the{" "}
             <Link href="/cities" className="font-medium text-brand-600 underline underline-offset-4">
               Cities
             </Link>{" "}
@@ -30,8 +32,7 @@ export default function AdminOverview() {
             title="Two-step verification"
             detail="Staff sign in with a password and an authenticator code (ADR-011). This row is fixed text, not checked live."
           />
-          <StatusRow tone="waiting" title="City configured" detail="See the Cities screen. It is not summarised here yet." />
-          <StatusRow tone="waiting" title="Delivery zone active" detail="See a city's zones. It is not summarised here yet." />
+          <CoverageStatus />
         </ul>
       </section>
 

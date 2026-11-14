@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { connection } from "next/server";
 
 const apiUrl = process.env.API_URL ?? "http://localhost:8000";
@@ -40,14 +41,19 @@ export function StatusRow({
   tone,
   title,
   detail,
+  word: wordOverride,
+  action,
 }: {
   tone: "ok" | "problem" | "waiting";
   title: string;
   detail: string;
+  /** Replaces the default status word, for rows that are checked live ("Waiting", "Checking"). */
+  word?: string;
+  action?: { href: string; label: string };
 }) {
   // Status is carried by the word and the symbol, never by colour alone.
   const mark = { ok: "✓", problem: "!", waiting: "…" }[tone];
-  const word = { ok: "Ready", problem: "Problem", waiting: "Not built yet" }[tone];
+  const word = wordOverride ?? { ok: "Ready", problem: "Problem", waiting: "Not built yet" }[tone];
   const colour = { ok: "text-success", problem: "text-danger", waiting: "text-text-secondary" }[tone];
 
   return (
@@ -62,6 +68,11 @@ export function StatusRow({
         <p className="font-medium">{title}</p>
         <p className="text-sm text-text-secondary">{detail}</p>
         <p className={`text-sm font-semibold ${colour}`}>{word}</p>
+        {action ? (
+          <Link href={action.href} className="text-sm font-medium text-brand-600 underline underline-offset-4">
+            {action.label}
+          </Link>
+        ) : null}
       </div>
     </li>
   );
