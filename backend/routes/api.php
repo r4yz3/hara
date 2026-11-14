@@ -56,7 +56,7 @@ Route::middleware(EnsureRiderToken::class)->group(function (): void {
 Route::middleware(EnsureSurfaceSession::class)->group(function (): void {
     Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
     Route::get('/me', [AuthController::class, 'me'])->name('me.show');
-    Route::patch('/me', [AuthController::class, 'updateMe'])->name('me.update');
+    Route::patch('/me', [AuthController::class, 'updateMe'])->middleware('throttle:account-writes')->name('me.update');
     Route::post('/me/mfa/totp', [MfaController::class, 'start'])->name('me.mfa.totp.start');
     Route::post('/me/mfa/totp/confirm', [MfaController::class, 'confirm'])->name('me.mfa.totp.confirm');
     Route::post('/me/mfa/recovery-codes', [MfaController::class, 'regenerateRecoveryCodes'])->name('me.mfa.recovery-codes.regenerate');
@@ -65,10 +65,10 @@ Route::middleware(EnsureSurfaceSession::class)->group(function (): void {
     // is scoped to the caller, so another person's id is "not found" (ADR-005).
     Route::middleware(EnsureCustomerSurface::class)->prefix('me/addresses')->group(function (): void {
         Route::get('/', [SavedAddressController::class, 'index'])->name('me.addresses.index');
-        Route::post('/', [SavedAddressController::class, 'store'])->name('me.addresses.store');
-        Route::patch('/{address}', [SavedAddressController::class, 'update'])->name('me.addresses.update');
-        Route::delete('/{address}', [SavedAddressController::class, 'destroy'])->name('me.addresses.destroy');
-        Route::post('/{address}/default', [SavedAddressController::class, 'makeDefault'])->name('me.addresses.default');
+        Route::post('/', [SavedAddressController::class, 'store'])->middleware('throttle:account-writes')->name('me.addresses.store');
+        Route::patch('/{address}', [SavedAddressController::class, 'update'])->middleware('throttle:account-writes')->name('me.addresses.update');
+        Route::delete('/{address}', [SavedAddressController::class, 'destroy'])->middleware('throttle:account-writes')->name('me.addresses.destroy');
+        Route::post('/{address}/default', [SavedAddressController::class, 'makeDefault'])->middleware('throttle:account-writes')->name('me.addresses.default');
     });
 
     // Staff. Each action checks its own permission and scope (ADR-005).

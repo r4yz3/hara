@@ -423,7 +423,7 @@ export interface paths {
          * @description Works on every browser surface under its own session. Only `name` can
          *     change (trimmed, 1 to 160 characters, no control characters). Email,
          *     phone, status, roles, password and ids are never editable here; any
-         *     other field in the body is ignored. Writes a `user.profile_updated`
+         *     other field in the body is ignored. Counts toward 30 writes a minute per account, shared with the saved-address writes (429 `RATE_LIMITED` with `Retry-After`). Writes a `user.profile_updated`
          *     audit entry only when the name actually changed. A deployed staff
          *     session without a second factor answers 403, as for other routes.
          */
@@ -2109,6 +2109,7 @@ export interface operations {
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             422: components["responses"]["Error"];
+            429: components["responses"]["Error"];
         };
     };
     meAddressesList: {
@@ -2164,6 +2165,7 @@ export interface operations {
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
             422: components["responses"]["Error"];
+            429: components["responses"]["Error"];
         };
     };
     meAddressesDelete: {
@@ -2190,6 +2192,7 @@ export interface operations {
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
         };
     };
     meAddressesUpdate: {
@@ -2223,6 +2226,7 @@ export interface operations {
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
             422: components["responses"]["Error"];
+            429: components["responses"]["Error"];
         };
     };
     meAddressesSetDefault: {
@@ -2251,6 +2255,7 @@ export interface operations {
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
         };
     };
     publicConfig: {

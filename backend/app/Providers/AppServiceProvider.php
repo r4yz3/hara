@@ -26,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
         'auth-mobile-token' => 30,
     ];
 
+    /** Writes per minute per signed-in account across the profile and saved-address routes. */
+    public const ACCOUNT_WRITES_PER_MINUTE = 30;
+
     public function register(): void
     {
         //
@@ -43,6 +46,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Signed in: one bucket per account, as the inline throttle did for authenticated requests.
         RateLimiter::for('admin-invitations-store', fn (Request $request): Limit => Limit::perMinute(20)->by('admin-invitations-store|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
+
+        // Profile and saved-address writes (threat model T31): one shared bucket per account, so a single account
+        // cannot flood writes from many addresses and users behind one network do not block each other. Keyed by
+        // user id; the address is only a fallback. Nothing from the request body is read here.
+        RateLimiter::for('account-writes', fn (Request $request): Limit => Limit::perMinute(self::ACCOUNT_WRITES_PER_MINUTE)->by('account-writes|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
 
         // Deny by default: anything that is not local development or the
         // test suite must pass the guard, whatever the environment is called

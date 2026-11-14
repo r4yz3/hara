@@ -629,7 +629,7 @@ paths:
         Works on every browser surface under its own session. Only `name` can
         change (trimmed, 1 to 160 characters, no control characters). Email,
         phone, status, roles, password and ids are never editable here; any
-        other field in the body is ignored. Writes a `user.profile_updated`
+        other field in the body is ignored. Counts toward 30 writes a minute per account, shared with the saved-address writes (429 `RATE_LIMITED` with `Retry-After`). Writes a `user.profile_updated`
         audit entry only when the name actually changed. A deployed staff
         session without a second factor answers 403, as for other routes.
       operationId: meUpdate
@@ -653,6 +653,7 @@ paths:
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
         "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
   /api/v1/me/addresses:
     get:
       tags: [Customer]
@@ -711,6 +712,7 @@ paths:
         "403": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
         "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
   /api/v1/me/addresses/{address}:
     parameters:
       - { $ref: "#/components/parameters/AddressId" }
@@ -744,6 +746,7 @@ paths:
         "403": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
         "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
     delete:
       tags: [Customer]
       summary: Delete a saved address
@@ -758,6 +761,7 @@ paths:
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
   /api/v1/me/addresses/{address}/default:
     parameters:
       - { $ref: "#/components/parameters/AddressId" }
@@ -780,6 +784,7 @@ paths:
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
   /api/v1/public/config:
     get:
       tags: [Geography]
