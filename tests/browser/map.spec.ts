@@ -63,14 +63,35 @@ test("editing a zone shows its bounds beside the editor", async ({ page }) => {
   await expect(edit.getByLabel("Shape (GeoJSON)")).toBeEditable();
 });
 
-test("a style URL without an installed library says so, keeps attribution and leaves GeoJSON usable", async ({ page }) => {
+test("a style that fails to load offers retry, keeps attribution and leaves GeoJSON usable", async ({ page }) => {
+  await page.route("https://styles.example.test/**", (route) => route.abort());
   await mock(page, "https://styles.example.test/style.json");
   const create = await openCreate(page);
   const map = create.getByTestId("map-view");
-  await expect(map).toHaveAttribute("data-map-state", "unavailable");
-  await expect(map.getByText("Map library not installed")).toBeVisible();
+  await expect(map).toHaveAttribute("data-map-state", "failed");
+  await expect(map.getByText("The map could not load")).toBeVisible();
+  await expect(map.getByRole("button", { name: "Retry map" })).toBeVisible();
   await expect(map.getByTestId("map-attribution")).toBeVisible();
   await expect(create.getByLabel("Shape (GeoJSON Polygon or MultiPolygon)")).toBeEditable();
+});
+
+test("a loadable style draws a real map, fitted to the shape, with attribution (ADR-015)", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("console", (message) => message.type() === "error" && errors.push(message.text()));
+  // A style with no tile source: enough to prove MapLibre, its worker and the CSS load in this build.
+  await page.route("https://styles.example.test/**", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ version: 8, sources: {}, layers: [{ id: "background", type: "background", paint: { "background-color": "#dddddd" } }] }),
+    }),
+  );
+  await mock(page, "https://styles.example.test/style.json");
+  const create = await openCreate(page);
+  const map = create.getByTestId("map-view");
+  await expect(map).toHaveAttribute("data-map-state", "ready");
+  await expect(map.locator("canvas.maplibregl-canvas")).toHaveCount(1);
+  await expect(map.locator(".maplibregl-ctrl-attrib")).toHaveCount(1);
+  expect(errors.filter((text) => /worker|maplibre/i.test(text))).toEqual([]);
 });
 
 test("the map area has no accessibility violations", async ({ page }) => {

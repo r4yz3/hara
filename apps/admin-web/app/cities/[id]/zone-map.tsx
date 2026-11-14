@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { apiGet } from "@food-delivery/session";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { MapView } from "@food-delivery/ui/map";
 
 type Envelope<T> = { data: T };

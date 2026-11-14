@@ -12,12 +12,9 @@ import { resolveMapState, type Bounds } from "./map-state";
 //   ever fitted to the bounds of a shape the caller passes in.
 // - Attribution is always rendered.
 //
-// TODO(U-04, ADR-007): maplibre-gl is NOT installed (the pinned version is chosen
-// in Sprint 6, and adding a package needs the operator's approval), so
-// `loadMapLibrary` reports "unavailable" and the component says so instead of
-// pretending to draw. When the package is added, replace its body with
-// `return await import("maplibre-gl");` and extend the CSP in packages/config
-// (img-src, connect-src, worker-src) for the chosen style host.
+// Tiles: self-hosted Protomaps PMTiles (ADR-015). The style at MAP_STYLE_URL
+// may reference `pmtiles://https://...` sources; the protocol is registered
+// once, the first time the library loads. The CSS is imported by the app.
 
 type MapInstance = {
   fitBounds: (bounds: [[number, number], [number, number]], options?: Record<string, unknown>) => void;
@@ -33,10 +30,20 @@ export type MapLibre = {
 
 export type LoadMapLibrary = () => Promise<MapLibre | null>;
 
-/** Dynamic import, called only when a style URL is set. Returns null while the library is not installed. */
+let registered = false;
+
+/** Dynamic import, called only when a style URL is set, so nothing map-related is in the server bundle. */
 export const loadMapLibrary: LoadMapLibrary = async () => {
-  // TODO(U-04): when maplibre-gl is installed, return `await import("maplibre-gl")`.
-  return null;
+  const [maplibre, pmtiles] = await Promise.all([import("maplibre-gl"), import("pmtiles")]);
+  if (!registered) {
+    // MapLibre finds its worker next to its own module, which the bundler
+    // moves; this reference makes the bundler emit the worker as an asset.
+    maplibre.setWorkerUrl(new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).href);
+    const protocol = new pmtiles.Protocol();
+    maplibre.addProtocol("pmtiles", protocol.tile);
+    registered = true;
+  }
+  return maplibre as unknown as MapLibre;
 };
 
 type Props = {

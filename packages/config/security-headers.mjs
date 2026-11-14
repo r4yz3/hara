@@ -36,6 +36,17 @@ export function apiOriginFrom(env = process.env) {
   return new URL(raw).origin;
 }
 
+/** Origin of MAP_STYLE_URL, or null when it is unset or not https. */
+export function tileOriginFrom(env = process.env) {
+  const raw = env.NEXT_PUBLIC_MAP_STYLE_URL ?? env.MAP_STYLE_URL ?? "";
+  try {
+    const url = new URL(raw);
+    return url.protocol === "https:" ? url.origin : null;
+  } catch {
+    return null;
+  }
+}
+
 /** 128 random bits, base64. Must be fresh for every request. */
 export function createNonce() {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
@@ -45,11 +56,14 @@ export function createNonce() {
 /**
  * The per-request, nonce-based policy (backlog E-02).
  *
- * @param {{ nonce: string, apiOrigin: string, dev?: boolean }} options
+ * @param {{ nonce: string, apiOrigin: string, tileOrigin?: string | null, dev?: boolean }} options
+ *   tileOrigin: the origin that serves the map style and PMTiles file (ADR-015),
+ *   or null when no map is configured.
  *   dev: `next dev` only. React evals in development to rebuild server stacks,
  *   and the dev overlay injects styles without a nonce. Never set it in a build.
  */
-export function contentSecurityPolicy({ nonce, apiOrigin, dev = false }) {
+export function contentSecurityPolicy({ nonce, apiOrigin, tileOrigin = null, dev = false }) {
+  const tiles = tileOrigin ? ` ${tileOrigin}` : "";
   if (!nonce) throw new Error("A CSP nonce is required.");
   const directives = [
     "default-src 'self'",
@@ -58,7 +72,9 @@ export function contentSecurityPolicy({ nonce, apiOrigin, dev = false }) {
     `style-src 'self' ${dev ? "'unsafe-inline'" : `'nonce-${nonce}'`}`,
     "img-src 'self' blob: data:",
     "font-src 'self'",
-    `connect-src 'self' ${apiOrigin}`,
+    `connect-src 'self' ${apiOrigin}${tiles}`,
+    // MapLibre runs its tile parsing in a blob: worker.
+    "worker-src 'self' blob:",
     "object-src 'none'",
     "base-uri 'none'",
     "form-action 'self'",

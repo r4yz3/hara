@@ -1,6 +1,6 @@
 # ADR-007: Map rendering and tiles
 
-- Status: accepted; tile provider is **open**
+- Status: accepted; tile provider decided in ADR-015 (self-hosted PMTiles)
 - Date: 2026-11-12
 
 ## Decision

@@ -68,8 +68,7 @@ How to read it: "evidence" names a file under `docs/qa/evidence/` or a test. Whe
 | Item | Exact decision needed |
 |---|---|
 | C-13 geometry caps | Approve or change the proposed 5,000 vertices and 2 degrees extent in `backend/config/geo.php`, then set `GEO_CAPS_APPROVED` (ADR-002). |
-| U-10 tile provider | Choose a provider, or accept the labelled placeholder for Phase 1 (ADR-007). OpenStreetMap public tiles are excluded. |
-| Map library install | After U-10: approve adding a pinned `maplibre-gl` and the CSP change for the chosen style host. |
+| Map tile hosting | Decided 2026-11-14: self-hosted PMTiles (ADR-015), library wired. Still needed: extract and host the archive and style JSON for the launch city (Range and CORS support), then set `MAP_STYLE_URL`. |
 | E-07 staging hosting | Provide a host and a domain layout that satisfies ADR-011 (https, separate origins per app, Secure cookies). Blocks the staging gate, a staging restore, and HSTS and cookie checks over real HTTPS. |
 | E-02 CSP rendering trade-off | Deferred by the product owner on 2026-11-14: a nonce-based script and style CSP needs per-request rendering, which conflicts with `cacheComponents` in every web app. Decide between nonces (dynamic rendering) and keeping the baseline CSP. |
 | Sprint 1 documents review | Human review of versions, ADR-000 to ADR-011, threat model, permission matrix, phase boundaries and acceptance tests; open items are listed in the Sprint 1 section below. |
@@ -92,7 +91,7 @@ Not built and not exposed as working routes (the route and OpenAPI tests fail if
 | 1 | `setup`, `up`, `migrate`, `seed-demo`, `check` through Make and PowerShell | Partial | All nine `dev.ps1` tasks ran (`a10-dev-tasks-check.txt`); `setup` ran in a clean clone (`x01-2026-11-14-clean-clone.txt`). Makefile never run; `up`, `migrate`, `seed-demo` not run in the clone. |
 | 2 | API boots with isolated databases, Redis, PostGIS; fresh migrate and rollback | Met (local) | `sprint3-check.txt`, MigrationRollbackTest, `food_delivery_test` forced by `tests/bootstrap.php`. |
 | 3 | Register, login, logout, current user under a selected secure design | Met (local) | `sprint4-auth-check.txt`, `sprint4-auth-smoke.txt`; ADR-011 accepted 2026-11-13. |
-| 4 | Admin creates and disables a city, draws and creates and disables a zone; no assumed coordinates or timezone | Partial | City and zone lifecycle met through the API and GeoJSON screens, live run `phase1-2026-11-14-live-coverage.txt`. "Draw" is not met: no map (U-10 blocked). Text searches found no hardcoded city or centre; the only place name is the `Asia/Manila` display timezone default (ADR-004). |
+| 4 | Admin creates and disables a city, draws and creates and disables a zone; no assumed coordinates or timezone | Partial | City and zone lifecycle met through the API and GeoJSON screens, live run `phase1-2026-11-14-live-coverage.txt`. "Draw" is not met: the map now renders (ADR-015, U-10 code done) but no tiles are hosted and drawing on the map is not built. Text searches found no hardcoded city or centre; the only place name is the `Asia/Manila` display timezone default (ADR-004). |
 | 5 | Serviceability reliable inside and outside; useful not-configured answer | Met (local) | ServiceabilityTest, `sprint5-config-plan-check.txt` (GiST plan). Geometry caps are unapproved (C-13). |
 | 6 | Cross-tenant access denied for guessed IDs | Met for city scope | `sprint5-cross-tenant-check.txt`. Merchant scope cannot be tested yet (no merchant endpoints). |
 | 7 | Four shells work at narrow and wide viewports; placeholders disabled and labelled | Partial | Web: Chromium at 375, 768 and 1440 with axe (`x01-2026-11-14-playwright-default.txt`). Rider: widget tests only, never on a device. Merchant has no account. Screen reader and dark theme not checked. |
@@ -101,7 +100,7 @@ Not built and not exposed as working routes (the route and OpenAPI tests fail if
 
 Other gate conditions (spec 15 and section 12): "MFA for admin production access" is built but its recovery design is unreviewed and no deployed admin exists; "Staging database backup restored successfully" is not met (no staging); "Proper map attribution, valid tile access terms" is not met (no provider); the spec 15 human checklist has not been ticked by a human. The Sprint 7 gate ("production-like staging with documented rollback") is met only as a local rehearsal. Sprint 8's rule applies: an open critical failure blocks the phase. No failing security, authorization, geometry or migration test is known.
 
-**Gate verdict: not passed.** Passing needs E-07 staging and the staging checks, the human reviews and decisions above (at minimum the Sprint 1 documents, the ADR-011 recovery codes, C-13, and U-10 or an accepted placeholder), and a hosted CI result for the final commit.
+**Gate verdict: not passed.** Passing needs E-07 staging and the staging checks, the human reviews and decisions above (at minimum the Sprint 1 documents, the ADR-011 recovery codes, C-13, and hosted tiles or an accepted placeholder), and a hosted CI result for the final commit.
 
 ## Inconsistencies found among the documents (2026-11-14)
 

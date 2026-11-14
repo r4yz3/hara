@@ -57,3 +57,16 @@ test("a nonce is required and the API origin comes from the environment", () => 
   assert.throws(() => contentSecurityPolicy({ nonce: "", apiOrigin: "http://x.test" }));
   assert.equal(apiOriginFrom({ NEXT_PUBLIC_API_URL: "https://api.example.test/v1/" }), "https://api.example.test");
 });
+
+import { tileOriginFrom } from "../security-headers.mjs";
+
+test("map tiles: only the configured https origin is added, and only to connect-src (ADR-015)", () => {
+  const without = contentSecurityPolicy({ nonce: "abc", apiOrigin: "https://api.example.test" });
+  assert.match(without, /connect-src 'self' https:\/\/api\.example\.test;/);
+  const withTiles = contentSecurityPolicy({ nonce: "abc", apiOrigin: "https://api.example.test", tileOrigin: "https://tiles.example.test" });
+  assert.match(withTiles, /connect-src 'self' https:\/\/api\.example\.test https:\/\/tiles\.example\.test;/);
+  assert.match(withTiles, /worker-src 'self' blob:/);
+  assert.equal(tileOriginFrom({ MAP_STYLE_URL: "https://tiles.example.test/style.json" }), "https://tiles.example.test");
+  assert.equal(tileOriginFrom({ MAP_STYLE_URL: "http://tiles.example.test/style.json" }), null);
+  assert.equal(tileOriginFrom({}), null);
+});
