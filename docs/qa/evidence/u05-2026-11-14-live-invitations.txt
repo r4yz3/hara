@@ -1,0 +1,25 @@
+# U-05 live staff invitations, 2026-11-14 (local stack: API :8000, admin :3002, Mailpit :8025)
+# Command: BROWSER_LIVE=1 npx playwright test tests/browser/live-invitations.spec.ts --project=desktop
+## Run 1
+
+Running 1 test using 1 worker
+
+  ok 1 [desktop] › tests\browser\live-invitations.spec.ts:73:1 › staff invitations work end to end: invite, mail, accept once, sign in, directory; revoke kills the link (12.5s)
+
+  1 passed (22.6s)
+## Run 2 (immediately after run 1: proves rerun-safety and separate rate-limit buckets)
+
+Running 1 test using 1 worker
+
+  ok 1 [desktop] › tests\browser\live-invitations.spec.ts:73:1 › staff invitations work end to end: invite, mail, accept once, sign in, directory; revoke kills the link (11.6s)
+
+  1 passed (21.8s)
+## Default (non-live) suite, desktop project
+[WebServer] ⚠ Slow filesystem detected. The benchmark took 256ms. If \\?\F:\PROJECTS\hara\apps\merchant-web\.next\dev is a network drive, consider moving it to a local folder.
+[WebServer] See more: https://nextjs.org/docs/app/guides/local-development
+
+Running 1 test using 1 worker
+
+  -  1 [desktop] › tests\browser\live-invitations.spec.ts:73:1 › staff invitations work end to end: invite, mail, accept once, sign in, directory; revoke kills the link
+
+  1 skipped

@@ -627,6 +627,18 @@ class StaffInvitationTest extends AuthTestCase
         $this->inspect(str_repeat('a', 64))->assertStatus(429);
     }
 
+    public function test_other_signed_out_routes_do_not_use_up_the_invitation_budget(): void
+    {
+        for ($i = 0; $i < 12; $i++) {
+            $this->via('admin')->getJson('/api/v1/auth/csrf')->assertOk();
+        }
+        for ($i = 0; $i < 10; $i++) {
+            $this->inspect(str_repeat('a', 64))->assertStatus(404);
+        }
+        // Inspecting a link does not use up the acceptance budget either.
+        $this->accept(str_repeat('a', 64))->assertStatus(404);
+    }
+
     // ------------------------------------------------------------ an address that already has an account
 
     public function test_an_existing_account_gets_the_role_only_with_its_own_password_and_is_not_duplicated(): void

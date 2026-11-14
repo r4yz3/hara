@@ -39,8 +39,8 @@ Route::post('/auth/mfa/verify', [AuthController::class, 'verifyMfa'])->middlewar
 Route::post('/auth/password/forgot', [AuthController::class, 'forgotPassword'])->middleware('throttle:10,1')->name('auth.password.forgot');
 Route::post('/auth/password/reset', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1')->name('auth.password.reset');
 // The invitee holds only the emailed token, sent in the body (never a URL). Failures all answer alike.
-Route::post('/auth/invitations/inspect', [StaffInvitationAcceptController::class, 'inspect'])->middleware('throttle:10,1')->name('auth.invitations.inspect');
-Route::post('/auth/invitations/accept', [StaffInvitationAcceptController::class, 'accept'])->middleware('throttle:10,1')->name('auth.invitations.accept');
+Route::post('/auth/invitations/inspect', [StaffInvitationAcceptController::class, 'inspect'])->middleware('throttle:invitation-inspect')->name('auth.invitations.inspect');
+Route::post('/auth/invitations/accept', [StaffInvitationAcceptController::class, 'accept'])->middleware('throttle:invitation-accept')->name('auth.invitations.accept');
 
 // Rider app: bearer tokens, not cookies. Per-account limiting is in the controller.
 Route::post('/auth/mobile/token', [RiderAuthController::class, 'issue'])->middleware('throttle:30,1')->name('auth.mobile.token');
