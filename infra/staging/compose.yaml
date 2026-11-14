@@ -172,7 +172,13 @@ services:
       - ${CERT_DIR:-/etc/hara/certs}:/etc/hara/certs:ro
     read_only: true
     tmpfs: ["/tmp:size=64m,mode=1777"]
-    networks: [edge]
+    networks:
+      edge:
+        # Fixed so TRUSTED_PROXIES can name this one container. The web app
+        # containers share the edge network and call the API directly
+        # (API_URL), so trusting the whole subnet would let them set
+        # X-Forwarded-For.
+        ipv4_address: 172.31.77.10
     depends_on:
       web: { condition: service_healthy }
       customer: { condition: service_healthy }
@@ -191,9 +197,10 @@ services:
 networks:
   # `backend` is internal: no route out and no published port, so PostgreSQL
   # and Redis are reachable from the api container only. `edge` carries the
-  # proxy traffic and fixes the subnet so TRUSTED_PROXIES can name it (the API
-  # believes X-Forwarded-For only from there). If you change the subnet,
-  # change the gateway in update-cloudflare-ranges.sh and TRUSTED_PROXIES too.
+  # proxy traffic and fixes the subnet so the edge can have a fixed address
+  # (172.31.77.10), the only one in TRUSTED_PROXIES. If you change the subnet,
+  # change the gateway in update-cloudflare-ranges.sh, the edge address and
+  # TRUSTED_PROXIES too.
   backend:
     internal: true
   edge:

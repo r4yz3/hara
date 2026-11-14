@@ -221,7 +221,7 @@ Settings that matter (see `.env.example` for the full list and comments):
 | `CUSTOMER_APP_URL`, `MERCHANT_APP_URL`, `ADMIN_APP_URL` | the three web hosts | distinct https origins; also the CORS allow-list |
 | `SESSION_DOMAIN` | empty | host-only cookie on the API host (ADR-011) |
 | `SESSION_DRIVER` | `database` | suspension and two-step reset revoke sessions only in the database store |
-| `TRUSTED_PROXIES` | `172.31.77.0/24` | the `edge` network in `compose.yaml`; the API believes `X-Forwarded-*` only from there |
+| `TRUSTED_PROXIES` | `172.31.77.10` | the `edge` container's fixed address in `compose.yaml`; the API believes `X-Forwarded-*` only from it. Not the whole subnet: the web app containers share that network and call the API directly |
 | `DEMO_PASSWORD` | empty | the guard refuses to serve if it is set |
 
 ## 7. Build the images (on the server, one at a time)
