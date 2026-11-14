@@ -2,7 +2,7 @@
 
 Status on 2026-11-14: there is **no staging or production environment** yet (E-07: Contabo Cloud VPS Plus 4 in Asia (Japan) bought 2026-11-14, behind Cloudflare with haradelivery.com; not set up yet: OS, DNS and deploy are still to do). Everything below has been run only on the authoring workstation, against the production-like rehearsal stack in `infra/rehearsal/`. It is a procedure that has been rehearsed, not one that has run on a real host.
 
-The three web apps have a production Dockerfile (`infra/docker/prod/web.Dockerfile`) and, with the API, a single-host staging procedure in `staging-setup.md` (files in `infra/staging/`), written and checked on the workstation but not yet run on a host. The rider app has no deployment procedure.
+The three web apps have a production Dockerfile (`infra/docker/prod/web.Dockerfile`) and, with the API, a single-host staging procedure in `staging-setup.md` (files in `infra/staging/`). The web images and the rider Android app (test-device APK, no app-store distribution in Phase 1) are covered step by step in `deploy-web-and-rider.md`: build args, re-tagging unchanged images, smoke checks, rollback, and the JDK 21 build.
 
 ## What a release is
 
