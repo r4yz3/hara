@@ -121,7 +121,7 @@ export function AddressesSection() {
 
   async function makeDefault(address: SavedAddress) {
     await run(address.id, async () => {
-      const result = await apiSend("POST", `/api/v1/me/addresses/${address.id}/default`);
+      const result = await apiSend("POST", `/api/v1/me/addresses/${encodeURIComponent(address.id)}/default`);
       if (result.ok) {
         setNotice({ tone: "ok", text: `${address.tag ?? "Address"} is now your default address.` });
         await load();
@@ -136,7 +136,7 @@ export function AddressesSection() {
     if (!deleting) return;
     const address = deleting;
     await run(address.id, async () => {
-      const result = await apiSend("DELETE", `/api/v1/me/addresses/${address.id}`);
+      const result = await apiSend("DELETE", `/api/v1/me/addresses/${encodeURIComponent(address.id)}`);
       if (result.ok) {
         dialog.current?.close();
         setNotice({ tone: "ok", text: `${address.tag ?? "Address"} was deleted.` });
@@ -427,7 +427,7 @@ function AddressForm({
     sending.current = true;
     setSaving(true);
     const result = existing
-      ? await apiSend("PATCH", `/api/v1/me/addresses/${existing.id}`, body)
+      ? await apiSend("PATCH", `/api/v1/me/addresses/${encodeURIComponent(existing.id)}`, body)
       : await apiSend("POST", "/api/v1/me/addresses", body);
 
     if (result.ok) {
