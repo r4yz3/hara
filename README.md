@@ -25,7 +25,7 @@ Git, Node 22 or later, pnpm 9.15.9, PHP 8.3 or later with Composer, Flutter stab
 ## Commands (Windows PowerShell)
 
 ```powershell
-.\infra\scripts\dev.ps1 setup      # install dependencies, create .env files
+.\infra\scripts\dev.ps1 setup      # install dependencies, create .env files, generate APP_KEY
 .\infra\scripts\dev.ps1 check      # lint, types, builds, analysis, tests
 .\infra\scripts\dev.ps1 up         # start the stack (needs Docker)
 .\infra\scripts\dev.ps1 migrate    # needs Docker
@@ -37,6 +37,8 @@ pnpm dev:customer                  # or dev:merchant, dev:admin
 ```
 
 On Linux, macOS or WSL the same targets exist in the `Makefile`.
+
+`setup` writes one generated `APP_KEY` into both the root `.env` (read by the `api` container through compose `env_file`, and the one that wins) and `backend\.env` (read by native PHP). It leaves a non-empty key alone and never prints it. Without a key, backend tests fail with "Unsupported cipher or incorrect key length". To run a second checkout beside a running stack, uncomment and change `COMPOSE_PROJECT_NAME` in its `.env`.
 
 For Chromium browser checks, run `pnpm exec playwright install chromium` once, then `pnpm test:browser --workers=2` from the repository root. Playwright starts the three web apps on ports 3000–3002. The tests cover selected UI states with synthetic API responses and run axe at three viewport widths.
 

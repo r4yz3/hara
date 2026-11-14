@@ -21,6 +21,27 @@ function Assert-Docker {
     if (-not (Test-Docker)) { throw 'Docker is not installed or not on PATH. Install Docker Desktop first.' }
 }
 
+function Get-EnvValue([string]$Path, [string]$Name) {
+    # Value of NAME=... in an env file with any trailing "  # comment" removed; '' when absent or empty.
+    $full = Join-Path $Root $Path
+    if (-not (Test-Path $full)) { return '' }
+    $line = Select-String -Path $full -Pattern "^$Name=(.*)$" | Select-Object -First 1
+    if (-not $line) { return '' }
+    ($line.Matches[0].Groups[1].Value -replace '\s+#.*$', '').Trim()
+}
+
+function Set-EnvValue([string]$Path, [string]$Name, [string]$Value) {
+    $full = Join-Path $Root $Path
+    $text = [System.IO.File]::ReadAllText($full)
+    $pattern = "(?m)^$Name=[^\r\n]*"
+    if ([regex]::IsMatch($text, $pattern)) {
+        $text = [regex]::Replace($text, $pattern, { param($m) "$Name=$Value" })
+    } else {
+        $text = $text.TrimEnd() + "`n$Name=$Value`n"
+    }
+    [System.IO.File]::WriteAllText($full, $text, (New-Object System.Text.UTF8Encoding($false)))
+}
+
 function Invoke-Step([string]$Name, [scriptblock]$Body) {
     Write-Host "==> $Name"
     # Judge a step by its exit code only. Windows PowerShell 5.1 turns every
@@ -50,10 +71,25 @@ try {
             Push-Location 'backend'
             try {
                 Invoke-Step 'composer install' { composer install --no-interaction }
-                if (-not (Select-String -Path '.env' -Pattern '^APP_KEY=base64:' -Quiet)) {
-                    Invoke-Step 'generate APP_KEY' { php artisan key:generate --ansi }
-                }
             } finally { Pop-Location }
+            # The api container reads the root .env (compose env_file), which wins over backend\.env; native PHP
+            # reads backend\.env. Keep one key in both. Never replace a non-empty key; never print it.
+            $key = Get-EnvValue '.env' 'APP_KEY'
+            if ($key -eq '') { $key = Get-EnvValue 'backend\.env' 'APP_KEY' }
+            if ($key -eq '') {
+                $bytes = New-Object byte[] 32
+                $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+                try { $rng.GetBytes($bytes) } finally { $rng.Dispose() }
+                $key = 'base64:' + [Convert]::ToBase64String($bytes)
+                Write-Host 'Generated a new APP_KEY'
+            }
+            foreach ($file in '.env', 'backend\.env') {
+                if ((Get-EnvValue $file 'APP_KEY') -eq '') {
+                    Set-EnvValue $file 'APP_KEY' $key
+                    Write-Host "Set APP_KEY in $file"
+                }
+            }
+            $key = $null
             Push-Location 'apps\rider-flutter'
             try { Invoke-Step 'flutter pub get' { flutter pub get } } finally { Pop-Location }
         }

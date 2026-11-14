@@ -1,0 +1,48 @@
+X-01 clean clone: setup, up, migrate, seed-demo, backend checks
+Date: 2026-11-15. Commit cloned: a4dba97 (HEAD of main at the time). Windows 11, PowerShell 5.1, Docker Desktop.
+Clone: git clone F:\PROJECTS\hara %TEMP%\hara-clean (1.4 s). Working-tree changes in the original repo were not part of the clone.
+
+Isolation
+- Root .env made from .env.example with: COMPOSE_PROJECT_NAME=hara-cleanclone, API_HOST_PORT=18000,
+  POSTGRES_HOST_PORT=18432, REDIS_HOST_PORT=16379, MAILPIT_UI_HOST_PORT=18025, MAILPIT_SMTP_HOST_PORT=11025,
+  DEMO_PASSWORD = random 24 characters generated in the session (not printed, not stored in the repo).
+- `docker compose -f infra/compose.yaml --env-file .env config` reported name: hara-cleanclone, so the
+  COMPOSE_PROJECT_NAME variable overrides the `name: food-delivery` line in compose.yaml.
+- All five published ports are overridable through variables; none is hard-coded.
+- `docker compose ls` during the run showed both projects side by side: food-delivery (original, untouched)
+  and hara-cleanclone. Containers, volumes (hara-cleanclone_postgres_data, hara-cleanclone_backend_vendor) and network were separate.
+
+Commands and results (run from the clone root)
+1. .\infra\scripts\dev.ps1 setup        exit 0, 68 s (pnpm install --frozen-lockfile, composer install, key:generate, flutter pub get)
+2. .\infra\scripts\dev.ps1 up           exit 0, 39 s (build, all four services healthy)
+3. .\infra\scripts\dev.ps1 migrate      exit 0, 2 s (all migrations through 2026_11_14_000003 DONE)
+4. .\infra\scripts\dev.ps1 seed-demo    exit 0, 3 s (RbacSeeder and DevelopmentSeeder DONE)
+5. docker compose exec -T api vendor/bin/pint --test                              exit 0, 9 s, PASS 179 files
+6. docker compose exec -T api vendor/bin/phpstan analyse --no-progress --memory-limit=1G   exit 0, 15 s, [OK] No errors
+7. docker compose exec -T api php artisan test
+   First run, exactly as the docs describe: exit 2, 128 s, 450 failed, 330 passed.
+     398 failures: RuntimeException "Unsupported cipher or incorrect key length" (empty APP_KEY in the api container).
+   After copying the APP_KEY that `setup` wrote into backend/.env into the root .env (clone only) and recreating the api container
+   (`docker compose up -d --force-recreate --wait api`): exit 0, 150 s, Tests: 780 passed (37477 assertions).
+8. Teardown: docker compose -p hara-cleanclone down -v  (exit 0; removed the four hara-cleanclone containers, the two
+   hara-cleanclone_* volumes and the hara-cleanclone_default network). Scratch folder deleted.
+   Afterwards `docker compose ls` shows only food-delivery running(4); its api, redis, postgres and mailpit containers
+   are Up and healthy (25 hours uptime, unchanged); volumes food-delivery_postgres_data and food-delivery_backend_vendor are intact.
+
+Findings (docs/scripts that did not work as written on a clean clone)
+F1. APP_KEY (blocking for the backend tests on a clean clone). `dev.ps1 setup` copies .env.example to .env and to backend\.env and
+    runs `php artisan key:generate`, which writes the key only into backend\.env. The api container reads the root .env
+    through env_file, where APP_KEY is empty (.env.example line is `APP_KEY=   # generated locally...`), and that value wins over
+    backend\.env. Result: 450 of 780 tests fail with "Unsupported cipher". The setup step and the docs do not say to put the key
+    into the root .env. Suggested fix: have `setup` (and the Makefile target) copy the generated key into the root .env, or
+    document it, or let the api container not receive an empty APP_KEY.
+F2. COMPOSE_PROJECT_NAME is not listed in .env.example. Compose.yaml sets `name: food-delivery`, so a second checkout on the same
+    machine would share the project name with a running stack unless COMPOSE_PROJECT_NAME is set (it does override the name).
+    Worth one comment line in .env.example.
+F3. Deleting the scratch clone with Remove-Item -Recurse fails on pnpm's deep node_modules paths (Windows long paths); an
+    empty-folder robocopy /MIR followed by Remove-Item worked. Only relevant to people repeating this drill.
+F4. Makefile targets were not run (make is not installed), as before.
+
+Not covered by this run: web check (lint, typecheck, test, build) and Flutter analyze/test in the clone (done on 2026-11-14,
+x01-2026-11-14-clean-clone.txt); Playwright; the `check` task as a whole (its backend part was run step by step above).
+Secrets: none recorded here. The DEMO_PASSWORD and APP_KEY values were never printed.

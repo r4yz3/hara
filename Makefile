@@ -10,7 +10,14 @@ setup:
 	test -f backend/.env || cp .env.example backend/.env
 	pnpm install --frozen-lockfile
 	cd backend && composer install --no-interaction
-	cd backend && (grep -q '^APP_KEY=base64:' .env || php artisan key:generate --ansi)
+	@# One APP_KEY in both files: the api container reads the root .env, native PHP reads backend/.env.
+	@# Never replaces a non-empty key and never prints it.
+	@val() { sed -n 's/^APP_KEY=//p' "$$1" 2>/dev/null | sed 's/[[:space:]]*#.*//;s/[[:space:]]*$$//' | head -n1; }; \
+	key=$$(val .env); [ -n "$$key" ] || key=$$(val backend/.env); \
+	[ -n "$$key" ] || { key=$$(cd backend && php artisan key:generate --show --no-ansi | tail -n1); echo "Generated a new APP_KEY"; }; \
+	for f in .env backend/.env; do \
+	  if [ -z "$$(val $$f)" ]; then sed "s|^APP_KEY=.*|APP_KEY=$$key|" $$f > $$f.tmp && mv $$f.tmp $$f; echo "Set APP_KEY in $$f"; fi; \
+	done
 	cd apps/rider-flutter && flutter pub get
 
 up:
