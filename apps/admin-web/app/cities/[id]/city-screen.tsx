@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import type { City, Zone } from "@food-delivery/api-client";
 import { apiGet, apiSend, describeFailure, isEnrolmentOnly, type ApiFailure, type ApiResult } from "@food-delivery/session";
 
-import { EnrolmentNotice, FieldError, LoadProblem, Notice, Panel, StatusPill, dangerButton, fieldClass, focusFirstInvalid, primaryButton, quietButton } from "@/components/ui";
+import { ActionNotice, EnrolmentNotice, FieldError, LoadProblem, Notice, Panel, StatusPill, dangerButton, fieldClass, focusFirstInvalid, primaryButton, quietButton } from "@/components/ui";
 import { ZoneExclusions } from "./zone-exclusions";
 import { ZoneMap } from "./zone-map";
 
@@ -18,7 +18,7 @@ type Message = { tone: "ok" | "problem"; text: string; stale?: boolean; enrolmen
 function Outcome({ message, onReload }: { message: NonNullable<Message>; onReload: () => Promise<void> }) {
   return (
     <>
-      {message.enrolment ? <EnrolmentNotice /> : <Notice tone={message.tone}>{message.text}</Notice>}
+      <ActionNotice message={message} />
       {message.stale ? (
         <button type="button" onClick={() => void onReload()} className={`${quietButton} self-start`}>
           Reload latest
@@ -687,7 +687,7 @@ function CreateZone({ cityId, onCreated }: { cityId: string; onCreated: () => Pr
             <button type="submit" disabled={busy} aria-busy={busy} className={`${primaryButton} w-fit`}>
               {busy ? "Checking shape…" : "Add draft zone"}
             </button>
-            {message ? (message.enrolment ? <EnrolmentNotice /> : <Notice tone={message.tone}>{message.text}</Notice>) : null}
+            <ActionNotice message={message} />
           </div>
         </form>
       </Panel>

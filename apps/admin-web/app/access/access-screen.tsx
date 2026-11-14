@@ -9,7 +9,7 @@ import { InviteStaff, PendingInvitations } from "./invitations";
 import { SuspensionControls } from "./suspension";
 import {
   FieldError,
-  EnrolmentNotice,
+  ActionNotice,
   EnrolmentSetup,
   LoadProblem,
   Notice,
@@ -297,7 +297,7 @@ function Member({ member, onChanged }: { member: StaffMember; onChanged: (text: 
                 : "They keep their other roles."}{" "}
               The removal is recorded in the audit log.
             </p>
-            {problem ? (problem.enrolment ? <EnrolmentNotice /> : <Notice tone="problem">{problem.text}</Notice>) : null}
+            <ActionNotice message={problem} />
             <div className="flex flex-wrap gap-2">
               <button type="button" disabled={busy} onClick={() => dialog.current?.close()} className={quietButton}>
                 Cancel
@@ -507,7 +507,7 @@ function GrantRole({
               <button type="submit" disabled={busy} aria-busy={busy} className={`${primaryButton} w-fit`}>
                 {busy ? "Giving…" : "Give role"}
               </button>
-              {message ? (message.enrolment ? <EnrolmentNotice /> : <Notice tone="problem">{message.text}</Notice>) : null}
+              <ActionNotice message={message} />
             </div>
           </form>
         </Panel>

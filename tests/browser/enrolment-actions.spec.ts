@@ -1,6 +1,7 @@
 // Admin actions (create a city, change a city's status, invite, give a role) that fail for enrolment-only staff
 // show the set-up words with a link to /security, in the place the action's message goes. Any other 403 keeps
 // its own sentence and shows no link. The API is replaced by route interception; no real data or account is used.
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Route } from "@playwright/test";
 
 const admin = "http://localhost:3002";
@@ -21,6 +22,13 @@ const other = {
   mfa_enrolled: true, is_self: false, grants: [],
 };
 const assignable = { slug: "dispatcher", label: "Dispatcher", scope_types: ["city"], global: false, all_cities: false, city_ids: ["test-city"] };
+
+async function assertAccessible(page: Page) {
+  const { violations } = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+    .analyze();
+  expect(violations.map(({ id, nodes }) => ({ id, targets: nodes.map(({ target }) => target) }))).toEqual([]);
+}
 
 const failure = (message: string) => ({ error: { code: "FORBIDDEN", message, request_id: "test" } });
 
@@ -73,6 +81,7 @@ test.describe("create a city", () => {
 
     await expect(form.getByRole("alert")).toContainText(enrolmentOnlyMessage);
     await expect(form.getByRole("link", { name: enrolmentLink })).toHaveAttribute("href", "/security");
+    await assertAccessible(page);
     await expect(form.getByRole("status")).toHaveCount(0);
   });
 
@@ -113,6 +122,7 @@ test.describe("change a city's status", () => {
 
     await expect(dialog.getByRole("alert")).toContainText(enrolmentOnlyMessage);
     await expect(dialog.getByRole("link", { name: enrolmentLink })).toHaveAttribute("href", "/security");
+    await assertAccessible(page);
   });
 
   test("an ordinary 403 keeps its own sentence and shows no link", async ({ page }) => {
@@ -142,6 +152,7 @@ test.describe("staff invitations and roles", () => {
 
     await expect(form.getByRole("alert")).toContainText(enrolmentOnlyMessage);
     await expect(form.getByRole("link", { name: enrolmentLink })).toHaveAttribute("href", "/security");
+    await assertAccessible(page);
   });
 
   test("invite: an ordinary 403 keeps its own sentence and shows no link", async ({ page }) => {
@@ -171,6 +182,7 @@ test.describe("staff invitations and roles", () => {
 
     await expect(form.getByRole("alert")).toContainText(enrolmentOnlyMessage);
     await expect(form.getByRole("link", { name: enrolmentLink })).toHaveAttribute("href", "/security");
+    await assertAccessible(page);
   });
 
   test("give a role: an ordinary 403 keeps its own sentence and shows no link", async ({ page }) => {
@@ -186,4 +198,70 @@ test.describe("staff invitations and roles", () => {
     await expect(form.getByRole("alert")).toContainText("Your role cannot give this role.");
     await expect(page.getByRole("link", { name: enrolmentLink })).toHaveCount(0);
   });
+
+  test("remove a role: an enrolment-only 403 shows the set-up words and a link to /security", async ({ page }) => {
+    const granted = {
+      ...other,
+      grants: [{ id: "grant-other", role: "dispatcher", role_label: "Dispatcher", scope_type: "city", scope_id: "test-city", city_name: "Synthetic city", granted_at: "2026-01-01T00:00:00Z", can_revoke: true }],
+    };
+    await adminApi(page, { ...accessLists, "/api/v1/admin/users": [self, granted] });
+    await onAdmin(page, "/api/v1/admin/users/person-other/roles/grant-other", "DELETE", (route) => reply(route, 403, failure(enrolmentOnlyMessage)));
+    await page.goto(`${admin}/access`);
+    await page.getByRole("button", { name: /^Remove Dispatcher/ }).click();
+    const dialog = page.getByRole("dialog", { name: /^Remove Dispatcher from/ });
+    await dialog.getByRole("button", { name: "Yes, remove" }).click();
+
+    await expect(dialog.getByRole("alert")).toContainText(enrolmentOnlyMessage);
+    await expect(dialog.getByRole("link", { name: enrolmentLink })).toHaveAttribute("href", "/security");
+    await assertAccessible(page);
+  });
+
+  test("revoke an invitation: an enrolment-only 403 shows the set-up words and a link to /security", async ({ page }) => {
+    const pending = {
+      id: "invite-1", name: "Synthetic invitee", email: "invitee@example.test", email_masked: false, role: "dispatcher", role_label: "Dispatcher",
+      scope_type: "city", scope_id: "test-city", city_name: "Synthetic city", invited_by_me: true,
+      created_at: "2026-02-03T00:00:00Z", expires_at: "2026-02-06T00:00:00Z", can_revoke: true,
+    };
+    await adminApi(page, { ...accessLists, "/api/v1/admin/invitations": [pending] });
+    await onAdmin(page, "/api/v1/admin/invitations/invite-1", "DELETE", (route) => reply(route, 403, failure(enrolmentOnlyMessage)));
+    await page.goto(`${admin}/access`);
+    await page.getByRole("button", { name: "Revoke the invitation for Synthetic invitee" }).click();
+    const dialog = page.getByRole("dialog", { name: "Revoke the invitation for Synthetic invitee?" });
+    await dialog.getByRole("button", { name: "Yes, revoke" }).click();
+
+    await expect(dialog.getByRole("alert")).toContainText(enrolmentOnlyMessage);
+    await expect(dialog.getByRole("link", { name: enrolmentLink })).toHaveAttribute("href", "/security");
+    await assertAccessible(page);
+  });
+});
+
+// ------------------------------------------------ /cities/[id]: add a zone
+
+test.describe("add a zone", () => {
+  const square = JSON.stringify({ type: "Polygon", coordinates: [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]] });
+
+  for (const [label, message, enrolment] of [
+    ["an enrolment-only 403 shows the set-up words and a link to /security", enrolmentOnlyMessage, true],
+    ["an ordinary 403 keeps its own sentence and shows no link", "Your role cannot add zones.", false],
+  ] as const) {
+    test(label, async ({ page }) => {
+      await adminApi(page);
+      await onAdmin(page, "/api/v1/admin/cities/test-city", "GET", (route) => reply(route, 200, { data: city }));
+      await onAdmin(page, "/api/v1/admin/cities/test-city/zones", "POST", (route) => reply(route, 403, failure(message)));
+      await page.goto(`${admin}/cities/test-city`);
+      const section = page.getByRole("region", { name: "Add a delivery zone" });
+      await section.getByLabel("Name", { exact: true }).fill("Synthetic zone");
+      await section.getByLabel("Short name for links").fill("synthetic-zone");
+      await section.getByLabel(/^Shape/).fill(square);
+      await section.getByRole("button", { name: "Add draft zone" }).click();
+
+      await expect(section.getByRole("alert")).toContainText(message);
+      if (enrolment) {
+        await expect(section.getByRole("link", { name: enrolmentLink })).toHaveAttribute("href", "/security");
+      } else {
+        await expect(page.getByRole("link", { name: enrolmentLink })).toHaveCount(0);
+      }
+      await assertAccessible(page);
+    });
+  }
 });

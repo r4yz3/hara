@@ -6,7 +6,7 @@ import type { AssignableRole, City, StaffInvitation } from "@food-delivery/api-c
 import { apiGet, apiSend, describeFailure, isEnrolmentOnly, type ApiFailure } from "@food-delivery/session";
 
 import {
-  EnrolmentNotice,
+  ActionNotice,
   EnrolmentSetup,
   FieldError,
   Notice,
@@ -254,7 +254,7 @@ export function InviteStaff({
               <button type="submit" disabled={busy} aria-busy={busy} className={`${primaryButton} w-fit`}>
                 {busy ? "Sending…" : "Send invitation"}
               </button>
-              {problemText ? (problemText.enrolment ? <EnrolmentNotice /> : <Notice tone="problem">{problemText.text}</Notice>) : null}
+              <ActionNotice message={problemText} />
               {sent ? <Notice tone="ok">If the address can receive mail, an invitation is on its way. It expires in 72 hours.</Notice> : null}
             </div>
           </form>
@@ -467,7 +467,7 @@ function InvitationRow({ invitation, onRevoked }: { invitation: StaffInvitation;
               {invitation.role_label} · {scopeLabel(invitation)}. The link in their email stops working at once. You can invite them again later. The
               revocation is recorded in the audit log.
             </p>
-            {problem ? (problem.enrolment ? <EnrolmentNotice /> : <Notice tone="problem">{problem.text}</Notice>) : null}
+            <ActionNotice message={problem} />
             <div className="flex flex-wrap gap-2">
               <button type="button" disabled={busy} onClick={() => dialog.current?.close()} className={quietButton}>
                 Cancel

@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import type { Exclusion } from "@food-delivery/api-client";
 import { apiGet, apiSend, describeFailure, isEnrolmentOnly, type ApiFailure } from "@food-delivery/session";
-import { EnrolmentNotice, Notice, dangerButton, fieldClass, focusFirstInvalid, primaryButton, quietButton } from "@/components/ui";
+import { ActionNotice, dangerButton, fieldClass, focusFirstInvalid, primaryButton, quietButton } from "@/components/ui";
 
 type ExclusionPage = { data: Exclusion[]; meta: { next_cursor: string | null } };
 
@@ -106,7 +106,7 @@ export function ZoneExclusions({ zoneId, archived }: { zoneId: string; archived:
         {open ? (
           <div className="flex flex-col gap-3" aria-busy={busy}>
             {busy ? <p role="status">Working…</p> : null}
-            {problem ? (problem.enrolment ? <EnrolmentNotice /> : <Notice tone="problem">{problem.text}</Notice>) : null}
+            <ActionNotice message={problem} />
             {rows === null && problem ? <button type="button" className={`${quietButton} self-start`} onClick={() => void load()}>Retry</button> : null}
             {rows?.length === 0 ? <p className="text-sm text-text-secondary">No coverage exclusions.</p> : null}
             {rows?.length ? (

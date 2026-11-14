@@ -76,6 +76,17 @@ export function EnrolmentNotice() {
   );
 }
 
+/**
+ * The inline message of a mutating action (spec ADR-019: inline, no toast). A failure that means "enrol in
+ * two-step sign-in first" shows the set-up words and the /security link; anything else keeps its own sentence.
+ */
+export function ActionNotice({ message }: { message: { text: string; tone?: "ok" | "problem"; enrolment?: boolean } | null }) {
+  if (!message) return null;
+  if (message.enrolment) return <EnrolmentNotice />;
+
+  return <Notice tone={message.tone ?? "problem"}>{message.text}</Notice>;
+}
+
 /** What to show when a load fails: says what happened and offers the next step. */
 export function LoadProblem({ failure, returnTo, onRetry }: { failure: ApiFailure; returnTo: string; onRetry: () => void }) {
   // A staff session that must enrol first gets 403 on everything else: say so and link to /security.

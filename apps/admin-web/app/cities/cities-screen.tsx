@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import type { City } from "@food-delivery/api-client";
 import { apiGet, apiSend, describeFailure, isEnrolmentOnly, type ApiFailure } from "@food-delivery/session";
 
-import { EnrolmentNotice, FieldError, LoadProblem, Notice, Panel, StatusPill, fieldClass, focusFirstInvalid, primaryButton } from "@/components/ui";
+import { ActionNotice, FieldError, LoadProblem, Panel, StatusPill, fieldClass, focusFirstInvalid, primaryButton } from "@/components/ui";
 
 type Loaded = { phase: "loading" } | { phase: "failed"; failure: ApiFailure } | { phase: "ready"; cities: City[]; more: boolean };
 
@@ -281,7 +281,7 @@ function CreateCity({ currency, onCreated }: { currency: string | null; onCreate
             <button type="submit" disabled={busy || currency === null} aria-busy={busy} className={`${primaryButton} w-fit`}>
               {busy ? "Creating…" : "Create draft city"}
             </button>
-            {message ? (message.enrolment ? <EnrolmentNotice /> : <Notice tone={message.tone}>{message.text}</Notice>) : null}
+            <ActionNotice message={message} />
           </div>
         </form>
       </Panel>

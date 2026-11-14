@@ -5,7 +5,7 @@ import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import type { StaffMember } from "@food-delivery/api-client";
 import { apiSend, describeFailure, isEnrolmentOnly } from "@food-delivery/session";
 
-import { EnrolmentNotice, FieldError, Notice, dangerButton, fieldClass, primaryButton, quietButton } from "@/components/ui";
+import { ActionNotice, FieldError, dangerButton, fieldClass, primaryButton, quietButton } from "@/components/ui";
 
 const MAX_REASON = 500;
 
@@ -136,7 +136,7 @@ export function SuspensionControls({ member, onChanged }: { member: StaffMember;
               </p>
               <FieldError id={`${id}-reason-error`} messages={fieldProblem} />
             </div>
-            {problem ? (problem.enrolment ? <EnrolmentNotice /> : <Notice tone="problem">{problem.text}</Notice>) : null}
+            <ActionNotice message={problem} />
             <div className="flex flex-wrap gap-2">
               <button type="button" disabled={busy} onClick={() => dialog.current?.close()} className={quietButton}>
                 Cancel
