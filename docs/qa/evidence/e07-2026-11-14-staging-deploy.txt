@@ -93,3 +93,20 @@
 - Not yet verified on staging: an invitation, password-reset or recovery-code email end to end.
 - Done: the R2 tiles upload token was deleted on 2026-11-15 (operator-reported).
 - Action item, not done as far as this record shows: a Resend onboarding API key was shown in a chat screenshot on 2026-11-15, and the operator was told to revoke it. Whether it is the same key as the one on the server is not recorded.
+
+## 12. Strict nonce CSP on staging, release 1ef4016, 2026-11-15
+- Procedure: `docs/operations/staging-setup.md`, section 7 (web builds with `NEXT_PUBLIC_MAP_STYLE_URL`) and section 13. Web-only commits: `87dbde7` (strict nonce CSP, ADR-020), `1ef4016` (every HTML response carries a CSP), `368af5a` (offline banner, ADR-019, same images).
+- Web apps rebuilt to `1ef4016` with `NEXT_PUBLIC_MAP_STYLE_URL=https://tiles.haradelivery.com/style-20261113.json` (operator-reported). All services healthy (operator-reported).
+- Checked from the workstation with curl against staging:
+  - `/` on customer, merchant and admin: 200 with the nonce CSP `default-src 'self'; script-src 'self' 'nonce-...' 'strict-dynamic'; connect-src` self, the staging API and the tile host; `frame-ancestors 'none'`. A new nonce on every request.
+  - A missing path `/favicon.icoX`: 404 with the nonce CSP (on `87dbde7` it had none).
+  - `/does-not-exist`: 404 with the CSP.
+  - `/favicon.ico`: 200 with the static floor CSP (`script-src 'self'; frame-ancestors 'none'; object-src 'none'`).
+  - A `next-router-prefetch: 1` request to admin carries a CSP.
+- Checked by the operator in a browser on staging under the nonce CSP (operator-reported):
+  - Customer "Do we deliver to you?" with device location: "Yes, this spot is inside a delivery area — Magsaysay, Davao del Sur". The API call is allowed by connect-src.
+  - Admin city page: Davao del Sur active, Magsaysay zone active, version 2.
+  - Admin "Add a delivery zone" map (confirmed 2026-11-15): basemap tiles, ocean labels (glyphs) and the attribution "OpenStreetMap contributors · Protomaps" all show. The updated zone-form helper text (`13d4ddc`) is live.
+- Not yet checked: the offline banner (`368af5a`) on staging; drawing a zone by hand on the real map under the CSP.
+- Resend onboarding API key deleted by the operator (operator-reported, 2026-11-15).
+- Rollback: the web images of `515e28c` are kept on the server. These commits change only the web apps, so no schema change is involved.

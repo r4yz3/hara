@@ -241,18 +241,20 @@ cd /srv/hara && docker build -f infra/docker/prod/api.Dockerfile --target web -t
 ```
 
 ```bash
-cd /srv/hara && docker build -f infra/docker/prod/web.Dockerfile --build-arg APP=customer-web --build-arg NEXT_PUBLIC_API_URL=https://staging-api.haradelivery.com -t food-delivery-customer-web:$(git rev-parse --short HEAD) .
+cd /srv/hara && docker build -f infra/docker/prod/web.Dockerfile --build-arg APP=customer-web --build-arg NEXT_PUBLIC_API_URL=https://staging-api.haradelivery.com --build-arg NEXT_PUBLIC_MAP_STYLE_URL=https://tiles.haradelivery.com/style-20261113.json -t food-delivery-customer-web:$(git rev-parse --short HEAD) .
 ```
 
 ```bash
-cd /srv/hara && docker build -f infra/docker/prod/web.Dockerfile --build-arg APP=merchant-web --build-arg NEXT_PUBLIC_API_URL=https://staging-api.haradelivery.com -t food-delivery-merchant-web:$(git rev-parse --short HEAD) .
+cd /srv/hara && docker build -f infra/docker/prod/web.Dockerfile --build-arg APP=merchant-web --build-arg NEXT_PUBLIC_API_URL=https://staging-api.haradelivery.com --build-arg NEXT_PUBLIC_MAP_STYLE_URL=https://tiles.haradelivery.com/style-20261113.json -t food-delivery-merchant-web:$(git rev-parse --short HEAD) .
 ```
 
 ```bash
-cd /srv/hara && docker build -f infra/docker/prod/web.Dockerfile --build-arg APP=admin-web --build-arg NEXT_PUBLIC_API_URL=https://staging-api.haradelivery.com -t food-delivery-admin-web:$(git rev-parse --short HEAD) .
+cd /srv/hara && docker build -f infra/docker/prod/web.Dockerfile --build-arg APP=admin-web --build-arg NEXT_PUBLIC_API_URL=https://staging-api.haradelivery.com --build-arg NEXT_PUBLIC_MAP_STYLE_URL=https://tiles.haradelivery.com/style-20261113.json -t food-delivery-admin-web:$(git rev-parse --short HEAD) .
 ```
 
 `NEXT_PUBLIC_API_URL` is written into the browser bundle, so a different API host means rebuilding the three web images. It is public; never pass a secret as a build argument.
+
+`NEXT_PUBLIC_MAP_STYLE_URL` is also a required web build argument (since release `1ef4016`). The strict CSP reads its origin to allow the tile host, and the browser fetches the style from it. It must be the same URL as the API's `MAP_STYLE_URL` (`https://tiles.haradelivery.com/style-20261113.json` on staging). Changing it means rebuilding the three web images.
 
 Both API images are scanned in CI (`security.yml`). Do not deploy a release whose scan failed. The three web images are not in the CI scan yet (open item).
 
@@ -675,6 +677,7 @@ Found and fixed on the way: an API image built from an older commit lacked `conf
 | Reboot persistence (2026-11-14, operator run, release `001f8ee`) | Server rebooted at 15:19:12 (server time CET, `uptime -s`). About a minute later all 8 services were Up (healthy) with no manual action. `hara-cloudflare-firewall status` showed the DOCKER-USER jumps for 443 and 80 on eth0 to HARA-CF with 15 IPv4 and 7 IPv6 Cloudflare RETURN rules ending in DROP, so the firewall unit re-applied at boot. `/dev/shm` was empty |
 | Redeploy to `515e28c` (2026-11-15, operator run) | API images rebuilt; web images re-tagged. All 9 compose services healthy; new `egress` network for `api` (section 15) |
 | Mail through Resend (2026-11-15, operator run) | `mail:test` printed `Mailer: smtp (smtp.resend.com:465)` and `Handed to the mailer`; the test message arrived in the operator's inbox, not spam. `MAIL_REQUIRE_REAL_TRANSPORT=true` set and `api` healthy. Invitation, reset and recovery-code mails not yet checked |
+| Redeploy to `1ef4016` (2026-11-15, operator run) | Web images rebuilt with `NEXT_PUBLIC_MAP_STYLE_URL` (section 7). Strict nonce CSP live (ADR-020; `87dbde7`, `1ef4016`). From the workstation: `/` returns 200 with the nonce CSP on customer, merchant and admin, a new nonce per request; a missing path returns 404 with the CSP; `/favicon.ico` returns 200 with the static floor CSP. Operator in a browser: customer location check returned a serviceable area; admin city page and the admin zone map render under the CSP. Offline banner (`368af5a`) is in the same images, not yet exercised on staging. Resend onboarding key deleted (operator-reported) |
 
 Found on the host: empty `apps/*/public` folders are not tracked by git, so the web image build failed; fixed in `bce7e3f`. Evidence: `docs/qa/evidence/e07-2026-11-14-staging-deploy.txt`.
 
