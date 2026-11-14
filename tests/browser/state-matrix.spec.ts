@@ -686,6 +686,7 @@ async function mockAccess(page: Page, options: { members?: object[]; roles?: obj
     route.fulfill({ json: { data: options.members ?? [people.self, people.dispatcher], meta: { next_cursor: null } } })));
   await api(page, "/api/v1/admin/roles", (route) => route.fulfill({ json: { data: options.roles ?? [assignable], meta: { next_cursor: null } } }));
   await api(page, "/api/v1/admin/cities", (route) => route.fulfill({ json: { data: [city], meta: { next_cursor: null } } }));
+  await api(page, "/api/v1/admin/invitations", (route) => route.fulfill({ json: { data: [], meta: { next_cursor: null } } }));
 }
 
 test("access: progress while slow, then only the people the API returned", async ({ page }) => {
@@ -850,6 +851,7 @@ test("access: roles that failed to load say so, and Try again recovers", async (
   await basics(page);
   await api(page, "/api/v1/admin/users", (route) => route.fulfill({ json: { data: [people.self, people.dispatcher], meta: { next_cursor: null } } }));
   await api(page, "/api/v1/admin/cities", (route) => route.fulfill({ json: { data: [city], meta: { next_cursor: null } } }));
+  await api(page, "/api/v1/admin/invitations", (route) => route.fulfill({ json: { data: [], meta: { next_cursor: null } } }));
   let healthy = false;
   await api(page, "/api/v1/admin/roles", (route) => healthy
     ? route.fulfill({ json: { data: [assignable], meta: { next_cursor: null } } })

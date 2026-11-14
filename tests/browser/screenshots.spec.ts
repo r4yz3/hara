@@ -89,7 +89,18 @@ const shots: Shot[] = [
       await api(page, "/api/v1/admin/users", (route) => route.fulfill(list([person])));
       await api(page, "/api/v1/admin/roles", (route) => route.fulfill(list([{ slug: "dispatcher", label: "Dispatcher", scope_types: ["city"], global: false, all_cities: false, city_ids: ["test-city"] }])));
       await api(page, "/api/v1/admin/cities", (route) => route.fulfill(list([city])));
+      await api(page, "/api/v1/admin/invitations", (route) => route.fulfill(list([{
+        id: "invite-1", name: "Synthetic invitee", email: "invitee@example.test", email_masked: false, role: "dispatcher", role_label: "Dispatcher",
+        scope_type: "city", scope_id: "test-city", city_name: "Synthetic city", invited_by_me: true,
+        created_at: "2026-02-03T00:00:00Z", expires_at: "2026-02-06T00:00:00Z", can_revoke: true,
+      }])));
     },
+  },
+  {
+    app: "admin", name: "invite", url: "/invite#token=" + "ab".repeat(32), wait: "Synthetic invitee",
+    setup: (page) => api(page, "/api/v1/auth/invitations/inspect", (route) => route.fulfill({
+      json: { data: { name: "Synthetic invitee", role_label: "Dispatcher", scope_label: "Synthetic city", expires_at: "2026-02-06T00:00:00Z" }, meta: {} },
+    })),
   },
   {
     app: "admin", name: "settings", url: "/settings", wait: "Service checks",

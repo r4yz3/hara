@@ -13,3 +13,5 @@ export type Serviceability = Schemas["Serviceability"];
 export type StaffMember = Schemas["StaffMember"];
 export type StaffGrant = Schemas["StaffGrant"];
 export type AssignableRole = Schemas["AssignableRole"];
+export type StaffInvitation = Schemas["StaffInvitation"];
+export type InvitationPreview = Schemas["InvitationPreview"];

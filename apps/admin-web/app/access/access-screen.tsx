@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import type { AssignableRole, City, StaffGrant, StaffMember } from "@food-delivery/api-client";
 import { apiGet, apiSend, describeFailure, type ApiFailure } from "@food-delivery/session";
 
+import { InviteStaff, PendingInvitations } from "./invitations";
 import {
   FieldError,
   LoadProblem,
@@ -74,6 +75,7 @@ export function AccessScreen() {
   const [offerProblem, setOfferProblem] = useState<ApiFailure | null>(null);
   const [outcome, setOutcome] = useState<{ tone: "ok" | "problem"; text: string } | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [invitesVersion, setInvitesVersion] = useState(0);
   const heading = useRef<HTMLHeadingElement>(null);
 
   const loadOffer = useCallback(async () => {
@@ -186,6 +188,9 @@ export function AccessScreen() {
       </section>
 
       <GrantRole members={state.members} offer={offer} problem={offerProblem} onChanged={changed} onRetry={() => void loadOffer()} />
+
+      <InviteStaff offer={offer} problem={offerProblem} onInvited={() => setInvitesVersion((version) => version + 1)} />
+      <PendingInvitations refreshKey={invitesVersion} />
     </>
   );
 }
@@ -413,7 +418,7 @@ function GrantRole({
       ) : (
         <Panel>
           <p className="max-w-prose text-sm text-text-secondary">
-            Choose someone who already holds a staff role. Bringing in a new person is not built yet. You cannot change your own roles.
+            Choose someone who already holds a staff role. To bring in a new person, invite them below.You cannot change your own roles.
           </p>
           <form onSubmit={onSubmit} noValidate aria-label="Give a role" className="grid gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5 sm:col-span-2">
