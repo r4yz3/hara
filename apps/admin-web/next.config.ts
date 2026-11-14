@@ -11,6 +11,8 @@ const nextConfig: NextConfig = {
   ...(standalone ? { output: "standalone" as const, outputFileTracingRoot: path.join(process.cwd(), "../..") } : {}),
   // Only the browser tests' production build sets this (playwright.config.ts), so it can sit beside the dev server's .next.
   distDir: process.env.NEXT_DIST_DIR || ".next",
+  // Do not send `X-Powered-By: Next.js` (Next 16 poweredByHeader option).
+  poweredByHeader: false,
   async headers() {
     return securityHeaders();
   },
